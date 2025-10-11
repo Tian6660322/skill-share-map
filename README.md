@@ -1,4 +1,3 @@
-<img width="2850" height="1438" alt="image" src="https://github.com/user-attachments/assets/6b06f32d-e5df-4b6d-a631-a2c8365e5a8a" /># skill_share_map
 A skill-sharing platform for university students
 
 
