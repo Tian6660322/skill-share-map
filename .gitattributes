@@ -1,0 +1,24 @@
+
+* text=auto
+*.cs text eol=lf
+*.razor text eol=lf
+*.cshtml text eol=lf
+*.json text eol=lf
+*.csproj text eol=lf
+*.sln text eol=lf
+*.md text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.html text eol=lf
+*.xml text eol=lf
+ 
+# Binary files: Git will not perform line-ending normalization or show diffs
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
