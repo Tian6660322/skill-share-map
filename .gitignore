@@ -416,3 +416,34 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+ 
+# Visual Studio for Mac
+.vscode/
+.vs/
+mono_crash.*
+*.userprefs
+ 
+# Citrix temporary files
+*.lock
+ 
+# Temporary SQLite journal files
+*.sqlite-journal
+ 
+# Avoid accidentally committing local configuration files.
+appsettings.Development.json
+appsettings.local.json

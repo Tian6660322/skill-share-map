@@ -1,0 +1,54 @@
+@page "/map"
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Typo="Typo.h4" Class="mb-4">Skill Map</MudText>
+    
+    <MudPaper Class="pa-4 mb-4">
+        <MudText>This page will show a map with nearby users and their skills.</MudText>
+        <MudAlert Severity="Severity.Info" Class="mt-3">Map integration will be added in a future update.</MudAlert>
+    </MudPaper>
+    
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Nearby Skills</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList>
+                        <MudListItem>
+                            <MudText>Programming (3 people)</MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText>Cooking (2 people)</MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText>Music (5 people)</MudText>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Nearby Tasks</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList>
+                        <MudListItem>
+                            <MudText>Help with math homework</MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText>Guitar lessons wanted</MudText>
+                        </MudListItem>
+                        <MudListItem>
+                            <MudText>Need help fixing my bike</MudText>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

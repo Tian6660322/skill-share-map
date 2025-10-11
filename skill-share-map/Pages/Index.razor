@@ -1,0 +1,59 @@
+﻿@page "/"
+
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h3" GutterBottom="true">Welcome to Skill Share Map</MudText>
+                <MudText Typo="Typo.body1">
+                    Connect with people nearby to share skills and help each other.
+                    Find tasks you can help with or post your own requests.
+                </MudText>
+                
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">
+                    Get Started
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="5">
+            <MudPaper Class="d-flex flex-column align-center justify-center mud-width-full py-8" Elevation="2">
+                <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Large" />
+                <MudText Typo="Typo.h5" Class="mt-4">Explore Nearby Skills</MudText>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" Class="mt-4">
+            <MudText Typo="Typo.h5">How it works</MudText>
+            <MudGrid>
+                <MudItem xs="12" sm="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Create" Size="Size.Large" />
+                            <MudText Typo="Typo.h6" Class="mt-2">1. Create a profile</MudText>
+                            <MudText Typo="Typo.body2">Add your skills and what you want to learn</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" />
+                            <MudText Typo="Typo.h6" Class="mt-2">2. Find people nearby</MudText>
+                            <MudText Typo="Typo.body2">Connect with others who can help or need your skills</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Handshake" Size="Size.Large" />
+                            <MudText Typo="Typo.h6" Class="mt-2">3. Share and learn</MudText>
+                            <MudText Typo="Typo.body2">Complete tasks, earn points, and grow your skills</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
