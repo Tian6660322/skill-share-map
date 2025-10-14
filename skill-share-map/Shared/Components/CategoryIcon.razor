@@ -1,0 +1,29 @@
+@namespace SkillShareMap.Shared.Components
+@using SkillShareMap.Models
+
+<MudIcon Icon="@GetCategoryIcon()" Color="@CategoryColor" Size="@IconSize" />
+
+@code {
+    [Parameter]
+    public TaskCategory Category { get; set; }
+
+    [Parameter]
+    public Size IconSize { get; set; } = Size.Medium;
+
+    [Parameter]
+    public Color CategoryColor { get; set; } = Color.Primary;
+
+    private string GetCategoryIcon()
+    {
+        return Category switch
+        {
+            TaskCategory.StudyHelp => Icons.Material.Filled.MenuBook,
+            TaskCategory.TechHelp => Icons.Material.Filled.Computer,
+            TaskCategory.CreativeDesign => Icons.Material.Filled.Palette,
+            TaskCategory.PhotoVideo => Icons.Material.Filled.Camera,
+            TaskCategory.WritingEditing => Icons.Material.Filled.Edit,
+            TaskCategory.LanguageHelp => Icons.Material.Filled.Translate,
+            _ => Icons.Material.Filled.Help
+        };
+    }
+}

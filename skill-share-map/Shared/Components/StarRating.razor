@@ -1,0 +1,32 @@
+@namespace SkillShareMap.Shared.Components
+
+<div class="star-rating">
+    @for (int i = 1; i <= 5; i++)
+    {
+        int currentStar = i;
+        if (i <= Math.Floor(Rating))
+        {
+            <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Size="Size.Small" />
+        }
+        else if (i - 0.5 <= Rating)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.StarHalf" Color="Color.Warning" Size="Size.Small" />
+        }
+        else
+        {
+            <MudIcon Icon="@Icons.Material.Outlined.StarBorder" Color="Color.Default" Size="Size.Small" />
+        }
+    }
+    @if (ShowRating)
+    {
+        <MudText Typo="Typo.caption" Class="ml-1">@Rating.ToString("F1")</MudText>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public double Rating { get; set; }
+
+    [Parameter]
+    public bool ShowRating { get; set; } = true;
+}

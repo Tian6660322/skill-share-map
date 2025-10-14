@@ -1,0 +1,59 @@
+@namespace SkillShareMap.Shared.Components
+@inject IJSRuntime JS
+
+<div id="@MapId" style="height: @Height; width: 100%;"></div>
+
+@code {
+    [Parameter]
+    public string MapId { get; set; } = "map";
+
+    [Parameter]
+    public string Height { get; set; } = "500px";
+
+    [Parameter]
+    public double InitialLat { get; set; } = -33.8688;
+
+    [Parameter]
+    public double InitialLng { get; set; } = 151.2093;
+
+    [Parameter]
+    public int InitialZoom { get; set; } = 13;
+
+    [Parameter]
+    public EventCallback<int> OnMarkerClick { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("mapHelper.initMap", MapId, InitialLat, InitialLng, InitialZoom);
+        }
+    }
+
+    public async Task AddMarkerAsync(int id, double lat, double lng, string title, string type = "task")
+    {
+        await JS.InvokeVoidAsync("mapHelper.addMarker", id, lat, lng, title, type);
+    }
+
+    public async Task ClearMarkersAsync()
+    {
+        await JS.InvokeVoidAsync("mapHelper.clearMarkers");
+    }
+
+    public async Task FitBoundsAsync()
+    {
+        await JS.InvokeVoidAsync("mapHelper.fitBounds");
+    }
+
+    public async Task SetViewAsync(double lat, double lng, int zoom = 13)
+    {
+        await JS.InvokeVoidAsync("mapHelper.setView", lat, lng, zoom);
+    }
+
+    [JSInvokable("OnMarkerClicked")]
+    public static async Task OnMarkerClicked(int markerId)
+    {
+        // This will be handled by the parent component
+        Console.WriteLine($"Marker clicked: {markerId}");
+    }
+}

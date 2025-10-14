@@ -1,0 +1,225 @@
+@page "/job/{JobId:int}"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@using SkillShareMap.Shared.Components
+@inject IJobService JobService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Job Details</PageTitle>
+
+@if (_job == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+        <MudGrid>
+            <!-- Main Content -->
+            <MudItem xs="12" md="8">
+                <MudPaper Elevation="2" Class="pa-6">
+                    <!-- Header -->
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <div>
+                            <MudText Typo="Typo.h4" GutterBottom="true">@_job.Title</MudText>
+                            <MudChip T="string" Color="@(_job.IsOpen ? Color.Success : Color.Default)" Size="Size.Small">
+                                @(_job.IsOpen ? "Open" : "Closed")
+                            </MudChip>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Large" Color="Color.Secondary" />
+                    </div>
+
+                    <MudDivider Class="my-4" />
+
+                    <!-- Posted By (Company) -->
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">
+                        <strong>Posted by:</strong>
+                    </MudText>
+                    <div class="d-flex align-center mb-4">
+                        <MudAvatar Color="Color.Secondary" Class="mr-2">
+                            @_job.PostedBy?.CompanyName?.Substring(0, 1).ToUpper()
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.body1">@_job.PostedBy?.CompanyName</MudText>
+                            @if (!string.IsNullOrEmpty(_job.PostedBy?.WebsiteUrl))
+                            {
+                                <MudLink Href="@_job.PostedBy.WebsiteUrl" Target="_blank" Typo="Typo.caption">
+                                    Visit Website
+                                </MudLink>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Employment Type -->
+                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Employment Type:</strong></MudText>
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Class="mb-4">
+                        @GetEmploymentTypeName(_job.EmploymentType)
+                    </MudChip>
+
+                    <!-- Responsibilities -->
+                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Responsibilities:</strong></MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">
+                        @_job.Responsibilities
+                    </MudText>
+
+                    <!-- Qualifications -->
+                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Qualifications:</strong></MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">
+                        @_job.Qualifications
+                    </MudText>
+
+                    <!-- Action Buttons -->
+                    <MudDivider Class="my-4" />
+
+                    @if (_isCompany)
+                    {
+                        <div class="d-flex gap-2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       Href="@($"/job/{_job.Id}/edit")">
+                                Edit
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Cancel"
+                                       OnClick="CloseJob">
+                                Close Position
+                            </MudButton>
+                        </div>
+                    }
+                    else if (_job.IsOpen)
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Chat"
+                                       Href="@($"/chat/{_job.PostedById}?jobId={_job.Id}")">
+                                Open Chat
+                            </MudButton>
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Report"
+                                       OnClick="ReportJob">
+                                Report
+                            </MudButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            This position is no longer accepting applications.
+                        </MudAlert>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <!-- Sidebar -->
+            <MudItem xs="12" md="4">
+                <!-- Location Map -->
+                <MudPaper Elevation="2" Class="pa-4 mb-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Location</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-3">@_job.LocationAddress</MudText>
+
+                    @if (_job.Latitude.HasValue && _job.Longitude.HasValue)
+                    {
+                        <MapComponent @ref="_miniMap"
+                                      MapId="jobMap"
+                                      Height="250px"
+                                      InitialLat="@_job.Latitude.Value"
+                                      InitialLng="@_job.Longitude.Value"
+                                      InitialZoom="15" />
+                    }
+                </MudPaper>
+
+                <!-- Job Info -->
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Job Info</MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.DateRange">
+                            Posted: @_job.CreatedAt.ToString("MMM dd, yyyy")
+                        </MudListItem>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.WorkOutline">
+                            Type: @GetEmploymentTypeName(_job.EmploymentType)
+                        </MudListItem>
+                        @if (_job.PostedBy != null)
+                        {
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Business">
+                                Company: @_job.PostedBy.CompanyName
+                            </MudListItem>
+                        }
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public int JobId { get; set; }
+
+    private Job? _job;
+    private MapComponent? _miniMap;
+    private int _currentUserId = 1; // TODO: Get from auth service
+    private bool _isCompany => _job?.PostedById == _currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _job = await JobService.GetJobByIdAsync(JobId);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _job != null && _miniMap != null)
+        {
+            await Task.Delay(500);
+            if (_job.Latitude.HasValue && _job.Longitude.HasValue)
+            {
+                await _miniMap.AddMarkerAsync(
+                    _job.Id,
+                    _job.Latitude.Value,
+                    _job.Longitude.Value,
+                    _job.Title,
+                    "job"
+                );
+            }
+        }
+    }
+
+    private async Task CloseJob()
+    {
+        if (_job == null) return;
+
+        var success = await JobService.CloseJobAsync(_job.Id);
+
+        if (success)
+        {
+            Snackbar.Add("Position closed successfully", Severity.Success);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Snackbar.Add("Failed to close position", Severity.Error);
+        }
+    }
+
+    private void ReportJob()
+    {
+        Snackbar.Add("Report feature coming soon!", Severity.Info);
+    }
+
+    private string GetEmploymentTypeName(EmploymentType type)
+    {
+        return type switch
+        {
+            EmploymentType.FullTime => "Full-Time",
+            EmploymentType.PartTime => "Part-Time",
+            EmploymentType.Internship => "Internship",
+            EmploymentType.Contract => "Contract",
+            EmploymentType.Temporary => "Temporary",
+            _ => type.ToString()
+        };
+    }
+}

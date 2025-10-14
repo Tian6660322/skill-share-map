@@ -1,0 +1,276 @@
+@page "/task/{TaskId:int}"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@using SkillShareMap.Shared.Components
+@inject ITaskService TaskService
+@inject IWalletService WalletService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Task Details</PageTitle>
+
+@if (_task == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+        <MudGrid>
+            <!-- Main Content -->
+            <MudItem xs="12" md="8">
+                <MudPaper Elevation="2" Class="pa-6">
+                    <!-- Header -->
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <div>
+                            <MudText Typo="Typo.h4" GutterBottom="true">@_task.Title</MudText>
+                            <MudChip T="string" Color="GetStatusColor(_task.Status)" Size="Size.Small">
+                                @_task.Status
+                            </MudChip>
+                        </div>
+                        <CategoryIcon Category="_task.Category" IconSize="Size.Large" />
+                    </div>
+
+                    <MudDivider Class="my-4" />
+
+                    <!-- Posted By -->
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">
+                        <strong>Posted by:</strong>
+                    </MudText>
+                    <div class="d-flex align-center mb-4">
+                        <MudAvatar Color="Color.Primary" Class="mr-2">
+                            @_task.Creator?.Username?.Substring(0, 1).ToUpper()
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.body1">@_task.Creator?.Username</MudText>
+                            @if (_task.Creator != null)
+                            {
+                                <StarRating Rating="_task.Creator.ReputationLevel" ShowRating="true" />
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Details -->
+                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Category:</strong></MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">
+                        <CategoryIcon Category="_task.Category" IconSize="Size.Small" />
+                        @GetCategoryName(_task.Category)
+                    </MudText>
+
+                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Budget:</strong></MudText>
+                    <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Success">${_task.Budget}</MudText>
+
+                    @if (_task.Deadline.HasValue)
+                    {
+                        <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Deadline:</strong></MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">
+                            @_task.Deadline.Value.ToString("MMM dd, yyyy")
+                        </MudText>
+                    }
+
+                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Description:</strong></MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">
+                        @_task.Description
+                    </MudText>
+
+                    <!-- Action Buttons -->
+                    <MudDivider Class="my-4" />
+
+                    @if (_isCreator)
+                    {
+                        <div class="d-flex gap-2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       Href="@($"/task/{_task.Id}/edit")">
+                                Edit
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Cancel"
+                                       OnClick="CancelTask">
+                                Cancel Task
+                            </MudButton>
+                        </div>
+                    }
+                    else if (_task.Status == SkillTaskStatus.Assigned && _task.AssignedToId != _currentUserId)
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            This task has been assigned to another user.
+                        </MudAlert>
+                    }
+                    else if (_task.Status == SkillTaskStatus.Open)
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Chat"
+                                       Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")">
+                                Open Chat
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.Check"
+                                       OnClick="AcceptTask">
+                                Accept Task
+                            </MudButton>
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Report"
+                                       OnClick="ReportTask">
+                                Report
+                            </MudButton>
+                        </div>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <!-- Sidebar -->
+            <MudItem xs="12" md="4">
+                <!-- Location Map -->
+                <MudPaper Elevation="2" Class="pa-4 mb-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Location</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-3">@_task.LocationAddress</MudText>
+
+                    @if (_task.Latitude.HasValue && _task.Longitude.HasValue)
+                    {
+                        <MapComponent @ref="_miniMap"
+                                      MapId="taskMap"
+                                      Height="250px"
+                                      InitialLat="@_task.Latitude.Value"
+                                      InitialLng="@_task.Longitude.Value"
+                                      InitialZoom="15" />
+                    }
+                </MudPaper>
+
+                <!-- Task Stats -->
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Task Info</MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.DateRange">
+                            Posted: @_task.CreatedAt.ToString("MMM dd")
+                        </MudListItem>
+                        @if (_task.AssignedTo != null)
+                        {
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
+                                Assigned to: @_task.AssignedTo.Username
+                            </MudListItem>
+                        }
+                        @if (_task.IsDepositPaid)
+                        {
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                                Deposit Paid: $@_task.DepositAmount
+                            </MudListItem>
+                        }
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public int TaskId { get; set; }
+
+    private SkillTask? _task;
+    private MapComponent? _miniMap;
+    private int _currentUserId = 1; // TODO: Get from auth service
+    private bool _isCreator => _task?.CreatorId == _currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _task = await TaskService.GetTaskByIdAsync(TaskId);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _task != null && _miniMap != null)
+        {
+            await Task.Delay(500);
+            if (_task.Latitude.HasValue && _task.Longitude.HasValue)
+            {
+                await _miniMap.AddMarkerAsync(
+                    _task.Id,
+                    _task.Latitude.Value,
+                    _task.Longitude.Value,
+                    _task.Title,
+                    "task"
+                );
+            }
+        }
+    }
+
+    private async Task AcceptTask()
+    {
+        if (_task == null) return;
+
+        // Assign task
+        var success = await TaskService.AssignTaskAsync(_task.Id, _currentUserId);
+
+        if (success)
+        {
+            // Calculate 10% deposit
+            var depositAmount = _task.Budget * 0.1m;
+
+            // Process deposit
+            await WalletService.ProcessDepositAsync(_task.CreatorId, _task.Id, depositAmount);
+
+            Snackbar.Add("Task accepted! Deposit processed.", Severity.Success);
+            Navigation.NavigateTo($"/task-room/{_task.Id}");
+        }
+        else
+        {
+            Snackbar.Add("Failed to accept task", Severity.Error);
+        }
+    }
+
+    private async Task CancelTask()
+    {
+        if (_task == null) return;
+
+        var success = await TaskService.CancelTaskAsync(_task.Id);
+
+        if (success)
+        {
+            Snackbar.Add("Task cancelled successfully", Severity.Success);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Snackbar.Add("Failed to cancel task", Severity.Error);
+        }
+    }
+
+    private void ReportTask()
+    {
+        Snackbar.Add("Report feature coming soon!", Severity.Info);
+    }
+
+    private string GetCategoryName(TaskCategory category)
+    {
+        return category switch
+        {
+            TaskCategory.StudyHelp => "Study Help",
+            TaskCategory.TechHelp => "Tech Help",
+            TaskCategory.CreativeDesign => "Creative Design",
+            TaskCategory.PhotoVideo => "Photo & Video",
+            TaskCategory.WritingEditing => "Writing & Editing",
+            TaskCategory.LanguageHelp => "Language Help",
+            _ => category.ToString()
+        };
+    }
+
+    private Color GetStatusColor(SkillTaskStatus status)
+    {
+        return status switch
+        {
+            SkillTaskStatus.Open => Color.Success,
+            SkillTaskStatus.Assigned => Color.Info,
+            SkillTaskStatus.PendingDeposit => Color.Warning,
+            SkillTaskStatus.Completed => Color.Default,
+            SkillTaskStatus.Cancelled => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

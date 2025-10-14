@@ -1,34 +1,67 @@
 ﻿@inherits LayoutComponentBase
 @namespace SkillShareMap.Shared
+@inject NavigationManager Navigation
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Skill Share Map</MudText>
+    <MudAppBar Elevation="2" Color="Color.Primary">
+        <!-- Logo -->
+        <MudIconButton Icon="@Icons.Material.Filled.Map" Color="Color.Inherit" Edge="Edge.Start" Href="/" />
+        <MudText Typo="Typo.h6" Class="ml-2">Skill Share Map</MudText>
+
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Edge="Edge.End" />
+
+        <!-- The Classroom -->
+        <MudButton Href="/classroom"
+                   StartIcon="@Icons.Material.Filled.School"
+                   Color="Color.Inherit"
+                   Variant="Variant.Text">
+            The Classroom
+        </MudButton>
+
+        <!-- Post a Task -->
+        <MudButton Href="/post-task"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Color="Color.Secondary"
+                   Variant="Variant.Filled"
+                   Class="ml-4">
+            Post a Task
+        </MudButton>
+
+        <!-- Profile -->
+        <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
+                 Color="Color.Inherit"
+                 AnchorOrigin="Origin.BottomRight"
+                 Class="ml-4">
+            <MudMenuItem Href="/profile" Icon="@Icons.Material.Filled.Person">My Profile</MudMenuItem>
+            <MudMenuItem Href="/wallet" Icon="@Icons.Material.Filled.AccountBalanceWallet">Wallet</MudMenuItem>
+            <MudDivider />
+            <MudMenuItem OnClick="Logout" Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
+        </MudMenu>
     </MudAppBar>
-    
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <NavMenu />
-    </MudDrawer>
-    
+
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="my-4 pt-4">
-            @Body
-        </MudContainer>
+        @Body
     </MudMainContent>
 </MudLayout>
 
 @code {
-    private bool _drawerOpen = true;
-
-    void DrawerToggle()
+    private MudTheme _theme = new MudTheme()
     {
-        _drawerOpen = !_drawerOpen;
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#1976d2",
+            Secondary = "#ff9800",
+            AppbarBackground = "#1976d2"
+        }
+    };
+
+    private void Logout()
+    {
+        // TODO: Implement logout logic
+        Navigation.NavigateTo("/login");
     }
 }

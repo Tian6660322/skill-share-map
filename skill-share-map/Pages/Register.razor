@@ -1,0 +1,205 @@
+@page "/register"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-8">
+    <MudPaper Elevation="4" Class="pa-6">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6">Create Account</MudText>
+
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @bind-ActivePanelIndex="_activeStep">
+            <!-- Tab 1: Role Selection -->
+            <MudTabPanel Text="Role" Icon="@Icons.Material.Filled.Person">
+                <MudText Typo="Typo.h6" Class="mb-4">Select Your Role</MudText>
+                <MudRadioGroup @bind-SelectedOption="_newUser.Role" T="UserRole">
+                    <MudRadio T="UserRole" Option="@UserRole.Student" Color="Color.Primary">
+                        <MudText><strong>Student</strong> - Learn skills and earn by helping others</MudText>
+                    </MudRadio>
+                    <MudRadio T="UserRole" Option="@UserRole.Company" Color="Color.Secondary">
+                        <MudText><strong>Company</strong> - Find talented students for projects</MudText>
+                    </MudRadio>
+                    <MudRadio T="UserRole" Option="@UserRole.School" Color="Color.Tertiary">
+                        <MudText><strong>School</strong> - Post educational opportunities</MudText>
+                    </MudRadio>
+                </MudRadioGroup>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => _activeStep = 1">
+                    Next
+                </MudButton>
+            </MudTabPanel>
+
+            <!-- Tab 2: Basic Info -->
+            <MudTabPanel Text="Info" Icon="@Icons.Material.Filled.Info">
+                @if (_newUser.Role == UserRole.Student)
+                {
+                    <MudText Typo="Typo.h6" Class="mb-4">Student Information</MudText>
+                    <MudTextField @bind-Value="_newUser.Username" Label="Username" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_newUser.Email" Label="Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_newUser.FirstName" Label="First Name" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_newUser.LastName" Label="Last Name" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_newUser.SchoolName" Label="School Name" Variant="Variant.Outlined" Class="mb-3" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6" Class="mb-4">@GetRoleName() Information</MudText>
+                    <MudTextField @bind-Value="_newUser.Username" Label="Username" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_newUser.Email" Label="Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_newUser.CompanyName" Label="@($"{GetRoleName()} Name")" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_newUser.WebsiteUrl" Label="Website URL" Variant="Variant.Outlined" Class="mb-3" />
+                    <MudTextField @bind-Value="_newUser.CompanyDescription" Label="Description" Lines="3" Variant="Variant.Outlined" />
+                }
+
+                <div class="d-flex gap-2 mt-4">
+                    <MudButton Variant="Variant.Text" OnClick="() => _activeStep = 0">Back</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _activeStep = 2">Next</MudButton>
+                </div>
+            </MudTabPanel>
+
+            <!-- Tab 3: Categories (Students only) -->
+            <MudTabPanel Text="Skills" Icon="@Icons.Material.Filled.Category">
+                @if (_newUser.Role == UserRole.Student)
+                {
+                    <MudText Typo="Typo.h6" Class="mb-4">Choose Your Skill Categories</MudText>
+                    @foreach (var category in Enum.GetValues<TaskCategory>())
+                    {
+                        <MudCheckBox T="bool" @bind-Checked="@_selectedCategories[category]" Color="Color.Primary" Class="mb-2">
+                            @GetCategoryDisplayName(category)
+                        </MudCheckBox>
+                    }
+                }
+                else
+                {
+                    <MudText Typo="Typo.body1">Categories selection is for students only.</MudText>
+                }
+
+                <div class="d-flex gap-2 mt-4">
+                    <MudButton Variant="Variant.Text" OnClick="() => _activeStep = 1">Back</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _activeStep = 3">Next</MudButton>
+                </div>
+            </MudTabPanel>
+
+            <!-- Tab 4: Location -->
+            <MudTabPanel Text="Location" Icon="@Icons.Material.Filled.LocationOn">
+                <MudText Typo="Typo.h6" Class="mb-4">Set Your Home Base</MudText>
+                <MudTextField @bind-Value="_newUser.HomeBaseAddress"
+                              Label="Address"
+                              Variant="Variant.Outlined"
+                              FullWidth="true"
+                              Class="mb-3" />
+
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="_newUser.HomeBaseLatitude"
+                                         Label="Latitude"
+                                         Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="_newUser.HomeBaseLongitude"
+                                         Label="Longitude"
+                                         Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+
+                <div class="d-flex gap-2 mt-4">
+                    <MudButton Variant="Variant.Text" OnClick="() => _activeStep = 2">Back</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleRegister" Disabled="_isLoading">
+                        @if (_isLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        }
+                        else
+                        {
+                            <text>Complete Registration</text>
+                        }
+                    </MudButton>
+                </div>
+            </MudTabPanel>
+        </MudTabs>
+
+        <MudButton Href="/login" Variant="Variant.Text" Class="mt-4" FullWidth="true">
+            Already have an account? Login
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private int _activeStep = 0;
+    private User _newUser = new User();
+    private string _password = "";
+    private bool _isLoading = false;
+    private Dictionary<TaskCategory, bool> _selectedCategories = new();
+
+    protected override void OnInitialized()
+    {
+        foreach (var category in Enum.GetValues<TaskCategory>())
+        {
+            _selectedCategories[category] = false;
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        _isLoading = true;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_newUser.Username) || string.IsNullOrWhiteSpace(_password))
+            {
+                Snackbar.Add("Please fill in all required fields", Severity.Warning);
+                _isLoading = false;
+                return;
+            }
+
+            if (_newUser.Role == UserRole.Student)
+            {
+                _newUser.SelectedCategories = _selectedCategories
+                    .Where(x => x.Value)
+                    .Select(x => x.Key)
+                    .ToList();
+            }
+
+            var user = await AuthService.RegisterAsync(_newUser, _password);
+
+            if (user != null)
+            {
+                Snackbar.Add("Registration successful! Please login.", Severity.Success);
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                Snackbar.Add("Username already exists", Severity.Error);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("An error occurred during registration", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetRoleName()
+    {
+        return _newUser.Role == UserRole.Company ? "Company" : "School";
+    }
+
+    private string GetCategoryDisplayName(TaskCategory category)
+    {
+        return category switch
+        {
+            TaskCategory.StudyHelp => "Study Help",
+            TaskCategory.TechHelp => "Tech Help",
+            TaskCategory.CreativeDesign => "Creative Design",
+            TaskCategory.PhotoVideo => "Photo & Video",
+            TaskCategory.WritingEditing => "Writing & Editing",
+            TaskCategory.LanguageHelp => "Language Help",
+            _ => category.ToString()
+        };
+    }
+}

@@ -1,0 +1,24 @@
+@namespace SkillShareMap.Shared.Components
+@using SkillShareMap.Models
+
+<MudChip T="string" Color="@GetBadgeColor()" Size="Size.Small" Icon="@Icons.Material.Filled.EmojiEvents">
+    @Tier.ToString()
+</MudChip>
+
+@code {
+    [Parameter]
+    public BadgeTier Tier { get; set; }
+
+    private Color GetBadgeColor()
+    {
+        return Tier switch
+        {
+            BadgeTier.Newbie => Color.Default,
+            BadgeTier.Skilled => Color.Info,
+            BadgeTier.Advanced => Color.Success,
+            BadgeTier.Expert => Color.Warning,
+            BadgeTier.Master => Color.Secondary,
+            _ => Color.Default
+        };
+    }
+}
