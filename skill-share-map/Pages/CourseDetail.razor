@@ -1,0 +1,185 @@
+@page "/course/{CourseId:int}"
+@using SkillShareMap.Models
+@using SkillShareMap.Services
+@inject ICourseService CourseService
+@inject NavigationManager Navigation
+
+<PageTitle>Course Details</PageTitle>
+
+@if (_isLoading)
+{
+    <div class="d-flex justify-center align-center" style="min-height: 300px;">
+        <MudProgressCircular Size="Size.Large" Indeterminate="true" />
+    </div>
+}
+else if (_course is null)
+{
+    <MudContainer MaxWidth="MaxWidth.Small" Class="my-8">
+        <MudPaper Elevation="2" Class="pa-6 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Color="Color.Error" Class="mb-3" />
+            <MudText Typo="Typo.h5" GutterBottom="true">Course not found</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                The course you are looking for is no longer available.
+            </MudText>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="GoBack">
+                Back to Classroom
+            </MudButton>
+        </MudPaper>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="my-8">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="GoBack"
+                   Class="mb-4">
+            Back to Classroom
+        </MudButton>
+
+        <MudPaper Elevation="3" Class="pa-6">
+            <MudGrid>
+                <MudItem xs="12" md="5">
+                    @if (!string.IsNullOrWhiteSpace(_course.ImageUrl))
+                    {
+                        <img src="@_course.ImageUrl"
+                             alt="@_course.Title"
+                             style="width: 100%; border-radius: 12px; object-fit: cover; max-height: 280px;" />
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0"
+                                  Class="d-flex align-center justify-center"
+                                  Style="height: 280px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <MudIcon Icon="@GetCategoryIcon(_course.Category)" Size="Size.Large" Color="Color.Surface" />
+                        </MudPaper>
+                    }
+                </MudItem>
+
+                <MudItem xs="12" md="7">
+                    <MudText Typo="Typo.h4" GutterBottom="true">@_course.Title</MudText>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">
+                            @GetCategoryName(_course.Category)
+                        </MudChip>
+                        <MudChip T="string" Color="@GetDifficultyColor(_course.Difficulty)" Size="Size.Small">
+                            @_course.Difficulty
+                        </MudChip>
+                        <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIcon Icon="@GetTypeIcon(_course.Type)" Size="Size.Small" Class="mr-1" />
+                            @GetTypeName(_course.Type)
+                        </MudChip>
+                    </div>
+
+                    <MudDivider Class="my-3" />
+
+                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Overview</strong></MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">
+                        @_course.Description
+                    </MudText>
+
+                    <MudGrid Spacing="2" Class="mb-4">
+                        <MudItem xs="12" sm="6">
+                            <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
+                                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Class="mr-1" />
+                                    Instructor
+                                </MudText>
+                                <MudText Typo="Typo.body1">@(_course.InstructorName ?? "TBA")</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
+                                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
+                                    <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="mr-1" />
+                                    Duration
+                                </MudText>
+                                <MudText Typo="Typo.body1">@(_course.Duration ?? "TBA")</MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (!string.IsNullOrWhiteSpace(_course.ExternalUrl))
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Launch"
+                                   Href="@_course.ExternalUrl"
+                                   Target="_blank">
+                            Open Learning Resource
+                        </MudButton>
+                    }
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public int CourseId { get; set; }
+
+    private Course? _course;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _course = await CourseService.GetCourseByIdAsync(CourseId);
+        _isLoading = false;
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/classroom");
+
+    private string GetCategoryName(TaskCategory category) => category switch
+    {
+        TaskCategory.StudyHelp => "Study Help",
+        TaskCategory.TechHelp => "Tech Help",
+        TaskCategory.CreativeDesign => "Creative Design",
+        TaskCategory.PhotoVideo => "Photo & Video",
+        TaskCategory.WritingEditing => "Writing & Editing",
+        TaskCategory.LanguageHelp => "Language Help",
+        _ => category.ToString()
+    };
+
+    private string GetCategoryIcon(TaskCategory category) => category switch
+    {
+        TaskCategory.StudyHelp => Icons.Material.Filled.MenuBook,
+        TaskCategory.TechHelp => Icons.Material.Filled.Computer,
+        TaskCategory.CreativeDesign => Icons.Material.Filled.Brush,
+        TaskCategory.PhotoVideo => Icons.Material.Filled.PhotoCamera,
+        TaskCategory.WritingEditing => Icons.Material.Filled.Edit,
+        TaskCategory.LanguageHelp => Icons.Material.Filled.Translate,
+        _ => Icons.Material.Filled.Category
+    };
+
+    private string GetTypeName(CourseType type) => type switch
+    {
+        CourseType.OnlineCourse => "Online Course",
+        CourseType.Workshop => "Workshop",
+        CourseType.WebSeminar => "Web Seminar",
+        CourseType.Tutorial => "Tutorial",
+        _ => type.ToString()
+    };
+
+    private string GetTypeIcon(CourseType type) => type switch
+    {
+        CourseType.OnlineCourse => Icons.Material.Filled.OndemandVideo,
+        CourseType.Workshop => Icons.Material.Filled.Groups,
+        CourseType.WebSeminar => Icons.Material.Filled.Videocam,
+        CourseType.Tutorial => Icons.Material.Filled.PlayCircle,
+        _ => Icons.Material.Filled.School
+    };
+
+    private Color GetDifficultyColor(DifficultyLevel difficulty) => difficulty switch
+    {
+        DifficultyLevel.Beginner => Color.Success,
+        DifficultyLevel.Intermediate => Color.Warning,
+        DifficultyLevel.Advanced => Color.Error,
+        DifficultyLevel.Expert => Color.Error,
+        _ => Color.Default
+    };
+}

@@ -4,6 +4,7 @@
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject UserState UserState
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-8">
     <MudPaper Elevation="4" Class="pa-6">
@@ -135,6 +136,12 @@
 
     protected override void OnInitialized()
     {
+        if (UserState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
         foreach (var category in Enum.GetValues<TaskCategory>())
         {
             _selectedCategories[category] = false;
@@ -166,8 +173,12 @@
 
             if (user != null)
             {
-                Snackbar.Add("Registration successful! Please login.", Severity.Success);
-                Navigation.NavigateTo("/login");
+                // Fetch the full user with related data for session storage
+                var signedInUser = await AuthService.LoginAsync(_newUser.Username, _password);
+                UserState.SetUser(signedInUser ?? user);
+
+                Snackbar.Add("Registration successful! You're now signed in.", Severity.Success);
+                Navigation.NavigateTo("/");
             }
             else
             {

@@ -1,6 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 @namespace SkillShareMap.Shared
 @inject NavigationManager Navigation
+@inject SkillShareMap.Services.UserState UserState
 
 <MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
@@ -15,33 +17,51 @@
 
         <MudSpacer />
 
-        <!-- The Classroom -->
-        <MudButton Href="/classroom"
-                   StartIcon="@Icons.Material.Filled.School"
-                   Color="Color.Inherit"
-                   Variant="Variant.Text">
-            The Classroom
-        </MudButton>
+        @if (UserState.IsAuthenticated)
+        {
+            <!-- The Classroom -->
+            <MudButton Href="/classroom"
+                       StartIcon="@Icons.Material.Filled.School"
+                       Color="Color.Inherit"
+                       Variant="Variant.Text">
+                The Classroom
+            </MudButton>
 
-        <!-- Post a Task -->
-        <MudButton Href="/post-task"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   Color="Color.Secondary"
-                   Variant="Variant.Filled"
-                   Class="ml-4">
-            Post a Task
-        </MudButton>
+            <!-- Post a Task -->
+            <MudButton Href="/post-task"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Color="Color.Secondary"
+                       Variant="Variant.Filled"
+                       Class="ml-4">
+                Post a Task
+            </MudButton>
 
-        <!-- Profile -->
-        <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
-                 Color="Color.Inherit"
-                 AnchorOrigin="Origin.BottomRight"
-                 Class="ml-4">
-            <MudMenuItem Href="/profile" Icon="@Icons.Material.Filled.Person">My Profile</MudMenuItem>
-            <MudMenuItem Href="/wallet" Icon="@Icons.Material.Filled.AccountBalanceWallet">Wallet</MudMenuItem>
-            <MudDivider />
-            <MudMenuItem OnClick="Logout" Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
-        </MudMenu>
+            <!-- Profile -->
+            <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
+                     Color="Color.Inherit"
+                     AnchorOrigin="Origin.BottomRight"
+                     Class="ml-4">
+                <MudMenuItem Href="/profile" Icon="@Icons.Material.Filled.Person">My Profile</MudMenuItem>
+                <MudMenuItem Href="/wallet" Icon="@Icons.Material.Filled.AccountBalanceWallet">Wallet</MudMenuItem>
+                <MudDivider />
+                <MudMenuItem OnClick="Logout" Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
+            </MudMenu>
+        }
+        else
+        {
+            <MudButton Href="/login"
+                       Color="Color.Inherit"
+                       Variant="Variant.Text">
+                Login
+            </MudButton>
+
+            <MudButton Href="/register"
+                       Color="Color.Secondary"
+                       Variant="Variant.Filled"
+                       Class="ml-2">
+                Sign Up
+            </MudButton>
+        }
     </MudAppBar>
 
     <MudMainContent>
@@ -60,9 +80,60 @@
         }
     };
 
+    protected override void OnInitialized()
+    {
+        UserState.OnChange += HandleUserStateChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        EnsureAuthenticated();
+    }
+
+    private void HandleUserStateChanged()
+    {
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+            EnsureAuthenticated();
+        });
+    }
+
+    private void EnsureAuthenticated()
+    {
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+
+        if (IsPublicPage(relativePath))
+        {
+            return;
+        }
+
+        if (!UserState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+        }
+    }
+
+    private static bool IsPublicPage(string? relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return false;
+        }
+
+        relativePath = relativePath.TrimStart('/');
+        return relativePath.StartsWith("login", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("register", StringComparison.OrdinalIgnoreCase);
+    }
+
     private void Logout()
     {
-        // TODO: Implement logout logic
+        UserState.SetUser(null);
         Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        UserState.OnChange -= HandleUserStateChanged;
     }
 }

@@ -26,6 +26,7 @@ builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<IXpService, XpService>();
 builder.Services.AddScoped<IReputationService, ReputationService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<UserState>();
 
 // Add HTTP client for external APIs
 builder.Services.AddHttpClient();

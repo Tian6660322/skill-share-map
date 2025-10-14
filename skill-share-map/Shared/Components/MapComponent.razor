@@ -1,9 +1,12 @@
 @namespace SkillShareMap.Shared.Components
+@implements IDisposable
 @inject IJSRuntime JS
 
 <div id="@MapId" style="height: @Height; width: 100%;"></div>
 
 @code {
+    private DotNetObjectReference<MapComponent>? _dotNetRef;
+
     [Parameter]
     public string MapId { get; set; } = "map";
 
@@ -26,7 +29,8 @@
     {
         if (firstRender)
         {
-            await JS.InvokeVoidAsync("mapHelper.initMap", MapId, InitialLat, InitialLng, InitialZoom);
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("mapHelper.initMap", MapId, InitialLat, InitialLng, InitialZoom, _dotNetRef);
         }
     }
 
@@ -50,10 +54,19 @@
         await JS.InvokeVoidAsync("mapHelper.setView", lat, lng, zoom);
     }
 
-    [JSInvokable("OnMarkerClicked")]
-    public static async Task OnMarkerClicked(int markerId)
+    [JSInvokable]
+    public Task HandleMarkerClick(int markerId)
     {
-        // This will be handled by the parent component
-        Console.WriteLine($"Marker clicked: {markerId}");
+        if (OnMarkerClick.HasDelegate)
+        {
+            return OnMarkerClick.InvokeAsync(markerId);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _dotNetRef?.Dispose();
     }
 }

@@ -3,6 +3,7 @@
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject UserState UserState
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="min-height: 100vh;">
     <MudPaper Elevation="4" Class="pa-8" Style="width: 100%; max-width: 500px;">
@@ -71,6 +72,14 @@
     private string _password = "";
     private bool _isLoading = false;
 
+    protected override void OnInitialized()
+    {
+        if (UserState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
     private async Task HandleLogin()
     {
         _isLoading = true;
@@ -82,7 +91,7 @@
             if (user != null)
             {
                 Snackbar.Add($"Welcome back, {user.Username}!", Severity.Success);
-                // TODO: Store user session
+                UserState.SetUser(user);
                 Navigation.NavigateTo("/");
             }
             else
@@ -90,7 +99,7 @@
                 Snackbar.Add("Invalid username or password", Severity.Error);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             Snackbar.Add("An error occurred during login", Severity.Error);
         }

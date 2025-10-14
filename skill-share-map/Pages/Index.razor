@@ -75,6 +75,7 @@
         <!-- Main Map Area -->
         <MudItem xs="12" md="9" Style="height: 100%; position: relative;">
             <MapComponent @ref="_mapComponent"
+                          OnMarkerClick="HandleMarkerClick"
                           MapId="mainMap"
                           Height="100%"
                           InitialLat="-33.8688"
@@ -259,6 +260,8 @@
         _selectedCategory = null;
         _selectedStatusChip = null;
         _distanceKm = 10;
+        _selectedTask = null;
+        _selectedJob = null;
         await ApplyFilters();
     }
 
@@ -287,5 +290,21 @@
             SkillTaskStatus.Cancelled => Color.Error,
             _ => Color.Default
         };
+    }
+
+    private Task HandleMarkerClick(int markerId)
+    {
+        if (_displayType == "tasks")
+        {
+            _selectedTask = _tasks.FirstOrDefault(t => t.Id == markerId);
+            _selectedJob = null;
+        }
+        else
+        {
+            _selectedJob = _jobs.FirstOrDefault(j => j.Id == markerId);
+            _selectedTask = null;
+        }
+
+        return InvokeAsync(StateHasChanged);
     }
 }

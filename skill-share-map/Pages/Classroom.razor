@@ -87,24 +87,22 @@
                             </div>
                         </MudCardContent>
 
-                        <MudCardActions>
+                        <MudCardActions Class="d-flex gap-2">
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Info"
+                                       Href="@($"/course/{course.Id}")">
+                                More Info
+                            </MudButton>
+
                             @if (!string.IsNullOrEmpty(course.ExternalUrl))
                             {
                                 <MudButton Variant="Variant.Text"
-                                           Color="Color.Primary"
+                                           Color="Color.Secondary"
                                            StartIcon="@Icons.Material.Filled.Launch"
                                            Href="@course.ExternalUrl"
                                            Target="_blank">
-                                    View Course
-                                </MudButton>
-                            }
-                            else
-                            {
-                                <MudButton Variant="Variant.Text"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.Info"
-                                           Disabled="true">
-                                    More Info
+                                    Visit Resource
                                 </MudButton>
                             }
                         </MudCardActions>
