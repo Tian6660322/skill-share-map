@@ -1,0 +1,225 @@
+@page "/classroom"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject ICourseService CourseService
+@inject NavigationManager Navigation
+
+<PageTitle>The Classroom - Skill Share Map</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-8">
+    <MudText Typo="Typo.h3" GutterBottom="true">
+        <MudIcon Icon="@Icons.Material.Filled.School" Class="mr-2" />
+        The Classroom
+    </MudText>
+    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">
+        Discover courses, workshops, and learning resources to enhance your skills
+    </MudText>
+
+    <!-- Category Filter -->
+    <MudPaper Elevation="2" Class="pa-4 mb-6">
+        <MudText Typo="Typo.subtitle1" Class="mb-3">Filter by Category</MudText>
+        <MudChipSet T="string" @bind-SelectedChip="_selectedCategoryChip" Filter="true" Mandatory="false">
+            <MudChip T="string" Text="All" Default="true" Color="Color.Primary" />
+            @foreach (var category in Enum.GetValues<TaskCategory>())
+            {
+                <MudChip T="string" Text="@GetCategoryName(category)" Value="@category.ToString()" Color="Color.Primary" />
+            }
+        </MudChipSet>
+    </MudPaper>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center align-center" style="min-height: 400px;">
+            <MudProgressCircular Size="Size.Large" Indeterminate="true" />
+        </div>
+    }
+    else if (_filteredCourses.Any())
+    {
+        <MudGrid>
+            @foreach (var course in _filteredCourses)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="3" Class="h-100">
+                        @if (!string.IsNullOrEmpty(course.ImageUrl))
+                        {
+                            <MudCardMedia Image="@course.ImageUrl" Height="200" />
+                        }
+                        else
+                        {
+                            <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                                <MudIcon Icon="@GetCategoryIcon(course.Category)" Size="Size.Large" Color="Color.Surface" />
+                            </div>
+                        }
+
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mb-2">@course.Title</MudText>
+
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="mb-2">
+                                @GetCategoryName(course.Category)
+                            </MudChip>
+
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                @course.Description
+                            </MudText>
+
+                            <MudDivider Class="my-2" />
+
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Class="mr-2" />
+                                    <MudText Typo="Typo.caption">@course.InstructorName</MudText>
+                                </div>
+
+                                <div class="d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="mr-2" />
+                                    <MudText Typo="Typo.caption">@course.Duration</MudText>
+                                </div>
+
+                                <div class="d-flex align-center">
+                                    <MudIcon Icon="@GetTypeIcon(course.Type)" Size="Size.Small" Class="mr-2" />
+                                    <MudText Typo="Typo.caption">@GetTypeName(course.Type)</MudText>
+                                </div>
+
+                                <MudChip T="string" Size="Size.Small"
+                                         Color="@GetDifficultyColor(course.Difficulty)">
+                                    @course.Difficulty
+                                </MudChip>
+                            </div>
+                        </MudCardContent>
+
+                        <MudCardActions>
+                            @if (!string.IsNullOrEmpty(course.ExternalUrl))
+                            {
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Launch"
+                                           Href="@course.ExternalUrl"
+                                           Target="_blank">
+                                    View Course
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Info"
+                                           Disabled="true">
+                                    More Info
+                                </MudButton>
+                            }
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Class="pa-8 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+            <MudText Typo="Typo.h6" Color="Color.Secondary">No courses found</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Try adjusting your filters</MudText>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private List<Course> _courses = new();
+    private List<Course> _filteredCourses = new();
+    private MudChip<string> _selectedCategoryChip;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCourses();
+    }
+
+    private async Task LoadCourses()
+    {
+        _isLoading = true;
+        try
+        {
+            _courses = await CourseService.GetAllCoursesAsync();
+            _filteredCourses = _courses;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnCategoryChanged(MudChip<string> chip)
+    {
+        if (chip?.Text == "All" || chip == null)
+        {
+            _filteredCourses = _courses;
+        }
+        else if (Enum.TryParse<TaskCategory>(chip.Value?.ToString(), out var category))
+        {
+            _filteredCourses = _courses.Where(c => c.Category == category).ToList();
+        }
+    }
+
+    private string GetCategoryName(TaskCategory category)
+    {
+        return category switch
+        {
+            TaskCategory.StudyHelp => "Study Help",
+            TaskCategory.TechHelp => "Tech Help",
+            TaskCategory.CreativeDesign => "Creative Design",
+            TaskCategory.PhotoVideo => "Photo & Video",
+            TaskCategory.WritingEditing => "Writing & Editing",
+            TaskCategory.LanguageHelp => "Language Help",
+            _ => category.ToString()
+        };
+    }
+
+    private string GetCategoryIcon(TaskCategory category)
+    {
+        return category switch
+        {
+            TaskCategory.StudyHelp => Icons.Material.Filled.MenuBook,
+            TaskCategory.TechHelp => Icons.Material.Filled.Computer,
+            TaskCategory.CreativeDesign => Icons.Material.Filled.Brush,
+            TaskCategory.PhotoVideo => Icons.Material.Filled.PhotoCamera,
+            TaskCategory.WritingEditing => Icons.Material.Filled.Edit,
+            TaskCategory.LanguageHelp => Icons.Material.Filled.Translate,
+            _ => Icons.Material.Filled.Category
+        };
+    }
+
+    private string GetTypeName(CourseType type)
+    {
+        return type switch
+        {
+            CourseType.OnlineCourse => "Online Course",
+            CourseType.Workshop => "Workshop",
+            CourseType.WebSeminar => "Web Seminar",
+            CourseType.Tutorial => "Tutorial",
+            _ => type.ToString()
+        };
+    }
+
+    private string GetTypeIcon(CourseType type)
+    {
+        return type switch
+        {
+            CourseType.OnlineCourse => Icons.Material.Filled.OndemandVideo,
+            CourseType.Workshop => Icons.Material.Filled.Groups,
+            CourseType.WebSeminar => Icons.Material.Filled.Videocam,
+            CourseType.Tutorial => Icons.Material.Filled.PlayCircle,
+            _ => Icons.Material.Filled.School
+        };
+    }
+
+    private Color GetDifficultyColor(DifficultyLevel difficulty)
+    {
+        return difficulty switch
+        {
+            DifficultyLevel.Beginner => Color.Success,
+            DifficultyLevel.Intermediate => Color.Warning,
+            DifficultyLevel.Advanced => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

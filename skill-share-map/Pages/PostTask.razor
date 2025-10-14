@@ -1,0 +1,246 @@
+@page "/post-task"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject ITaskService TaskService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Post a Task - Skill Share Map</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+    <MudPaper Elevation="3" Class="pa-6">
+        <MudText Typo="Typo.h4" GutterBottom="true">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />
+            Post a New Task
+        </MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-6">
+            Share your skills or request help from the community
+        </MudText>
+
+        <MudForm @ref="_form" @bind-IsValid="@_formValid">
+            <!-- Title -->
+            <MudTextField @bind-Value="_task.Title"
+                          Label="Task Title"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Title is required"
+                          Counter="100"
+                          MaxLength="100"
+                          
+                          Class="mb-4" />
+
+            <!-- Description -->
+            <MudTextField @bind-Value="_task.Description"
+                          Label="Description"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Description is required"
+                          Lines="5"
+                          Counter="500"
+                          MaxLength="500"
+                          
+                          Class="mb-4" />
+
+            <!-- Category -->
+            <MudSelect @bind-Value="_task.Category"
+                       Label="Category"
+                       Variant="Variant.Outlined"
+                       Required="true"
+                       
+                       Class="mb-4">
+                @foreach (var category in Enum.GetValues<TaskCategory>())
+                {
+                    <MudSelectItem Value="@category">@GetCategoryName(category)</MudSelectItem>
+                }
+            </MudSelect>
+
+            <!-- Budget -->
+            <MudNumericField @bind-Value="_task.Budget"
+                             Label="Budget ($)"
+                             Variant="Variant.Outlined"
+                             Required="true"
+                             Min="0"
+                             Step="10"
+                             
+                             Class="mb-4"
+                             Adornment="Adornment.Start"
+                             AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+
+            <!-- Deadline -->
+            <MudDatePicker @bind-Date="_deadline"
+                           Label="Deadline"
+                           Variant="Variant.Outlined"
+                           MinDate="DateTime.Today"
+                           Required="true"
+                           
+                           Class="mb-4" />
+
+            <!-- Location -->
+            <MudText Typo="Typo.h6" Class="mt-6 mb-4">Location</MudText>
+
+            <MudTextField @bind-Value="_task.LocationAddress"
+                          Label="Address"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Location is required"
+                          
+                          Class="mb-2" />
+
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="_task.Latitude"
+                                     Label="Latitude"
+                                     Variant="Variant.Outlined"
+                                     Format="N6"
+                                      />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="_task.Longitude"
+                                     Label="Longitude"
+                                     Variant="Variant.Outlined"
+                                     Format="N6"
+                                      />
+                </MudItem>
+            </MudGrid>
+
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Info"
+                       StartIcon="@Icons.Material.Filled.MyLocation"
+                       OnClick="GetCurrentLocation"
+                       Class="mt-2 mb-4"
+                       Disabled="_isLoadingLocation">
+                @if (_isLoadingLocation)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <text>Getting location...</text>
+                }
+                else
+                {
+                    <text>Use Current Location</text>
+                }
+            </MudButton>
+
+            <!-- Buttons -->
+            <MudDivider Class="my-6" />
+
+            <div class="d-flex justify-space-between">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.Cancel"
+                           OnClick="Cancel">
+                    Cancel
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           OnClick="SubmitTask"
+                           Disabled="!_formValid || _isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <text>Posting...</text>
+                    }
+                    else
+                    {
+                        <text>Post Task</text>
+                    }
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm _form;
+    private bool _formValid;
+    private bool _isSubmitting;
+    private bool _isLoadingLocation;
+    private DateTime? _deadline = DateTime.Today.AddDays(7);
+
+    private SkillTask _task = new SkillTask
+    {
+        Category = TaskCategory.StudyHelp,
+        Budget = 50,
+        Status = SkillTaskStatus.Open,
+        CreatorId = 1 // TODO: Get from auth service
+    };
+
+    private async Task GetCurrentLocation()
+    {
+        _isLoadingLocation = true;
+        try
+        {
+            // TODO: Implement geolocation service
+            // For now, use a default Sydney location
+            _task.Latitude = -33.8688;
+            _task.Longitude = 151.2093;
+            _task.LocationAddress = "Sydney, NSW";
+
+            Snackbar.Add("Location set successfully", Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Could not get location", Severity.Warning);
+        }
+        finally
+        {
+            _isLoadingLocation = false;
+        }
+    }
+
+    private async Task SubmitTask()
+    {
+        if (!_formValid) return;
+
+        _isSubmitting = true;
+        try
+        {
+            // Set the deadline
+            if (_deadline.HasValue)
+            {
+                _task.Deadline = _deadline.Value;
+            }
+
+            // Create the task
+            var createdTask = await TaskService.CreateTaskAsync(_task);
+
+            if (createdTask != null)
+            {
+                Snackbar.Add("Task posted successfully!", Severity.Success);
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                Snackbar.Add("Failed to post task", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private string GetCategoryName(TaskCategory category)
+    {
+        return category switch
+        {
+            TaskCategory.StudyHelp => "Study Help",
+            TaskCategory.TechHelp => "Tech Help",
+            TaskCategory.CreativeDesign => "Creative Design",
+            TaskCategory.PhotoVideo => "Photo & Video",
+            TaskCategory.WritingEditing => "Writing & Editing",
+            TaskCategory.LanguageHelp => "Language Help",
+            _ => category.ToString()
+        };
+    }
+}

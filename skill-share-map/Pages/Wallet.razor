@@ -1,0 +1,234 @@
+@page "/wallet"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject IWalletService WalletService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>My Wallet - Skill Share Map</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="my-8">
+    <MudText Typo="Typo.h3" GutterBottom="true">
+        <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Class="mr-2" />
+        My Wallet
+    </MudText>
+    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">
+        Manage your balance and transactions
+    </MudText>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center align-center" style="min-height: 400px;">
+            <MudProgressCircular Size="Size.Large" Indeterminate="true" />
+        </div>
+    }
+    else if (_wallet != null)
+    {
+        <MudGrid>
+            <!-- Balance Card -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="3" Class="pa-6" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <MudText Typo="Typo.h6" Class="mb-2">Available Balance</MudText>
+                    <MudText Typo="Typo.h3" Class="mb-4">
+                        $@_wallet.Balance.ToString("N2")
+                    </MudText>
+                    <div class="d-flex gap-2">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Surface"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="OpenAddFundsDialog">
+                            Add Funds
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Style="color: white; border-color: white;"
+                                   StartIcon="@Icons.Material.Filled.ArrowUpward"
+                                   OnClick="OpenWithdrawDialog">
+                            Withdraw
+                        </MudButton>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Quick Stats -->
+            <MudItem xs="12" md="6">
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudPaper Elevation="3" Class="pa-4">
+                            <div class="d-flex align-center justify-space-between">
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Earned</MudText>
+                                    <MudText Typo="Typo.h6">$@_totalEarned.ToString("N2")</MudText>
+                                </div>
+                                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" />
+                            </div>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudPaper Elevation="3" Class="pa-4">
+                            <div class="d-flex align-center justify-space-between">
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Spent</MudText>
+                                    <MudText Typo="Typo.h6">$@_totalSpent.ToString("N2")</MudText>
+                                </div>
+                                <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Color="Color.Error" />
+                            </div>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" Class="mt-2">
+                        <MudPaper Elevation="3" Class="pa-4">
+                            <div class="d-flex align-center justify-space-between">
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Pending</MudText>
+                                    <MudText Typo="Typo.h6">$@_pendingAmount.ToString("N2")</MudText>
+                                </div>
+                                <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Color="Color.Warning" />
+                            </div>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+
+            <!-- Transaction History -->
+            <MudItem xs="12">
+                <MudPaper Elevation="3" Class="pa-6">
+                    <MudText Typo="Typo.h6" Class="mb-4">Transaction History</MudText>
+
+                    @if (_transactions.Any())
+                    {
+                        <MudTable Items="@_transactions" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
+                            <HeaderContent>
+                                <MudTh>Date</MudTh>
+                                <MudTh>Type</MudTh>
+                                <MudTh>Description</MudTh>
+                                <MudTh>Amount</MudTh>
+                                <MudTh>Status</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Date">@context.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")</MudTd>
+                                <MudTd DataLabel="Type">
+                                    <MudChip T="string" Size="Size.Small" Color="@GetTransactionTypeColor(context.Type)">
+                                        @context.Type
+                                    </MudChip>
+                                </MudTd>
+                                <MudTd DataLabel="Description">@GetTransactionDescription(context)</MudTd>
+                                <MudTd DataLabel="Amount">
+                                    <MudText Typo="Typo.body2" Color="@(context.Amount > 0 ? Color.Success : Color.Error)">
+                                        @(context.Amount > 0 ? "+" : "")$@context.Amount.ToString("N2")
+                                    </MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Status">
+                                    <MudChip T="string" Size="Size.Small" Color="@GetTransactionStatusColor("Completed")">
+                                        Completed
+                                    </MudChip>
+                                </MudTd>
+                            </RowTemplate>
+                            <PagerContent>
+                                <MudTablePager />
+                            </PagerContent>
+                        </MudTable>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">No transactions yet</MudAlert>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error">Wallet not found</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    private SkillShareMap.Models.Wallet? _wallet;
+    private List<WalletTransaction> _transactions = new();
+    private decimal _totalEarned = 0;
+    private decimal _totalSpent = 0;
+    private decimal _pendingAmount = 0;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWallet();
+    }
+
+    private async Task LoadWallet()
+    {
+        _isLoading = true;
+        try
+        {
+            // TODO: Get current user ID from auth service
+            int userId = 1;
+
+            _wallet = await WalletService.GetWalletByUserIdAsync(userId);
+
+            if (_wallet != null)
+            {
+                _transactions = await WalletService.GetTransactionHistoryAsync(userId);
+
+                // Calculate stats
+                _totalEarned = _transactions
+                    .Where(t => t.Amount > 0)
+                    .Sum(t => t.Amount);
+
+                _totalSpent = _transactions
+                    .Where(t => t.Amount < 0)
+                    .Sum(t => Math.Abs(t.Amount));
+
+                _pendingAmount = 0; // TODO: Add pending transaction tracking
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenAddFundsDialog()
+    {
+        // TODO: Implement add funds dialog
+        Snackbar.Add("Add funds feature coming soon", Severity.Info);
+    }
+
+    private void OpenWithdrawDialog()
+    {
+        // TODO: Implement withdraw dialog
+        Snackbar.Add("Withdraw feature coming soon", Severity.Info);
+    }
+
+    private string GetTransactionDescription(WalletTransaction transaction)
+    {
+        if (!string.IsNullOrEmpty(transaction.Description))
+            return transaction.Description;
+
+        return transaction.Type switch
+        {
+            TransactionType.TaskPayment => "Payment received",
+            TransactionType.TaskDeposit => "Deposit paid",
+            TransactionType.TaskRefund => "Refund received",
+            TransactionType.Deposit => "Funds added",
+            TransactionType.Withdrawal => "Funds withdrawn",
+            _ => "Transaction"
+        };
+    }
+
+    private Color GetTransactionTypeColor(TransactionType type)
+    {
+        return type switch
+        {
+            TransactionType.TaskPayment => Color.Success,
+            TransactionType.Deposit => Color.Success,
+            TransactionType.TaskDeposit => Color.Error,
+            TransactionType.Withdrawal => Color.Error,
+            TransactionType.TaskRefund => Color.Info,
+            _ => Color.Default
+        };
+    }
+
+    private Color GetTransactionStatusColor(string status)
+    {
+        return Color.Success; // All transactions are completed for now
+    }
+}

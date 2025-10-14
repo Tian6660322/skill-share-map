@@ -7,6 +7,7 @@ namespace SkillShareMap.Services;
 public interface IWalletService
 {
     Task<Wallet?> GetOrCreateWalletAsync(int userId);
+    Task<Wallet?> GetWalletByUserIdAsync(int userId);
     Task<decimal> GetBalanceAsync(int userId);
     Task<bool> ProcessDepositAsync(int userId, int taskId, decimal amount);
     Task<bool> ProcessPaymentAsync(int taskId);
@@ -176,6 +177,14 @@ public class WalletService : IWalletService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    /// <summary>
+    /// Get wallet by user ID
+    /// </summary>
+    public async Task<Wallet?> GetWalletByUserIdAsync(int userId)
+    {
+        return await GetOrCreateWalletAsync(userId);
     }
 
     /// <summary>

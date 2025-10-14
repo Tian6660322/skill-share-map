@@ -10,6 +10,8 @@ public interface IRatingService
     Task<List<Rating>> GetReceivedRatingsAsync(int userId);
     Task<List<Rating>> GetGivenRatingsAsync(int userId);
     Task<double> GetAverageRatingAsync(int userId);
+    Task<List<Rating>> GetRatingsForUserAsync(int userId);
+    Task<List<UserBadge>> GetUserBadgesAsync(int userId);
 }
 
 public class RatingService : IRatingService
@@ -115,5 +117,24 @@ public class RatingService : IRatingService
             return 0;
 
         return ratings.Average(r => r.Stars);
+    }
+
+    /// <summary>
+    /// Get ratings for a user (same as GetReceivedRatingsAsync)
+    /// </summary>
+    public async Task<List<Rating>> GetRatingsForUserAsync(int userId)
+    {
+        return await GetReceivedRatingsAsync(userId);
+    }
+
+    /// <summary>
+    /// Get all badges for a user
+    /// </summary>
+    public async Task<List<UserBadge>> GetUserBadgesAsync(int userId)
+    {
+        return await _context.UserBadges
+            .Where(b => b.UserId == userId)
+            .OrderByDescending(b => b.Tier)
+            .ToListAsync();
     }
 }

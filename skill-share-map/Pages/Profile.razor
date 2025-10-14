@@ -1,0 +1,312 @@
+@page "/profile"
+@page "/profile/{UserId:int}"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject IAuthService AuthService
+@inject ITaskService TaskService
+@inject IRatingService RatingService
+@inject NavigationManager Navigation
+
+<PageTitle>Profile - Skill Share Map</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="my-8">
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center align-center" style="min-height: 400px;">
+            <MudProgressCircular Size="Size.Large" Indeterminate="true" />
+        </div>
+    }
+    else if (_user != null)
+    {
+        <MudGrid>
+            <!-- Profile Card -->
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="3" Class="pa-6">
+                    <div class="d-flex flex-column align-center">
+                        <MudAvatar Size="Size.Large" Class="mb-4" Style="width: 120px; height: 120px;">
+                            @if (!string.IsNullOrEmpty(_user.AvatarUrl))
+                            {
+                                <MudImage Src="@_user.AvatarUrl" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" />
+                            }
+                        </MudAvatar>
+
+                        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-2">
+                            @(_user.Role == UserRole.Student ? $"{_user.FirstName} {_user.LastName}" : _user.CompanyName)
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mb-2">
+                            @("@" + _user.Username)
+                        </MudText>
+
+                        <MudChip T="string" Color="@(_user.Role == UserRole.Student ? Color.Primary : Color.Secondary)" Size="Size.Small" Class="mb-3">
+                            @_user.Role
+                        </MudChip>
+
+                        @if (_user.IsVerified)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.Verified" Class="mb-3">
+                                Verified
+                            </MudChip>
+                        }
+
+                        @if (_user.Role == UserRole.Student)
+                        {
+                            <MudDivider Class="my-4" />
+
+                            <div class="d-flex align-center mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Class="mr-2" />
+                                <MudText Typo="Typo.body2">@_user.SchoolName</MudText>
+                            </div>
+                        }
+                        else
+                        {
+                            <MudDivider Class="my-4" />
+
+                            @if (!string.IsNullOrEmpty(_user.WebsiteUrl))
+                            {
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Language"
+                                           Href="@_user.WebsiteUrl"
+                                           Target="_blank"
+                                           FullWidth="true"
+                                           Class="mb-2">
+                                    Visit Website
+                                </MudButton>
+                            }
+                        }
+
+                        <MudDivider Class="my-4" />
+
+                        <div class="d-flex align-center mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-2" />
+                            <MudText Typo="Typo.body2">@_user.HomeBaseAddress</MudText>
+                        </div>
+
+                        <div class="d-flex align-center mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Class="mr-2" />
+                            <MudText Typo="Typo.body2">@_user.Email</MudText>
+                        </div>
+
+                        @if (_user.ReputationLevel > 0)
+                        {
+                            <MudDivider Class="my-4" />
+
+                            <div class="d-flex align-center justify-center">
+                                <MudRating ReadOnly="true" SelectedValue="@((int)_user.ReputationLevel)" />
+                                <MudText Typo="Typo.body2" Class="ml-2">
+                                    @_user.ReputationLevel.ToString("F1")
+                                </MudText>
+                            </div>
+                        }
+                    </div>
+                </MudPaper>
+
+                @if (_user.Role == UserRole.Student && _badges.Any())
+                {
+                    <MudPaper Elevation="3" Class="pa-6 mt-4">
+                        <MudText Typo="Typo.h6" Class="mb-4">
+                            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
+                            Badges
+                        </MudText>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var badge in _badges)
+                            {
+                                <MudTooltip Text="@($"{GetCategoryName(badge.Category)} - {badge.Tier}")">
+                                    <MudChip T="string" Color="@GetBadgeColor(badge.Tier)" Icon="@Icons.Material.Filled.Stars">
+                                        @GetCategoryName(badge.Category)
+                                    </MudChip>
+                                </MudTooltip>
+                            }
+                        </div>
+                    </MudPaper>
+                }
+            </MudItem>
+
+            <!-- Main Content -->
+            <MudItem xs="12" md="8">
+                <!-- Bio / Description -->
+                <MudPaper Elevation="3" Class="pa-6 mb-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        @(_user.Role == UserRole.Student ? "Bio" : "About")
+                    </MudText>
+                    <MudText Typo="Typo.body1">
+                        @(_user.Role == UserRole.Student ? _user.Bio : _user.CompanyDescription)
+                    </MudText>
+                </MudPaper>
+
+                <!-- Tasks -->
+                <MudPaper Elevation="3" Class="pa-6 mb-4">
+                    <MudText Typo="Typo.h6" Class="mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="mr-2" />
+                        Recent Tasks
+                    </MudText>
+
+                    @if (_userTasks.Any())
+                    {
+                        <MudList T="string">
+                            @foreach (var task in _userTasks.Take(5))
+                            {
+                                <MudListItem T="string" OnClick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">
+                                    <div class="d-flex justify-space-between align-center">
+                                        <div>
+                                            <MudText Typo="Typo.subtitle1">@task.Title</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @task.Category | $@task.Budget
+                                            </MudText>
+                                        </div>
+                                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(task.Status)">
+                                            @task.Status
+                                        </MudChip>
+                                    </div>
+                                </MudListItem>
+                                <MudDivider />
+                            }
+                        </MudList>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="pa-4">
+                            No tasks yet
+                        </MudText>
+                    }
+                </MudPaper>
+
+                <!-- Ratings -->
+                <MudPaper Elevation="3" Class="pa-6">
+                    <MudText Typo="Typo.h6" Class="mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.Star" Class="mr-2" />
+                        Recent Reviews
+                    </MudText>
+
+                    @if (_ratings.Any())
+                    {
+                        <MudList T="string">
+                            @foreach (var rating in _ratings.Take(5))
+                            {
+                                <MudListItem T="string">
+                                    <div>
+                                        <div class="d-flex align-center mb-2">
+                                            <MudRating ReadOnly="true" SelectedValue="@rating.Stars" Size="Size.Small" />
+                                            <MudText Typo="Typo.caption" Class="ml-2" Color="Color.Secondary">
+                                                by @rating.FromUser?.Username
+                                            </MudText>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(rating.Comment))
+                                        {
+                                            <MudText Typo="Typo.body2">@rating.Comment</MudText>
+                                        }
+                                    </div>
+                                </MudListItem>
+                                <MudDivider />
+                            }
+                        </MudList>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="pa-4">
+                            No reviews yet
+                        </MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error">User not found</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int? UserId { get; set; }
+
+    private User? _user;
+    private List<SkillTask> _userTasks = new();
+    private List<Rating> _ratings = new();
+    private List<UserBadge> _badges = new();
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+    }
+
+    private async Task LoadProfile()
+    {
+        _isLoading = true;
+        try
+        {
+            // TODO: Get current user ID from auth service
+            int profileUserId = UserId ?? 1;
+
+            _user = await AuthService.GetUserByIdAsync(profileUserId);
+
+            if (_user != null)
+            {
+                // Load user's tasks
+                _userTasks = await TaskService.GetTasksAsync();
+                _userTasks = _userTasks.Where(t => t.CreatorId == _user.Id).ToList();
+
+                // Load ratings
+                _ratings = await RatingService.GetRatingsForUserAsync(_user.Id);
+
+                // Load badges if student
+                if (_user.Role == UserRole.Student)
+                {
+                    _badges = await RatingService.GetUserBadgesAsync(_user.Id);
+                }
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetCategoryName(TaskCategory category)
+    {
+        return category switch
+        {
+            TaskCategory.StudyHelp => "Study Help",
+            TaskCategory.TechHelp => "Tech Help",
+            TaskCategory.CreativeDesign => "Creative Design",
+            TaskCategory.PhotoVideo => "Photo & Video",
+            TaskCategory.WritingEditing => "Writing & Editing",
+            TaskCategory.LanguageHelp => "Language Help",
+            _ => category.ToString()
+        };
+    }
+
+    private Color GetStatusColor(SkillTaskStatus status)
+    {
+        return status switch
+        {
+            SkillTaskStatus.Open => Color.Success,
+            SkillTaskStatus.Assigned => Color.Info,
+            SkillTaskStatus.PendingDeposit => Color.Warning,
+            SkillTaskStatus.Completed => Color.Default,
+            SkillTaskStatus.Cancelled => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private Color GetBadgeColor(BadgeTier tier)
+    {
+        return tier switch
+        {
+            BadgeTier.Newbie => Color.Default,
+            BadgeTier.Skilled => Color.Info,
+            BadgeTier.Advanced => Color.Primary,
+            BadgeTier.Expert => Color.Warning,
+            BadgeTier.Master => Color.Error,
+            _ => Color.Default
+        };
+    }
+}
