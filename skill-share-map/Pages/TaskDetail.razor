@@ -58,7 +58,7 @@ else
                     </MudText>
 
                     <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Budget:</strong></MudText>
-                    <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Success">${_task.Budget}</MudText>
+                    <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Success">$@_task.Budget</MudText>
 
                     @if (_task.Deadline.HasValue)
                     {
@@ -213,15 +213,25 @@ else
             // Calculate 10% deposit
             var depositAmount = _task.Budget * 0.1m;
 
-            // Process deposit
-            await WalletService.ProcessDepositAsync(_task.CreatorId, _task.Id, depositAmount);
+            // Process deposit (deduct from helper, add to creator)
+            var depositSuccess = await WalletService.ProcessDepositAsync(_currentUserId, _task.Id, depositAmount);
 
-            Snackbar.Add("Task accepted! Deposit processed.", Severity.Success);
-            Navigation.NavigateTo($"/task-room/{_task.Id}");
+            if (depositSuccess)
+            {
+                Snackbar.Add($"Task accepted successfully! A deposit of ${depositAmount:F2} has been processed.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Task accepted, but deposit payment failed. Please ensure you have sufficient balance (${depositAmount:F2}).", Severity.Warning);
+            }
+
+            // Reload the task to show updated status
+            _task = await TaskService.GetTaskByIdAsync(TaskId);
+            StateHasChanged();
         }
         else
         {
-            Snackbar.Add("Failed to accept task", Severity.Error);
+            Snackbar.Add("Failed to accept task. Please try again.", Severity.Error);
         }
     }
 

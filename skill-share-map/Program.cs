@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using SkillShareMap.Data;
 using SkillShareMap.Services;
+using Blazored.LocalStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,9 @@ builder.Services.AddServerSideBlazor();
 
 // Add MudBlazor for UI components
 builder.Services.AddMudServices();
+
+// Add Blazored LocalStorage
+builder.Services.AddBlazoredLocalStorage();
 
 // Add our database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -26,6 +30,7 @@ builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<IXpService, XpService>();
 builder.Services.AddScoped<IReputationService, ReputationService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IGeoService, GeoService>();
 builder.Services.AddScoped<UserState>();
 
 // Add HTTP client for external APIs

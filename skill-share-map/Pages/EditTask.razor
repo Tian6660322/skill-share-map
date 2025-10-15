@@ -1,0 +1,213 @@
+@page "/task/{TaskId:int}/edit"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject ITaskService TaskService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject UserState UserState
+
+<PageTitle>Edit Task - Skill Share Map</PageTitle>
+
+@if (_isLoading)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8 text-center">
+        <MudProgressCircular Indeterminate="true" />
+    </MudContainer>
+}
+else if (_task == null)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Error">Task not found or you don't have permission to edit it.</MudAlert>
+        <MudButton Href="/" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">
+            Back to Home
+        </MudButton>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudPaper Elevation="3" Class="pa-6">
+            <MudText Typo="Typo.h4" GutterBottom="true">
+                <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+                Edit Task
+            </MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-6">
+                Update your task details
+            </MudText>
+
+            <MudForm @ref="_form" @bind-IsValid="@_formValid">
+                <!-- Title -->
+                <MudTextField @bind-Value="_task.Title"
+                              Label="Task Title"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Title is required"
+                              Counter="100"
+                              MaxLength="100"
+                              Class="mb-4" />
+
+                <!-- Description -->
+                <MudTextField @bind-Value="_task.Description"
+                              Label="Description"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Description is required"
+                              Lines="5"
+                              Counter="500"
+                              MaxLength="500"
+                              Class="mb-4" />
+
+                <!-- Category -->
+                <MudSelect @bind-Value="_task.Category"
+                           Label="Category"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Class="mb-4">
+                    <MudSelectItem Value="@TaskCategory.StudyHelp">Study Help</MudSelectItem>
+                    <MudSelectItem Value="@TaskCategory.TechHelp">Tech Help</MudSelectItem>
+                    <MudSelectItem Value="@TaskCategory.CreativeDesign">Creative & Design</MudSelectItem>
+                    <MudSelectItem Value="@TaskCategory.PhotoVideo">Photo & Video</MudSelectItem>
+                    <MudSelectItem Value="@TaskCategory.WritingEditing">Writing & Editing</MudSelectItem>
+                    <MudSelectItem Value="@TaskCategory.LanguageHelp">Language Help</MudSelectItem>
+                </MudSelect>
+
+                <!-- Budget -->
+                <MudNumericField @bind-Value="_task.Budget"
+                                 Label="Budget ($)"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="0"
+                                 Step="5"
+                                 Class="mb-4" />
+
+                <!-- Location -->
+                <MudTextField @bind-Value="_task.LocationAddress"
+                              Label="Location"
+                              Variant="Variant.Outlined"
+                              Placeholder="e.g., UTS Building 11, Sydney"
+                              HelperText="Where should the task be completed?"
+                              Class="mb-4" />
+
+                <!-- Deadline -->
+                <MudDatePicker @bind-Date="_deadline"
+                               Label="Deadline (Optional)"
+                               Variant="Variant.Outlined"
+                               MinDate="@DateTime.Today"
+                               Class="mb-4" />
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-space-between mt-6">
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Default"
+                               OnClick="Cancel">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="SaveTask"
+                               Disabled="@(!_formValid || _isSaving)">
+                        @if (_isSaving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            <span class="ml-2">Saving...</span>
+                        }
+                        else
+                        {
+                            <text>Save Changes</text>
+                        }
+                    </MudButton>
+                </div>
+            </MudForm>
+        </MudPaper>
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public int TaskId { get; set; }
+
+    private SkillTask? _task;
+    private MudForm? _form;
+    private bool _formValid;
+    private bool _isSaving;
+    private bool _isLoading = true;
+    private DateTime? _deadline;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Wait a bit for UserState to initialize if needed
+        var retries = 0;
+        while (UserState.CurrentUser == null && retries < 10)
+        {
+            await Task.Delay(100);
+            retries++;
+        }
+
+        if (UserState.CurrentUser == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadTask();
+    }
+
+    private async Task LoadTask()
+    {
+        _isLoading = true;
+
+        _task = await TaskService.GetTaskByIdAsync(TaskId);
+
+        // Check if task exists and user is the creator
+        if (_task == null || _task.CreatorId != UserState.CurrentUser?.Id)
+        {
+            _task = null;
+            _isLoading = false;
+            return;
+        }
+
+        // Convert deadline to DateTime? for the date picker
+        _deadline = _task.Deadline;
+
+        _isLoading = false;
+    }
+
+    private async Task SaveTask()
+    {
+        if (_task == null || UserState.CurrentUser == null) return;
+
+        _isSaving = true;
+
+        try
+        {
+            // Update deadline from date picker
+            _task.Deadline = _deadline;
+
+            // Update the task
+            var success = await TaskService.UpdateTaskAsync(_task);
+
+            if (success)
+            {
+                Snackbar.Add("Task updated successfully!", Severity.Success);
+                Navigation.NavigateTo($"/task/{_task.Id}");
+            }
+            else
+            {
+                Snackbar.Add("Failed to update task. Please try again.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo($"/task/{TaskId}");
+    }
+}

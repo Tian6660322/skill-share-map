@@ -91,7 +91,7 @@
             if (user != null)
             {
                 Snackbar.Add($"Welcome back, {user.Username}!", Severity.Success);
-                UserState.SetUser(user);
+                await UserState.SetUserAsync(user);
                 Navigation.NavigateTo("/");
             }
             else

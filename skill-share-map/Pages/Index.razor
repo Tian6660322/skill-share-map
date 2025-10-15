@@ -4,6 +4,7 @@
 @using SkillShareMap.Shared.Components
 @inject ITaskService TaskService
 @inject IJobService JobService
+@inject IGeoService GeoService
 @inject NavigationManager Navigation
 
 <PageTitle>Skill Share Map</PageTitle>
@@ -17,9 +18,9 @@
 
                 <!-- Type Filter -->
                 <MudText Typo="Typo.subtitle2" Class="mb-2">Display Type</MudText>
-                <MudRadioGroup @bind-SelectedOption="_displayType" T="string">
-                    <MudRadio T="string" Option="@("tasks")" Color="Color.Primary">Tasks</MudRadio>
-                    <MudRadio T="string" Option="@("jobs")" Color="Color.Secondary">Jobs</MudRadio>
+                <MudRadioGroup @bind-Value="_displayType" T="string">
+                    <MudRadio T="string" Value="@("tasks")" Color="Color.Primary">Tasks</MudRadio>
+                    <MudRadio T="string" Value="@("jobs")" Color="Color.Secondary">Jobs</MudRadio>
                 </MudRadioGroup>
 
                 <MudDivider Class="my-4" />
@@ -43,15 +44,17 @@
                     </MudChipSet>
 
                     <!-- Distance Filter -->
-                    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Distance (km)</MudText>
-                    <MudSlider @bind-Value="_distanceKm" Min="1" Max="50" Step="1" Color="Color.Primary">
-                        @_distanceKm km
-                    </MudSlider>
+                    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Distance: @_distanceKm km</MudText>
+                    <MudSlider @bind-Value="_distanceKm" Min="1" Max="50" Step="1" Color="Color.Primary" />
                 }
                 else
                 {
-                    <MudText Typo="Typo.body2" Class="mt-2">
-                        Showing all open job positions
+                    <!-- Distance Filter for Jobs -->
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">Distance: @_distanceKm km</MudText>
+                    <MudSlider @bind-Value="_distanceKm" Min="1" Max="50" Step="1" Color="Color.Secondary" />
+
+                    <MudText Typo="Typo.body2" Class="mt-4" Color="Color.Secondary">
+                        Showing open job positions within @_distanceKm km
                     </MudText>
                 }
 
@@ -178,6 +181,10 @@
     private List<SkillTask> _tasks = new();
     private List<Job> _jobs = new();
 
+    // User's current location (default: Sydney CBD)
+    private double _userLat = -33.8688;
+    private double _userLng = 151.2093;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -208,6 +215,9 @@
         {
             var filteredTasks = _tasks.AsEnumerable();
 
+            // Exclude cancelled tasks by default
+            filteredTasks = filteredTasks.Where(t => t.Status != SkillTaskStatus.Cancelled);
+
             // Filter by category
             if (_selectedCategory.HasValue)
             {
@@ -219,6 +229,20 @@
             {
                 filteredTasks = filteredTasks.Where(t => t.Status == status);
             }
+
+            // Filter by distance
+            filteredTasks = filteredTasks.Where(t =>
+            {
+                if (!t.Latitude.HasValue || !t.Longitude.HasValue)
+                    return false;
+
+                var distance = GeoService.CalculateDistance(
+                    _userLat, _userLng,
+                    t.Latitude.Value, t.Longitude.Value
+                );
+
+                return distance <= _distanceKm;
+            });
 
             // Add markers for filtered tasks
             foreach (var task in filteredTasks)
@@ -237,7 +261,21 @@
         }
         else // jobs
         {
-            foreach (var job in _jobs)
+            // Filter jobs by distance
+            var filteredJobs = _jobs.Where(j =>
+            {
+                if (!j.Latitude.HasValue || !j.Longitude.HasValue)
+                    return false;
+
+                var distance = GeoService.CalculateDistance(
+                    _userLat, _userLng,
+                    j.Latitude.Value, j.Longitude.Value
+                );
+
+                return distance <= _distanceKm;
+            });
+
+            foreach (var job in filteredJobs)
             {
                 if (job.Latitude.HasValue && job.Longitude.HasValue)
                 {

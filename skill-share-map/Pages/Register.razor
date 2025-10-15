@@ -175,7 +175,7 @@
             {
                 // Fetch the full user with related data for session storage
                 var signedInUser = await AuthService.LoginAsync(_newUser.Username, _password);
-                UserState.SetUser(signedInUser ?? user);
+                await UserState.SetUserAsync(signedInUser ?? user);
 
                 Snackbar.Add("Registration successful! You're now signed in.", Severity.Success);
                 Navigation.NavigateTo("/");

@@ -80,9 +80,10 @@
         }
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         UserState.OnChange += HandleUserStateChanged;
+        await UserState.InitializeAsync();
     }
 
     protected override void OnParametersSet()
@@ -126,9 +127,9 @@
             || relativePath.StartsWith("register", StringComparison.OrdinalIgnoreCase);
     }
 
-    private void Logout()
+    private async Task Logout()
     {
-        UserState.SetUser(null);
+        await UserState.LogoutAsync();
         Navigation.NavigateTo("/login");
     }
 

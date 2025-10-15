@@ -1,0 +1,116 @@
+@page "/chat/{UserId:int}"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject IAuthService AuthService
+@inject UserState UserState
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Chat</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+    @if (_otherUser == null)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+        <MudPaper Elevation="2" Class="pa-4 mb-4">
+            <div class="d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                    <MudAvatar Color="Color.Primary" Size="Size.Large" Class="mr-3">
+                        @_otherUser.Username?.Substring(0, 1).ToUpper()
+                    </MudAvatar>
+                    <div>
+                        <MudText Typo="Typo.h5">@_otherUser.Username</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            @(_otherUser.Role == UserRole.Student ? "Student" : _otherUser.Role == UserRole.Company ? "Company" : "School")
+                        </MudText>
+                    </div>
+                </div>
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/">
+                    Back
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        <MudPaper Elevation="2" Style="height: 500px; display: flex; flex-direction: column;">
+            <!-- Messages Area -->
+            <div class="pa-4" style="flex: 1; overflow-y: auto;">
+                <div class="d-flex align-center justify-center flex-column" style="height: 100%;">
+                    <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-2">
+                        Chat Feature Coming Soon!
+                    </MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Start a conversation with @_otherUser.Username about @(_taskContext ?? "your collaboration")
+                    </MudText>
+                </div>
+            </div>
+
+            <!-- Message Input Area (Disabled for now) -->
+            <MudDivider />
+            <div class="pa-4">
+                <div class="d-flex gap-2">
+                    <MudTextField Value="@_newMessage"
+                                  Placeholder="Chat feature coming soon..."
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  FullWidth="true"
+                                  Disabled="true" />
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Send"
+                               Disabled="true">
+                        Send
+                    </MudButton>
+                </div>
+            </div>
+        </MudPaper>
+
+        @if (!string.IsNullOrEmpty(_taskContext))
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                <MudText Typo="Typo.body2">
+                    About: <strong>@_taskContext</strong>
+                </MudText>
+            </MudAlert>
+        }
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int UserId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? TaskId { get; set; }
+
+    private User? _otherUser;
+    private string _newMessage = "";
+    private string? _taskContext;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserState.CurrentUser == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        _otherUser = await AuthService.GetUserByIdAsync(UserId);
+
+        if (_otherUser == null)
+        {
+            Snackbar.Add("User not found", Severity.Error);
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        // Set task context if available
+        if (TaskId.HasValue)
+        {
+            _taskContext = $"Task #{TaskId}";
+        }
+    }
+}
