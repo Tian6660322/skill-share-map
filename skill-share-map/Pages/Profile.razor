@@ -1,11 +1,11 @@
 @page "/profile"
-@page "/profile/{UserId:int}"
 @using SkillShareMap.Services
 @using SkillShareMap.Models
 @inject IAuthService AuthService
 @inject ITaskService TaskService
 @inject IRatingService RatingService
 @inject NavigationManager Navigation
+@inject UserState UserState
 
 <PageTitle>Profile - Skill Share Map</PageTitle>
 
@@ -224,8 +224,6 @@
 </MudContainer>
 
 @code {
-    [Parameter]
-    public int? UserId { get; set; }
 
     private User? _user;
     private List<SkillTask> _userTasks = new();
@@ -243,26 +241,20 @@
         _isLoading = true;
         try
         {
-            // TODO: Get current user ID from auth service
-            int profileUserId = UserId ?? 1;
-
-            _user = await AuthService.GetUserByIdAsync(profileUserId);
-
-            if (_user != null)
-            {
-                // Load user's tasks
-                _userTasks = await TaskService.GetTasksAsync();
-                _userTasks = _userTasks.Where(t => t.CreatorId == _user.Id).ToList();
-
-                // Load ratings
-                _ratings = await RatingService.GetRatingsForUserAsync(_user.Id);
-
-                // Load badges if student
-                if (_user.Role == UserRole.Student)
+            if (UserState.IsAuthenticated && UserState.CurrentUser != null)
                 {
-                    _badges = await RatingService.GetUserBadgesAsync(_user.Id);
+                    int currentUserId = UserState.CurrentUser.Id;
+                    _user = await AuthService.GetUserByIdAsync(currentUserId);
                 }
-            }
+                else
+                {
+                    Navigation.NavigateTo("/login");
+
+                }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while loading the profile: {ex.Message}");
         }
         finally
         {

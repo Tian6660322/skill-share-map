@@ -4,18 +4,6 @@ using SkillShareMap.Models;
 
 namespace SkillShareMap.Services;
 
-public interface ITaskService
-{
-    Task<SkillTask?> CreateTaskAsync(SkillTask task);
-    Task<SkillTask?> GetTaskByIdAsync(int taskId);
-    Task<List<SkillTask>> GetTasksAsync(TaskCategory? category = null, SkillTaskStatus? status = null);
-    Task<List<SkillTask>> GetTasksNearLocationAsync(double latitude, double longitude, double radiusKm, TaskCategory? category = null);
-    Task<bool> UpdateTaskAsync(SkillTask task);
-    Task<bool> AssignTaskAsync(int taskId, int userId);
-    Task<bool> AcceptNegotiatedPriceAsync(int taskId, decimal newPrice);
-    Task<bool> CompleteTaskAsync(int taskId);
-    Task<bool> CancelTaskAsync(int taskId);
-}
 
 public class TaskService : ITaskService
 {
@@ -48,6 +36,14 @@ public class TaskService : ITaskService
             .Include(t => t.AssignedTo)
             .Include(t => t.Rating)
             .FirstOrDefaultAsync(t => t.Id == taskId);
+    }
+
+    public async Task<List<SkillTask>> GetTasksByUserIdAsync(int userId)
+    {
+        return await _context.SkillTasks
+                             .Where(task => task.CreatorId == userId)
+                             .OrderByDescending(t => t.CreatedAt)
+                             .ToListAsync();
     }
 
     /// <summary>
@@ -191,4 +187,5 @@ public class TaskService : ITaskService
 
         return true;
     }
+
 }
