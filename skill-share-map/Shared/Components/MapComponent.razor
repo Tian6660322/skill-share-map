@@ -36,22 +36,22 @@
 
     public async Task AddMarkerAsync(int id, double lat, double lng, string title, string type = "task")
     {
-        await JS.InvokeVoidAsync("mapHelper.addMarker", id, lat, lng, title, type);
+        await JS.InvokeVoidAsync("mapHelper.addMarker", MapId, id, lat, lng, title, type);
     }
 
     public async Task ClearMarkersAsync()
     {
-        await JS.InvokeVoidAsync("mapHelper.clearMarkers");
+        await JS.InvokeVoidAsync("mapHelper.clearMarkers", MapId);
     }
 
     public async Task FitBoundsAsync()
     {
-        await JS.InvokeVoidAsync("mapHelper.fitBounds");
+        await JS.InvokeVoidAsync("mapHelper.fitBounds", MapId);
     }
 
     public async Task SetViewAsync(double lat, double lng, int zoom = 13)
     {
-        await JS.InvokeVoidAsync("mapHelper.setView", lat, lng, zoom);
+        await JS.InvokeVoidAsync("mapHelper.setView", MapId, lat, lng, zoom);
     }
 
     [JSInvokable]

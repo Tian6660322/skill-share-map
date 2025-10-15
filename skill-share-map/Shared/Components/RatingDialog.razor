@@ -1,0 +1,123 @@
+@namespace SkillShareMap.Shared.Components
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@using MudBlazor
+@inject IRatingService RatingService
+@inject ISnackbar Snackbar
+@inject UserState UserState
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Rate @HelperName</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.subtitle2" Class="mb-2">How would you rate their work?</MudText>
+        <MudRating @bind-Value="_stars" Size="Size.Large" Class="mb-4" />
+
+        <MudTextField @bind-Value="_comment"
+                      Label="Comment"
+                      Variant="Variant.Outlined"
+                      Lines="4"
+                      FullWidth="true"
+                      Required="true"
+                      HelperText="A comment is required for the rating" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitRating" Disabled="_isSubmitting">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+            }
+            else
+            {
+                <text>Submit Rating</text>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    public required dynamic MudDialog { get; set; }
+
+    [Parameter]
+    public int TaskId { get; set; }
+
+    [Parameter]
+    public int HelperId { get; set; }
+
+    [Parameter]
+    public string HelperName { get; set; } = string.Empty;
+
+    [Parameter]
+    public TaskCategory Category { get; set; }
+
+    private int _stars = 5;
+    private string _comment = string.Empty;
+    private bool _isSubmitting = false;
+
+    private async Task SubmitRating()
+    {
+        if (string.IsNullOrWhiteSpace(_comment))
+        {
+            Snackbar.Add("Please provide a comment", Severity.Warning);
+            return;
+        }
+
+        if (UserState.CurrentUser == null)
+        {
+            Snackbar.Add("You must be logged in to rate", Severity.Error);
+            return;
+        }
+
+        _isSubmitting = true;
+
+        try
+        {
+            var rating = new Rating
+            {
+                FromUserId = UserState.CurrentUser.Id,
+                ToUserId = HelperId,
+                TaskId = TaskId,
+                Category = Category,
+                Stars = _stars,
+                Comment = _comment
+            };
+
+            var result = await RatingService.CreateRatingAsync(rating);
+
+            if (result != null)
+            {
+                Snackbar.Add($"Rating submitted successfully! {result.XpAwarded} XP awarded to helper.", Severity.Success);
+                MudDialog?.Close();
+            }
+            else
+            {
+                Snackbar.Add("Failed to submit rating", Severity.Error);
+            }
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (ex.InnerException?.Message.Contains("UNIQUE") == true)
+        {
+            Snackbar.Add("This task has already been rated", Severity.Warning);
+            MudDialog?.Close();
+        }
+        catch (ArgumentException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting rating: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog?.Cancel();
+    }
+}

@@ -6,6 +6,7 @@
 @inject ITaskService TaskService
 @inject IRatingService RatingService
 @inject NavigationManager Navigation
+@inject UserState UserState
 
 <PageTitle>Profile - Skill Share Map</PageTitle>
 
@@ -144,30 +145,79 @@
                 <MudPaper Elevation="3" Class="pa-6 mb-4">
                     <MudText Typo="Typo.h6" Class="mb-4">
                         <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="mr-2" />
-                        Recent Tasks
+                        Tasks
                     </MudText>
 
-                    @if (_userTasks.Any())
+                    @{
+                        var createdTasks = _userTasks.Where(t => t.CreatorId == _user.Id).ToList();
+                        var acceptedTasks = _userTasks.Where(t => t.AssignedToId == _user.Id).ToList();
+                    }
+
+                    @if (createdTasks.Any() || acceptedTasks.Any())
                     {
-                        <MudList T="string">
-                            @foreach (var task in _userTasks.Take(5))
-                            {
-                                <MudListItem T="string" OnClick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">
-                                    <div class="d-flex justify-space-between align-center">
-                                        <div>
-                                            <MudText Typo="Typo.subtitle1">@task.Title</MudText>
-                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                                @task.Category | $@task.Budget
-                                            </MudText>
-                                        </div>
-                                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(task.Status)">
-                                            @task.Status
-                                        </MudChip>
-                                    </div>
-                                </MudListItem>
-                                <MudDivider />
-                            }
-                        </MudList>
+                        <MudTabs Rounded="true">
+                            <MudTabPanel Text="Created Tasks">
+                                @if (createdTasks.Any())
+                                {
+                                    <MudList T="string">
+                                        @foreach (var task in createdTasks)
+                                        {
+                                            <MudListItem T="string" OnClick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">
+                                                <div class="d-flex justify-space-between align-center">
+                                                    <div>
+                                                        <MudText Typo="Typo.subtitle1">@task.Title</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                            @task.Category | $@task.Budget
+                                                        </MudText>
+                                                    </div>
+                                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(task.Status)">
+                                                        @task.Status
+                                                    </MudChip>
+                                                </div>
+                                            </MudListItem>
+                                            <MudDivider />
+                                        }
+                                    </MudList>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="pa-4">
+                                        No created tasks yet
+                                    </MudText>
+                                }
+                            </MudTabPanel>
+
+                            <MudTabPanel Text="Accepted Tasks">
+                                @if (acceptedTasks.Any())
+                                {
+                                    <MudList T="string">
+                                        @foreach (var task in acceptedTasks)
+                                        {
+                                            <MudListItem T="string" OnClick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">
+                                                <div class="d-flex justify-space-between align-center">
+                                                    <div>
+                                                        <MudText Typo="Typo.subtitle1">@task.Title</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                            @task.Category | $@task.Budget
+                                                        </MudText>
+                                                    </div>
+                                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(task.Status)">
+                                                        @task.Status
+                                                    </MudChip>
+                                                </div>
+                                            </MudListItem>
+                                            <MudDivider />
+                                        }
+                                    </MudList>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="pa-4">
+                                        No accepted tasks yet
+                                    </MudText>
+                                }
+                            </MudTabPanel>
+                        </MudTabs>
                     }
                     else
                     {
@@ -243,16 +293,24 @@
         _isLoading = true;
         try
         {
-            // TODO: Get current user ID from auth service
-            int profileUserId = UserId ?? 1;
+            // If UserId is provided, show that user's profile
+            // Otherwise, show the current logged-in user's profile
+            int profileUserId = UserId ?? UserState.CurrentUser?.Id ?? 0;
+
+            if (profileUserId == 0)
+            {
+                // No user specified and not logged in
+                Navigation.NavigateTo("/login");
+                return;
+            }
 
             _user = await AuthService.GetUserByIdAsync(profileUserId);
 
             if (_user != null)
             {
-                // Load user's tasks
+                // Load user's tasks (both created and accepted)
                 _userTasks = await TaskService.GetTasksAsync();
-                _userTasks = _userTasks.Where(t => t.CreatorId == _user.Id).ToList();
+                _userTasks = _userTasks.Where(t => t.CreatorId == _user.Id || t.AssignedToId == _user.Id).ToList();
 
                 // Load ratings
                 _ratings = await RatingService.GetRatingsForUserAsync(_user.Id);

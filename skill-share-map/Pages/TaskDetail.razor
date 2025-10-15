@@ -4,8 +4,11 @@
 @using SkillShareMap.Shared.Components
 @inject ITaskService TaskService
 @inject IWalletService WalletService
+@inject IRatingService RatingService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject UserState UserState
 
 <PageTitle>Task Details</PageTitle>
 
@@ -78,20 +81,92 @@ else
 
                     @if (_isCreator)
                     {
-                        <div class="d-flex gap-2">
+                        @if (_task.Status == SkillTaskStatus.Cancelled)
+                        {
+                            <MudAlert Severity="Severity.Warning" Class="mb-4">
+                                This task has been cancelled.
+                            </MudAlert>
                             <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Edit"
-                                       Href="@($"/task/{_task.Id}/edit")">
-                                Edit
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.Publish"
+                                       OnClick="RepublishTask">
+                                Republish Task
                             </MudButton>
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Error"
-                                       StartIcon="@Icons.Material.Filled.Cancel"
-                                       OnClick="CancelTask">
-                                Cancel Task
+                        }
+                        else if (_task.Status == SkillTaskStatus.PendingCompletion)
+                        {
+                            <MudAlert Severity="Severity.Info" Class="mb-4">
+                                The helper has marked this task as complete. Please review and confirm completion.
+                            </MudAlert>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.CheckCircle"
+                                       OnClick="ConfirmTaskComplete">
+                                Confirm Task Complete
                             </MudButton>
-                        </div>
+                        }
+                        else if (_task.Status == SkillTaskStatus.Completed)
+                        {
+                            <MudAlert Severity="Severity.Success" Class="mb-4">
+                                This task has been completed successfully!
+                            </MudAlert>
+                            @if (_task.Rating == null)
+                            {
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Star"
+                                           OnClick="OpenRatingDialog">
+                                    Rate Helper
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info">
+                                    You have already rated this task.
+                                </MudAlert>
+                            }
+                        }
+                        else
+                        {
+                            <div class="d-flex gap-2">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Edit"
+                                           Href="@($"/task/{_task.Id}/edit")">
+                                    Edit
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Error"
+                                           StartIcon="@Icons.Material.Filled.Cancel"
+                                           OnClick="CancelTask">
+                                    Cancel Task
+                                </MudButton>
+                            </div>
+                        }
+                    }
+                    else if (_isHelper)
+                    {
+                        @if (_task.Status == SkillTaskStatus.Assigned)
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.Done"
+                                       OnClick="MarkTaskDone">
+                                Mark Task as Done
+                            </MudButton>
+                        }
+                        else if (_task.Status == SkillTaskStatus.PendingCompletion)
+                        {
+                            <MudAlert Severity="Severity.Info" Class="mb-4">
+                                Waiting for creator to confirm task completion.
+                            </MudAlert>
+                        }
+                        else if (_task.Status == SkillTaskStatus.Completed)
+                        {
+                            <MudAlert Severity="Severity.Success" Class="mb-4">
+                                Task completed successfully! Payment has been processed.
+                            </MudAlert>
+                        }
                     }
                     else if (_task.Status == SkillTaskStatus.Assigned && _task.AssignedToId != _currentUserId)
                     {
@@ -175,8 +250,9 @@ else
 
     private SkillTask? _task;
     private MapComponent? _miniMap;
-    private int _currentUserId = 1; // TODO: Get from auth service
+    private int _currentUserId => UserState.CurrentUser?.Id ?? 0;
     private bool _isCreator => _task?.CreatorId == _currentUserId;
+    private bool _isHelper => _task?.AssignedToId == _currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -244,11 +320,93 @@ else
         if (success)
         {
             Snackbar.Add("Task cancelled successfully", Severity.Success);
-            Navigation.NavigateTo("/");
+            // Reload the task to show updated status
+            _task = await TaskService.GetTaskByIdAsync(TaskId);
+            StateHasChanged();
         }
         else
         {
             Snackbar.Add("Failed to cancel task", Severity.Error);
+        }
+    }
+
+    private async Task RepublishTask()
+    {
+        if (_task == null) return;
+
+        var success = await TaskService.RepublishTaskAsync(_task.Id);
+
+        if (success)
+        {
+            Snackbar.Add("Task republished successfully! It's now visible to everyone.", Severity.Success);
+            // Reload the task to show updated status
+            _task = await TaskService.GetTaskByIdAsync(TaskId);
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add("Failed to republish task", Severity.Error);
+        }
+    }
+
+    private async Task MarkTaskDone()
+    {
+        if (_task == null || _currentUserId == 0) return;
+
+        var success = await TaskService.HelperMarkTaskDoneAsync(_task.Id, _currentUserId);
+
+        if (success)
+        {
+            Snackbar.Add("Task marked as done! Waiting for creator confirmation.", Severity.Success);
+            // Reload the task to show updated status
+            _task = await TaskService.GetTaskByIdAsync(TaskId);
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add("Failed to mark task as done", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmTaskComplete()
+    {
+        if (_task == null || _currentUserId == 0) return;
+
+        var success = await TaskService.CreatorConfirmTaskDoneAsync(_task.Id, _currentUserId);
+
+        if (success)
+        {
+            Snackbar.Add("Task confirmed as complete! Payment has been processed.", Severity.Success);
+            // Reload the task to show updated status
+            _task = await TaskService.GetTaskByIdAsync(TaskId);
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add("Failed to confirm task completion", Severity.Error);
+        }
+    }
+
+    private async Task OpenRatingDialog()
+    {
+        if (_task == null || _task.AssignedToId == null) return;
+
+        var parameters = new DialogParameters
+        {
+            ["TaskId"] = _task.Id,
+            ["HelperId"] = _task.AssignedToId.Value,
+            ["HelperName"] = _task.AssignedTo?.Username ?? "Helper",
+            ["Category"] = _task.Category
+        };
+
+        var dialog = await DialogService.ShowAsync<SkillShareMap.Shared.Components.RatingDialog>("Rate Helper", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            // Reload the task to show the rating
+            _task = await TaskService.GetTaskByIdAsync(TaskId);
+            StateHasChanged();
         }
     }
 
@@ -278,7 +436,8 @@ else
             SkillTaskStatus.Open => Color.Success,
             SkillTaskStatus.Assigned => Color.Info,
             SkillTaskStatus.PendingDeposit => Color.Warning,
-            SkillTaskStatus.Completed => Color.Default,
+            SkillTaskStatus.PendingCompletion => Color.Warning,
+            SkillTaskStatus.Completed => Color.Success,
             SkillTaskStatus.Cancelled => Color.Error,
             _ => Color.Default
         };

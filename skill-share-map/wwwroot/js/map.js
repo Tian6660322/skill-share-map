@@ -20,10 +20,19 @@ window.mapHelper = {
         const map = L.map(mapId).setView([lat, lng], zoom);
 
         // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         }).addTo(map);
+
+        tileLayer.on('tileerror', (errorEvent) => {
+            console.warn('Map tile failed to load. Check internet access or tile server availability.', errorEvent);
+        });
+
+        // Ensure map properly renders when container size changes (e.g., flex layout)
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 150);
 
         // Store map instance with its own markers and helper
         this.maps[mapId] = {
@@ -37,12 +46,21 @@ window.mapHelper = {
 
     // Get map instance
     getMapInstance: function (mapId) {
-        return this.maps[mapId] || this.maps['mainMap'] || Object.values(this.maps)[0];
+        if (mapId && this.maps[mapId]) {
+            return this.maps[mapId];
+        }
+
+        if (this.maps['mainMap']) {
+            return this.maps['mainMap'];
+        }
+
+        const mapEntries = Object.values(this.maps);
+        return mapEntries.length > 0 ? mapEntries[0] : null;
     },
 
     // Add marker
-    addMarker: function (id, lat, lng, title, type) {
-        const mapInstance = this.getMapInstance();
+    addMarker: function (mapId, id, lat, lng, title, type) {
+        const mapInstance = this.getMapInstance(mapId);
         if (!mapInstance) return false;
 
         const iconUrl = type === 'task'
@@ -73,8 +91,8 @@ window.mapHelper = {
     },
 
     // Clear all markers
-    clearMarkers: function () {
-        const mapInstance = this.getMapInstance();
+    clearMarkers: function (mapId) {
+        const mapInstance = this.getMapInstance(mapId);
         if (!mapInstance) return false;
 
         mapInstance.markers.forEach(marker => {
@@ -85,20 +103,21 @@ window.mapHelper = {
     },
 
     // Fit bounds to show all markers
-    fitBounds: function () {
-        const mapInstance = this.getMapInstance();
+    fitBounds: function (mapId) {
+        const mapInstance = this.getMapInstance(mapId);
         if (!mapInstance) return false;
 
         if (mapInstance.markers.length > 0) {
             const group = L.featureGroup(mapInstance.markers);
             mapInstance.map.fitBounds(group.getBounds().pad(0.1));
         }
+        mapInstance.map.invalidateSize();
         return true;
     },
 
     // Set view to specific location
-    setView: function (lat, lng, zoom) {
-        const mapInstance = this.getMapInstance();
+    setView: function (mapId, lat, lng, zoom) {
+        const mapInstance = this.getMapInstance(mapId);
         if (mapInstance && mapInstance.map) {
             mapInstance.map.setView([lat, lng], zoom);
         }
@@ -106,8 +125,8 @@ window.mapHelper = {
     },
 
     // Get current map center
-    getCenter: function () {
-        const mapInstance = this.getMapInstance();
+    getCenter: function (mapId) {
+        const mapInstance = this.getMapInstance(mapId);
         if (mapInstance && mapInstance.map) {
             const center = mapInstance.map.getCenter();
             return { lat: center.lat, lng: center.lng };

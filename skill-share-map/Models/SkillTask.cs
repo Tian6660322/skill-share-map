@@ -37,15 +37,20 @@ public class SkillTask
 
     // Task completion and rating
     public bool IsCompleted { get; set; } = false;
+    public bool IsHelperConfirmedComplete { get; set; } = false;
+    public bool IsCreatorConfirmedComplete { get; set; } = false;
+    public DateTime? HelperConfirmedAt { get; set; }
+    public DateTime? CreatorConfirmedAt { get; set; }
     public Rating? Rating { get; set; }
 }
 
 // Task statuses to track progress
 public enum SkillTaskStatus
 {
-    Open,              // Available for anyone to accept
-    Assigned,          // Assigned to someone, in progress
-    PendingDeposit,    // Waiting for deposit payment
-    Completed,         // Task completed successfully
-    Cancelled          // Task cancelled by creator
+    Open,                    // Available for anyone to accept
+    Assigned,                // Assigned to someone, in progress
+    PendingDeposit,          // Waiting for deposit payment
+    PendingCompletion,       // Helper marked as done, waiting for creator confirmation
+    Completed,               // Task completed successfully by both parties
+    Cancelled                // Task cancelled by creator
 }

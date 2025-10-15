@@ -4,6 +4,7 @@
 @inject IWalletService WalletService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject UserState UserState
 
 <PageTitle>My Wallet - Skill Share Map</PageTitle>
 
@@ -159,8 +160,14 @@
         _isLoading = true;
         try
         {
-            // TODO: Get current user ID from auth service
-            int userId = 1;
+            // Get current logged-in user
+            if (UserState.CurrentUser == null)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            int userId = UserState.CurrentUser.Id;
 
             _wallet = await WalletService.GetWalletByUserIdAsync(userId);
 

@@ -116,6 +116,7 @@ public class WalletService : IWalletService
         // Update task
         task.DepositAmount = amount;
         task.IsDepositPaid = true;
+        task.Status = SkillTaskStatus.Assigned; // Update status to Assigned after deposit is paid
 
         await _context.SaveChangesAsync();
         return true;
@@ -123,6 +124,8 @@ public class WalletService : IWalletService
 
     /// <summary>
     /// Process full payment when task is completed
+    /// Creator pays (Budget - Deposit) to Helper
+    /// Helper also gets their deposit back
     /// </summary>
     public async Task<bool> ProcessPaymentAsync(int taskId)
     {
@@ -139,25 +142,54 @@ public class WalletService : IWalletService
         if (helperWallet == null)
             return false;
 
-        // Calculate payment amount (use negotiated price or original budget)
-        var paymentAmount = task.NegotiatedPrice ?? task.Budget;
+        // Get creator's wallet
+        var creatorWallet = await GetOrCreateWalletAsync(task.CreatorId);
+        if (creatorWallet == null)
+            return false;
 
-        // Add payment to helper's wallet
-        helperWallet.Balance += paymentAmount;
+        // Calculate payment amount (use negotiated price or original budget)
+        var totalAmount = task.NegotiatedPrice ?? task.Budget;
+        var depositAmount = task.DepositAmount ?? 0;
+
+        // Remaining amount that creator needs to pay (Budget - Deposit already paid)
+        var remainingPayment = totalAmount - depositAmount;
+
+        // Check if creator has enough balance
+        if (creatorWallet.Balance < remainingPayment)
+            return false;
+
+        // Deduct remaining payment from creator's wallet
+        creatorWallet.Balance -= remainingPayment;
+        creatorWallet.LastUpdated = DateTime.UtcNow;
+
+        // Add total amount to helper's wallet (they get the full budget)
+        helperWallet.Balance += totalAmount;
         helperWallet.LastUpdated = DateTime.UtcNow;
 
-        // Create transaction record
-        var transaction = new WalletTransaction
+        // Create transaction record for creator (deduction)
+        var creatorTransaction = new WalletTransaction
+        {
+            WalletId = creatorWallet.Id,
+            Type = TransactionType.TaskPayment,
+            Amount = -remainingPayment,
+            Description = $"Final payment for task #{taskId} (${remainingPayment:F2} = ${totalAmount:F2} total - ${depositAmount:F2} deposit)",
+            TaskId = taskId,
+            BalanceAfter = creatorWallet.Balance
+        };
+
+        // Create transaction record for helper (addition)
+        var helperTransaction = new WalletTransaction
         {
             WalletId = helperWallet.Id,
             Type = TransactionType.TaskPayment,
-            Amount = paymentAmount,
+            Amount = totalAmount,
             Description = $"Payment for completing task #{taskId}",
             TaskId = taskId,
             BalanceAfter = helperWallet.Balance
         };
 
-        _context.WalletTransactions.Add(transaction);
+        _context.WalletTransactions.Add(creatorTransaction);
+        _context.WalletTransactions.Add(helperTransaction);
         await _context.SaveChangesAsync();
 
         return true;

@@ -14,7 +14,10 @@ public interface ITaskService
     Task<bool> AssignTaskAsync(int taskId, int userId);
     Task<bool> AcceptNegotiatedPriceAsync(int taskId, decimal newPrice);
     Task<bool> CompleteTaskAsync(int taskId);
+    Task<bool> HelperMarkTaskDoneAsync(int taskId, int helperId);
+    Task<bool> CreatorConfirmTaskDoneAsync(int taskId, int creatorId);
     Task<bool> CancelTaskAsync(int taskId);
+    Task<bool> RepublishTaskAsync(int taskId);
 }
 
 public class TaskService : ITaskService
@@ -151,7 +154,7 @@ public class TaskService : ITaskService
     }
 
     /// <summary>
-    /// Mark task as complete and process payment
+    /// Mark task as complete and process payment (DEPRECATED - use two-step confirmation instead)
     /// </summary>
     public async Task<bool> CompleteTaskAsync(int taskId)
     {
@@ -159,6 +162,47 @@ public class TaskService : ITaskService
         if (task == null || task.Status != SkillTaskStatus.Assigned)
             return false;
 
+        task.Status = SkillTaskStatus.Completed;
+        task.CompletedAt = DateTime.UtcNow;
+        task.IsCompleted = true;
+
+        await _context.SaveChangesAsync();
+
+        // Process payment to helper
+        await _walletService.ProcessPaymentAsync(taskId);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Helper marks task as done (first step of completion)
+    /// </summary>
+    public async Task<bool> HelperMarkTaskDoneAsync(int taskId, int helperId)
+    {
+        var task = await _context.SkillTasks.FindAsync(taskId);
+        if (task == null || task.Status != SkillTaskStatus.Assigned || task.AssignedToId != helperId)
+            return false;
+
+        task.IsHelperConfirmedComplete = true;
+        task.HelperConfirmedAt = DateTime.UtcNow;
+        task.Status = SkillTaskStatus.PendingCompletion;
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    /// <summary>
+    /// Creator confirms task is done (second step - triggers payment)
+    /// </summary>
+    public async Task<bool> CreatorConfirmTaskDoneAsync(int taskId, int creatorId)
+    {
+        var task = await _context.SkillTasks.FindAsync(taskId);
+        if (task == null || task.Status != SkillTaskStatus.PendingCompletion || task.CreatorId != creatorId)
+            return false;
+
+        task.IsCreatorConfirmedComplete = true;
+        task.CreatorConfirmedAt = DateTime.UtcNow;
         task.Status = SkillTaskStatus.Completed;
         task.CompletedAt = DateTime.UtcNow;
         task.IsCompleted = true;
@@ -188,6 +232,27 @@ public class TaskService : ITaskService
         {
             await _walletService.ProcessRefundAsync(taskId);
         }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Republish a cancelled task (make it Open again)
+    /// </summary>
+    public async Task<bool> RepublishTaskAsync(int taskId)
+    {
+        var task = await _context.SkillTasks.FindAsync(taskId);
+        if (task == null || task.Status != SkillTaskStatus.Cancelled)
+            return false;
+
+        // Reset task to Open status
+        task.Status = SkillTaskStatus.Open;
+        task.AssignedToId = null;
+        task.IsDepositPaid = false;
+        task.DepositAmount = 0;
+        task.NegotiatedPrice = null;
+
+        await _context.SaveChangesAsync();
 
         return true;
     }

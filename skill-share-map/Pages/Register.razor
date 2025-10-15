@@ -129,7 +129,7 @@
 
 @code {
     private int _activeStep = 0;
-    private User _newUser = new User();
+    private User _newUser = new User { Role = UserRole.Student }; // Default to Student
     private string _password = "";
     private bool _isLoading = false;
     private Dictionary<TaskCategory, bool> _selectedCategories = new();
@@ -173,12 +173,8 @@
 
             if (user != null)
             {
-                // Fetch the full user with related data for session storage
-                var signedInUser = await AuthService.LoginAsync(_newUser.Username, _password);
-                await UserState.SetUserAsync(signedInUser ?? user);
-
-                Snackbar.Add("Registration successful! You're now signed in.", Severity.Success);
-                Navigation.NavigateTo("/");
+                Snackbar.Add("Registration successful! Please log in.", Severity.Success);
+                Navigation.NavigateTo("/login");
             }
             else
             {

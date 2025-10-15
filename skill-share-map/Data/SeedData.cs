@@ -6,12 +6,7 @@ public static class SeedData
 {
     public static void Initialize(ApplicationDbContext context)
     {
-        // Check if database already has data
-        if (context.Users.Any())
-            return;
-
-        // Create Student Users
-        var students = new List<User>
+        var userSeeds = new List<User>
         {
             new User
             {
@@ -60,12 +55,7 @@ public static class SeedData
                 HomeBaseLongitude = 151.2313,
                 HomeBaseAddress = "Kensington NSW 2052",
                 ReputationLevel = 5.0
-            }
-        };
-
-        // Create Company/School Users
-        var companies = new List<User>
-        {
+            },
             new User
             {
                 Username = "techcorp",
@@ -94,23 +84,45 @@ public static class SeedData
             }
         };
 
-        context.Users.AddRange(students);
-        context.Users.AddRange(companies);
-        context.SaveChanges();
-
-        // Create Wallets for all users
-        foreach (var user in students.Concat(companies))
+        foreach (var userSeed in userSeeds)
         {
-            context.Wallets.Add(new Wallet
+            if (!context.Users.Any(u => u.Username == userSeed.Username))
             {
-                UserId = user.Id,
-                Balance = 1000
-            });
+                context.Users.Add(userSeed);
+            }
         }
+
         context.SaveChanges();
 
-        // Create Tasks
-        var tasks = new List<SkillTask>
+        var trackedUsernames = userSeeds.Select(u => u.Username).ToList();
+        var userLookup = context.Users
+            .Where(u => trackedUsernames.Contains(u.Username))
+            .ToDictionary(u => u.Username, u => u);
+
+        if (!userLookup.TryGetValue("alice_student", out var alice) ||
+            !userLookup.TryGetValue("bob_student", out var bob) ||
+            !userLookup.TryGetValue("charlie_student", out var charlie) ||
+            !userLookup.TryGetValue("techcorp", out var techcorp) ||
+            !userLookup.TryGetValue("design_studio", out var designStudio))
+        {
+            return;
+        }
+
+        foreach (var user in userLookup.Values)
+        {
+            if (!context.Wallets.Any(w => w.UserId == user.Id))
+            {
+                context.Wallets.Add(new Wallet
+                {
+                    UserId = user.Id,
+                    Balance = 1000
+                });
+            }
+        }
+
+        context.SaveChanges();
+
+        var tasksToSeed = new List<SkillTask>
         {
             new SkillTask
             {
@@ -120,7 +132,7 @@ public static class SeedData
                 Status = SkillTaskStatus.Open,
                 Budget = 50,
                 Deadline = DateTime.UtcNow.AddDays(7),
-                CreatorId = students[0].Id,
+                CreatorId = alice.Id,
                 Latitude = -33.8836,
                 Longitude = 151.2006,
                 LocationAddress = "UTS Building 11"
@@ -133,7 +145,7 @@ public static class SeedData
                 Status = SkillTaskStatus.Open,
                 Budget = 150,
                 Deadline = DateTime.UtcNow.AddDays(3),
-                CreatorId = students[1].Id,
+                CreatorId = bob.Id,
                 Latitude = -33.8879,
                 Longitude = 151.1876,
                 LocationAddress = "University of Sydney, Quadrangle"
@@ -146,7 +158,7 @@ public static class SeedData
                 Status = SkillTaskStatus.Open,
                 Budget = 200,
                 Deadline = DateTime.UtcNow.AddDays(14),
-                CreatorId = students[2].Id,
+                CreatorId = charlie.Id,
                 Latitude = -33.9173,
                 Longitude = 151.2313,
                 LocationAddress = "UNSW Campus"
@@ -159,7 +171,7 @@ public static class SeedData
                 Status = SkillTaskStatus.Open,
                 Budget = 80,
                 Deadline = DateTime.UtcNow.AddDays(5),
-                CreatorId = students[0].Id,
+                CreatorId = alice.Id,
                 Latitude = -33.8836,
                 Longitude = 151.2006,
                 LocationAddress = "UTS Library"
@@ -172,7 +184,7 @@ public static class SeedData
                 Status = SkillTaskStatus.Open,
                 Budget = 40,
                 Deadline = DateTime.UtcNow.AddDays(30),
-                CreatorId = students[1].Id,
+                CreatorId = bob.Id,
                 Latitude = -33.8879,
                 Longitude = 151.1876,
                 LocationAddress = "Sydney CBD"
@@ -185,8 +197,8 @@ public static class SeedData
                 Status = SkillTaskStatus.Assigned,
                 Budget = 100,
                 Deadline = DateTime.UtcNow.AddDays(10),
-                CreatorId = students[0].Id,
-                AssignedToId = students[2].Id,
+                CreatorId = alice.Id,
+                AssignedToId = charlie.Id,
                 Latitude = -33.8836,
                 Longitude = 151.2006,
                 LocationAddress = "UTS Building 2",
@@ -195,11 +207,22 @@ public static class SeedData
             }
         };
 
-        context.SkillTasks.AddRange(tasks);
+        foreach (var taskSeed in tasksToSeed)
+        {
+            if (!context.SkillTasks.Any(t => t.Title == taskSeed.Title))
+            {
+                context.SkillTasks.Add(taskSeed);
+            }
+        }
+
         context.SaveChanges();
 
-        // Create Jobs
-        var jobs = new List<Job>
+        var taskTitles = tasksToSeed.Select(t => t.Title).ToList();
+        var taskLookup = context.SkillTasks
+            .Where(t => taskTitles.Contains(t.Title))
+            .ToDictionary(t => t.Title, t => t);
+
+        var jobsToSeed = new List<Job>
         {
             new Job
             {
@@ -207,7 +230,7 @@ public static class SeedData
                 Responsibilities = "Develop web applications using React and Node.js. Work with senior developers on real projects.",
                 Qualifications = "Currently studying Computer Science or related field. Familiar with JavaScript and web development.",
                 EmploymentType = EmploymentType.Internship,
-                PostedById = companies[0].Id,
+                PostedById = techcorp.Id,
                 Latitude = -33.8650,
                 Longitude = 151.2094,
                 LocationAddress = "200 George St, Sydney NSW 2000",
@@ -219,7 +242,7 @@ public static class SeedData
                 Responsibilities = "Create visual content for social media and marketing campaigns. Assist senior designers with projects.",
                 Qualifications = "Portfolio showcasing design skills. Proficient in Adobe Creative Suite.",
                 EmploymentType = EmploymentType.PartTime,
-                PostedById = companies[1].Id,
+                PostedById = designStudio.Id,
                 Latitude = -33.8697,
                 Longitude = 151.2079,
                 LocationAddress = "Surry Hills NSW 2010",
@@ -231,7 +254,7 @@ public static class SeedData
                 Responsibilities = "Design user interfaces for mobile and web applications. Conduct user research and testing.",
                 Qualifications = "2+ years experience in UI/UX design. Strong portfolio required.",
                 EmploymentType = EmploymentType.FullTime,
-                PostedById = companies[0].Id,
+                PostedById = techcorp.Id,
                 Latitude = -33.8650,
                 Longitude = 151.2094,
                 LocationAddress = "200 George St, Sydney NSW 2000",
@@ -239,11 +262,17 @@ public static class SeedData
             }
         };
 
-        context.Jobs.AddRange(jobs);
+        foreach (var jobSeed in jobsToSeed)
+        {
+            if (!context.Jobs.Any(j => j.Title == jobSeed.Title))
+            {
+                context.Jobs.Add(jobSeed);
+            }
+        }
+
         context.SaveChanges();
 
-        // Create Courses
-        var courses = new List<Course>
+        var coursesToSeed = new List<Course>
         {
             new Course
             {
@@ -314,59 +343,87 @@ public static class SeedData
             }
         };
 
-        context.Courses.AddRange(courses);
+        foreach (var courseSeed in coursesToSeed)
+        {
+            if (!context.Courses.Any(c => c.Title == courseSeed.Title))
+            {
+                context.Courses.Add(courseSeed);
+            }
+        }
+
         context.SaveChanges();
 
-        // Create some skill progress for Charlie (the expert helper)
-        var charlieProgress = new List<UserSkillProgress>
+        var progressSeeds = new List<UserSkillProgress>
         {
             new UserSkillProgress
             {
-                UserId = students[2].Id,
+                UserId = charlie.Id,
                 Category = TaskCategory.StudyHelp,
                 TotalXp = 850,
                 CurrentTier = BadgeTier.Expert
             },
             new UserSkillProgress
             {
-                UserId = students[2].Id,
+                UserId = charlie.Id,
                 Category = TaskCategory.TechHelp,
                 TotalXp = 450,
                 CurrentTier = BadgeTier.Advanced
             }
         };
 
-        context.UserSkillProgress.AddRange(charlieProgress);
+        foreach (var progressSeed in progressSeeds)
+        {
+            if (!context.UserSkillProgress.Any(p =>
+                    p.UserId == progressSeed.UserId &&
+                    p.Category == progressSeed.Category))
+            {
+                context.UserSkillProgress.Add(progressSeed);
+            }
+        }
+
         context.SaveChanges();
 
-        // Create badges for Charlie
-        var charlieBadges = new List<UserBadge>
+        var badgeSeeds = new List<UserBadge>
         {
             new UserBadge
             {
-                UserId = students[2].Id,
+                UserId = charlie.Id,
                 Category = TaskCategory.StudyHelp,
                 Tier = BadgeTier.Expert
             },
             new UserBadge
             {
-                UserId = students[2].Id,
+                UserId = charlie.Id,
                 Category = TaskCategory.TechHelp,
                 Tier = BadgeTier.Advanced
             }
         };
 
-        context.UserBadges.AddRange(charlieBadges);
+        foreach (var badgeSeed in badgeSeeds)
+        {
+            if (!context.UserBadges.Any(b =>
+                    b.UserId == badgeSeed.UserId &&
+                    b.Category == badgeSeed.Category &&
+                    b.Tier == badgeSeed.Tier))
+            {
+                context.UserBadges.Add(badgeSeed);
+            }
+        }
+
         context.SaveChanges();
 
-        // Create some ratings
-        var ratings = new List<Rating>
+        if (!taskLookup.TryGetValue("Math Exam Preparation", out var mathPrepTask))
+        {
+            return;
+        }
+
+        var ratingSeeds = new List<Rating>
         {
             new Rating
             {
-                FromUserId = students[0].Id,
-                ToUserId = students[2].Id,
-                TaskId = tasks[5].Id,
+                FromUserId = alice.Id,
+                ToUserId = charlie.Id,
+                TaskId = mathPrepTask.Id,
                 Category = TaskCategory.StudyHelp,
                 Stars = 5,
                 Comment = "Charlie is an amazing tutor! Very patient and knowledgeable.",
@@ -374,15 +431,23 @@ public static class SeedData
             },
             new Rating
             {
-                FromUserId = students[1].Id,
-                ToUserId = students[2].Id,
+                FromUserId = bob.Id,
+                ToUserId = charlie.Id,
+                Category = TaskCategory.TechHelp,
                 Stars = 4,
                 Comment = "Great help with my coding assignment. Would recommend!",
                 XpAwarded = 10
             }
         };
 
-        context.Ratings.AddRange(ratings);
+        foreach (var ratingSeed in ratingSeeds)
+        {
+            if (!context.Ratings.Any(r => r.Comment == ratingSeed.Comment))
+            {
+                context.Ratings.Add(ratingSeed);
+            }
+        }
+
         context.SaveChanges();
     }
 }

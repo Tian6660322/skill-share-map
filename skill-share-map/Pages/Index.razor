@@ -38,10 +38,11 @@
 
                     <!-- Status Filter -->
                     <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Status</MudText>
-                    <MudChipSet @bind-SelectedChip="_selectedStatusChip" T="SkillTaskStatus" Filter="true" Mandatory="false">
-                        <MudChip T="SkillTaskStatus" Text="Open" Value="@SkillTaskStatus.Open" Color="Color.Success" />
-                        <MudChip T="SkillTaskStatus" Text="Assigned" Value="@SkillTaskStatus.Assigned" Color="Color.Info" />
-                    </MudChipSet>
+                    <MudSelect @bind-Value="_selectedStatus" T="SkillTaskStatus?" Placeholder="All Statuses" Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.Open)">Open</MudSelectItem>
+                        <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.Assigned)">Assigned</MudSelectItem>
+                        <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.PendingCompletion)">In Progress</MudSelectItem>
+                    </MudSelect>
 
                     <!-- Distance Filter -->
                     <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Distance: @_distanceKm km</MudText>
@@ -168,12 +169,14 @@
     </MudGrid>
 </MudContainer>
 
+@implements IDisposable
+
 @code {
     private MapComponent? _mapComponent;
     private string _displayType = "tasks";
     private TaskCategory? _selectedCategory;
-    private MudChip<SkillTaskStatus>? _selectedStatusChip;
-    private int _distanceKm = 10;
+    private SkillTaskStatus? _selectedStatus;
+    private int _distanceKm = 50; // Default to 50km to show more tasks
 
     private SkillTask? _selectedTask;
     private Job? _selectedJob;
@@ -187,6 +190,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Subscribe to navigation events to reload data when returning to this page
+        Navigation.LocationChanged += OnLocationChanged;
         await LoadData();
     }
 
@@ -199,10 +204,29 @@
         }
     }
 
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // Reload data when navigating back to this page
+        if (e.Location.EndsWith("/") || e.Location.EndsWith("/index"))
+        {
+            InvokeAsync(async () =>
+            {
+                await LoadData();
+                await ApplyFilters();
+            });
+        }
+    }
+
     private async Task LoadData()
     {
         _tasks = await TaskService.GetTasksAsync();
         _jobs = await JobService.GetOpenJobsAsync();
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from navigation events
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 
     private async Task ApplyFilters()
@@ -225,9 +249,9 @@
             }
 
             // Filter by status
-            if (_selectedStatusChip?.Value is SkillTaskStatus status)
+            if (_selectedStatus.HasValue)
             {
-                filteredTasks = filteredTasks.Where(t => t.Status == status);
+                filteredTasks = filteredTasks.Where(t => t.Status == _selectedStatus.Value);
             }
 
             // Filter by distance
@@ -296,8 +320,8 @@
     private async Task ResetFilters()
     {
         _selectedCategory = null;
-        _selectedStatusChip = null;
-        _distanceKm = 10;
+        _selectedStatus = null;
+        _distanceKm = 50; // Increase to 50km to surface more tasks after clearing filters
         _selectedTask = null;
         _selectedJob = null;
         await ApplyFilters();
@@ -324,7 +348,8 @@
             SkillTaskStatus.Open => Color.Success,
             SkillTaskStatus.Assigned => Color.Info,
             SkillTaskStatus.PendingDeposit => Color.Warning,
-            SkillTaskStatus.Completed => Color.Default,
+            SkillTaskStatus.PendingCompletion => Color.Warning,
+            SkillTaskStatus.Completed => Color.Success,
             SkillTaskStatus.Cancelled => Color.Error,
             _ => Color.Default
         };
