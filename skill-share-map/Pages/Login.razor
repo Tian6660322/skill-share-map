@@ -47,16 +47,33 @@
 
         <MudDivider Class="my-6" />
 
-        <MudText Typo="Typo.body2" Align="Align.Center">
-            Don't have an account?
+        <MudText Typo="Typo.body2" Align="Align.Center" Class="mb-3">
+            Don't have an account? Choose your registration type:
         </MudText>
-        <MudButton Variant="Variant.Text"
-                   Color="Color.Primary"
-                   FullWidth="true"
-                   Href="/register"
-                   Class="mt-2">
-            Sign Up Now
-        </MudButton>
+
+        <MudStack Spacing="2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Href="/register/student"
+                       StartIcon="@Icons.Material.Filled.School">
+                Register as Student
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       FullWidth="true"
+                       Href="/register/company"
+                       StartIcon="@Icons.Material.Filled.Business">
+                Register as Company
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Tertiary"
+                       FullWidth="true"
+                       Href="/register/school"
+                       StartIcon="@Icons.Material.Filled.AccountBalance">
+                Register as School
+            </MudButton>
+        </MudStack>
 
         <!-- Demo Credentials -->
         <MudAlert Severity="Severity.Info" Class="mt-6">

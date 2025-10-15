@@ -1,0 +1,226 @@
+@page "/register/company"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject IAuthService AuthService
+@inject IGeoService GeoService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject UserState UserState
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-8">
+    <MudPaper Elevation="4" Class="pa-6">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-2">Company Registration</MudText>
+        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mb-6">
+            Join as a company to find talented students for your projects
+        </MudText>
+
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @bind-ActivePanelIndex="_activeStep">
+            <!-- Tab 1: Account Info -->
+            <MudTabPanel Text="Account" Icon="@Icons.Material.Filled.AccountCircle">
+                <MudText Typo="Typo.h6" Class="mb-4">Account Information</MudText>
+                <MudTextField @bind-Value="_newUser.Username" Label="Username" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="_newUser.Email" Label="Company Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="_confirmPassword" Label="Confirm Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" />
+
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4" OnClick="() => _activeStep = 1">
+                    Next
+                </MudButton>
+            </MudTabPanel>
+
+            <!-- Tab 2: Company Info -->
+            <MudTabPanel Text="Company Info" Icon="@Icons.Material.Filled.Business">
+                <MudText Typo="Typo.h6" Class="mb-4">Company Details</MudText>
+                <MudTextField @bind-Value="_newUser.CompanyName" Label="Company Name" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="_newUser.WebsiteUrl" Label="Website URL" Variant="Variant.Outlined" Class="mb-3" Placeholder="https://example.com" />
+                <MudTextField @bind-Value="_newUser.CompanyDescription" Label="Company Description" Lines="4" Variant="Variant.Outlined" Placeholder="Tell students about your company..." />
+
+                <div class="d-flex gap-2 mt-4">
+                    <MudButton Variant="Variant.Text" OnClick="() => _activeStep = 0">Back</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => _activeStep = 2">Next</MudButton>
+                </div>
+            </MudTabPanel>
+
+            <!-- Tab 3: Location -->
+            <MudTabPanel Text="Location" Icon="@Icons.Material.Filled.LocationOn">
+                <MudText Typo="Typo.h6" Class="mb-4">Company Location</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Enter your company address to find students nearby
+                </MudText>
+
+                <MudTextField @bind-Value="_newUser.HomeBaseAddress"
+                              Label="Address (e.g., Sydney, NSW or 123 Business St, Sydney)"
+                              Variant="Variant.Outlined"
+                              FullWidth="true"
+                              Class="mb-3"
+                              Placeholder="Enter your company address" />
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="GeocodeAddress"
+                           Disabled="_isGeocodingAddress"
+                           Class="mb-4">
+                    @if (_isGeocodingAddress)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <text>Finding location...</text>
+                    }
+                    else
+                    {
+                        <text>Find Coordinates</text>
+                    }
+                </MudButton>
+
+                @if (_newUser.HomeBaseLatitude.HasValue && _newUser.HomeBaseLongitude.HasValue)
+                {
+                    <MudAlert Severity="Severity.Success" Class="mb-3">
+                        Location found: @_newUser.HomeBaseLatitude.Value.ToString("F6"), @_newUser.HomeBaseLongitude.Value.ToString("F6")
+                    </MudAlert>
+                }
+
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="_newUser.HomeBaseLatitude"
+                                         Label="Latitude"
+                                         Variant="Variant.Outlined"
+                                         Format="N6"
+                                         ReadOnly="true" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="_newUser.HomeBaseLongitude"
+                                         Label="Longitude"
+                                         Variant="Variant.Outlined"
+                                         Format="N6"
+                                         ReadOnly="true" />
+                    </MudItem>
+                </MudGrid>
+
+                <div class="d-flex gap-2 mt-4">
+                    <MudButton Variant="Variant.Text" OnClick="() => _activeStep = 1">Back</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleRegister" Disabled="_isLoading || !_newUser.HomeBaseLatitude.HasValue">
+                        @if (_isLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        }
+                        else
+                        {
+                            <text>Complete Registration</text>
+                        }
+                    </MudButton>
+                </div>
+            </MudTabPanel>
+        </MudTabs>
+
+        <MudButton Href="/login" Variant="Variant.Text" Class="mt-4" FullWidth="true">
+            Already have an account? Login
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private int _activeStep = 0;
+    private User _newUser = new User { Role = UserRole.Company };
+    private string _password = "";
+    private string _confirmPassword = "";
+    private bool _isLoading = false;
+    private bool _isGeocodingAddress = false;
+
+    protected override void OnInitialized()
+    {
+        if (UserState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+    }
+
+    private async Task GeocodeAddress()
+    {
+        if (string.IsNullOrWhiteSpace(_newUser.HomeBaseAddress))
+        {
+            Snackbar.Add("Please enter an address first", Severity.Warning);
+            return;
+        }
+
+        _isGeocodingAddress = true;
+        try
+        {
+            var result = await GeoService.GeocodeAddressAsync(_newUser.HomeBaseAddress);
+            if (result.HasValue)
+            {
+                _newUser.HomeBaseLatitude = result.Value.lat;
+                _newUser.HomeBaseLongitude = result.Value.lon;
+                Snackbar.Add("Location found successfully!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Could not find location. Please try a different address.", Severity.Warning);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error finding location. Please try again.", Severity.Error);
+        }
+        finally
+        {
+            _isGeocodingAddress = false;
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        _isLoading = true;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_newUser.Username) || string.IsNullOrWhiteSpace(_password))
+            {
+                Snackbar.Add("Please fill in all required fields", Severity.Warning);
+                _isLoading = false;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_newUser.CompanyName))
+            {
+                Snackbar.Add("Please enter your company name", Severity.Warning);
+                _isLoading = false;
+                return;
+            }
+
+            if (_password != _confirmPassword)
+            {
+                Snackbar.Add("Passwords do not match", Severity.Warning);
+                _isLoading = false;
+                return;
+            }
+
+            if (!_newUser.HomeBaseLatitude.HasValue || !_newUser.HomeBaseLongitude.HasValue)
+            {
+                Snackbar.Add("Please set your company location", Severity.Warning);
+                _isLoading = false;
+                return;
+            }
+
+            var user = await AuthService.RegisterAsync(_newUser, _password);
+
+            if (user != null)
+            {
+                Snackbar.Add("Company registration successful! Please log in.", Severity.Success);
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                Snackbar.Add("Username already exists", Severity.Error);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("An error occurred during registration", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}
