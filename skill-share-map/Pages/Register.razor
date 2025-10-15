@@ -2,6 +2,7 @@
 @using SkillShareMap.Services
 @using SkillShareMap.Models
 @inject IAuthService AuthService
+@inject IGeoService GeoService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject UserState UserState
@@ -86,28 +87,61 @@
             <!-- Tab 4: Location -->
             <MudTabPanel Text="Location" Icon="@Icons.Material.Filled.LocationOn">
                 <MudText Typo="Typo.h6" Class="mb-4">Set Your Home Base</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Enter your address to help us find nearby tasks and opportunities
+                </MudText>
+
                 <MudTextField @bind-Value="_newUser.HomeBaseAddress"
-                              Label="Address"
+                              Label="Address (e.g., Sydney, NSW or 123 Main St, Sydney)"
                               Variant="Variant.Outlined"
                               FullWidth="true"
-                              Class="mb-3" />
+                              Class="mb-3"
+                              Placeholder="Enter your city or full address" />
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="GeocodeAddress"
+                           Disabled="_isGeocodingAddress"
+                           Class="mb-4">
+                    @if (_isGeocodingAddress)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <text>Finding location...</text>
+                    }
+                    else
+                    {
+                        <text>Find Coordinates</text>
+                    }
+                </MudButton>
+
+                @if (_newUser.HomeBaseLatitude.HasValue && _newUser.HomeBaseLongitude.HasValue)
+                {
+                    <MudAlert Severity="Severity.Success" Class="mb-3">
+                        Location found: @_newUser.HomeBaseLatitude.Value.ToString("F6"), @_newUser.HomeBaseLongitude.Value.ToString("F6")
+                    </MudAlert>
+                }
 
                 <MudGrid>
                     <MudItem xs="6">
                         <MudNumericField @bind-Value="_newUser.HomeBaseLatitude"
                                          Label="Latitude"
-                                         Variant="Variant.Outlined" />
+                                         Variant="Variant.Outlined"
+                                         Format="N6"
+                                         ReadOnly="true" />
                     </MudItem>
                     <MudItem xs="6">
                         <MudNumericField @bind-Value="_newUser.HomeBaseLongitude"
                                          Label="Longitude"
-                                         Variant="Variant.Outlined" />
+                                         Variant="Variant.Outlined"
+                                         Format="N6"
+                                         ReadOnly="true" />
                     </MudItem>
                 </MudGrid>
 
                 <div class="d-flex gap-2 mt-4">
                     <MudButton Variant="Variant.Text" OnClick="() => _activeStep = 2">Back</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleRegister" Disabled="_isLoading">
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleRegister" Disabled="_isLoading || !_newUser.HomeBaseLatitude.HasValue">
                         @if (_isLoading)
                         {
                             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
@@ -132,6 +166,7 @@
     private User _newUser = new User { Role = UserRole.Student }; // Default to Student
     private string _password = "";
     private bool _isLoading = false;
+    private bool _isGeocodingAddress = false;
     private Dictionary<TaskCategory, bool> _selectedCategories = new();
 
     protected override void OnInitialized()
@@ -148,6 +183,39 @@
         }
     }
 
+    private async Task GeocodeAddress()
+    {
+        if (string.IsNullOrWhiteSpace(_newUser.HomeBaseAddress))
+        {
+            Snackbar.Add("Please enter an address first", Severity.Warning);
+            return;
+        }
+
+        _isGeocodingAddress = true;
+        try
+        {
+            var result = await GeoService.GeocodeAddressAsync(_newUser.HomeBaseAddress);
+            if (result.HasValue)
+            {
+                _newUser.HomeBaseLatitude = result.Value.lat;
+                _newUser.HomeBaseLongitude = result.Value.lon;
+                Snackbar.Add("Location found successfully!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Could not find location. Please try a different address.", Severity.Warning);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error finding location. Please try again.", Severity.Error);
+        }
+        finally
+        {
+            _isGeocodingAddress = false;
+        }
+    }
+
     private async Task HandleRegister()
     {
         _isLoading = true;
@@ -157,6 +225,13 @@
             if (string.IsNullOrWhiteSpace(_newUser.Username) || string.IsNullOrWhiteSpace(_password))
             {
                 Snackbar.Add("Please fill in all required fields", Severity.Warning);
+                _isLoading = false;
+                return;
+            }
+
+            if (!_newUser.HomeBaseLatitude.HasValue || !_newUser.HomeBaseLongitude.HasValue)
+            {
+                Snackbar.Add("Please set your home base location", Severity.Warning);
                 _isLoading = false;
                 return;
             }

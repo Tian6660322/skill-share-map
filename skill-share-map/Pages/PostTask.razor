@@ -4,6 +4,7 @@
 @inject ITaskService TaskService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject UserState UserState
 
 <PageTitle>Post a Task - Skill Share Map</PageTitle>
 
@@ -162,9 +163,20 @@
     {
         Category = TaskCategory.StudyHelp,
         Budget = 50,
-        Status = SkillTaskStatus.Open,
-        CreatorId = 1 // TODO: Get from auth service
+        Status = SkillTaskStatus.Open
     };
+
+    protected override void OnInitialized()
+    {
+        if (!UserState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        // Set the creator ID to the current logged-in user
+        _task.CreatorId = UserState.CurrentUser!.Id;
+    }
 
     private async Task GetCurrentLocation()
     {

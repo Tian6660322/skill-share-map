@@ -131,6 +131,14 @@ public class TaskService : ITaskService
         if (task == null || task.Status != SkillTaskStatus.Open)
             return false;
 
+        // Check if user is a company or school - they cannot accept tasks
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            return false;
+
+        if (user.Role == UserRole.Company || user.Role == UserRole.School)
+            return false; // Companies and schools can only post tasks, not accept them
+
         task.AssignedToId = userId;
         task.Status = SkillTaskStatus.PendingDeposit;
         await _context.SaveChangesAsync();

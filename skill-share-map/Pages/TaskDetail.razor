@@ -176,26 +176,41 @@ else
                     }
                     else if (_task.Status == SkillTaskStatus.Open)
                     {
-                        <div class="d-flex flex-wrap gap-2">
+                        @if (UserState.CurrentUser?.Role == UserRole.Company || UserState.CurrentUser?.Role == UserRole.School)
+                        {
+                            <MudAlert Severity="Severity.Info" Class="mb-4">
+                                @(UserState.CurrentUser.Role == UserRole.Company ? "Companies" : "Schools") can only post tasks and jobs, not accept them.
+                            </MudAlert>
                             <MudButton Variant="Variant.Filled"
                                        Color="Color.Primary"
                                        StartIcon="@Icons.Material.Filled.Chat"
                                        Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")">
                                 Open Chat
                             </MudButton>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Success"
-                                       StartIcon="@Icons.Material.Filled.Check"
-                                       OnClick="AcceptTask">
-                                Accept Task
-                            </MudButton>
-                            <MudButton Variant="Variant.Text"
-                                       Color="Color.Error"
-                                       StartIcon="@Icons.Material.Filled.Report"
-                                       OnClick="ReportTask">
-                                Report
-                            </MudButton>
-                        </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-wrap gap-2">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Chat"
+                                           Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")">
+                                    Open Chat
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Success"
+                                           StartIcon="@Icons.Material.Filled.Check"
+                                           OnClick="AcceptTask">
+                                    Accept Task
+                                </MudButton>
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Error"
+                                           StartIcon="@Icons.Material.Filled.Report"
+                                           OnClick="ReportTask">
+                                    Report
+                                </MudButton>
+                            </div>
+                        }
                     }
                 </MudPaper>
             </MudItem>

@@ -5,6 +5,7 @@
 @inject ITaskService TaskService
 @inject IJobService JobService
 @inject IGeoService GeoService
+@inject UserState UserState
 @inject NavigationManager Navigation
 
 <PageTitle>Skill Share Map</PageTitle>
@@ -82,8 +83,8 @@
                           OnMarkerClick="HandleMarkerClick"
                           MapId="mainMap"
                           Height="100%"
-                          InitialLat="-33.8688"
-                          InitialLng="151.2093"
+                          InitialLat="@_userLat"
+                          InitialLng="@_userLng"
                           InitialZoom="13" />
 
             <!-- Task Summary Card (Slides up when item clicked) -->
@@ -192,6 +193,17 @@
     {
         // Subscribe to navigation events to reload data when returning to this page
         Navigation.LocationChanged += OnLocationChanged;
+
+        // Use user's homebase location if available
+        if (UserState.IsAuthenticated && UserState.CurrentUser != null)
+        {
+            if (UserState.CurrentUser.HomeBaseLatitude.HasValue && UserState.CurrentUser.HomeBaseLongitude.HasValue)
+            {
+                _userLat = UserState.CurrentUser.HomeBaseLatitude.Value;
+                _userLng = UserState.CurrentUser.HomeBaseLongitude.Value;
+            }
+        }
+
         await LoadData();
     }
 

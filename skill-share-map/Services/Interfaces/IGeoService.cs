@@ -11,4 +11,11 @@ public interface IGeoService
     /// <param name="lon2">Longitude of the second point</param>
     /// <returns>Distance in kilometers</returns>
     double CalculateDistance(double lat1, double lon1, double lat2, double lon2);
+
+    /// <summary>
+    /// Geocode an address using Nominatim API
+    /// </summary>
+    /// <param name="address">The address to geocode</param>
+    /// <returns>Tuple of (latitude, longitude) or null if not found</returns>
+    Task<(double lat, double lon)?> GeocodeAddressAsync(string address);
 }

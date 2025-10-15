@@ -20,7 +20,7 @@
     <!-- Category Filter -->
     <MudPaper Elevation="2" Class="pa-4 mb-6">
         <MudText Typo="Typo.subtitle1" Class="mb-3">Filter by Category</MudText>
-        <MudSelect @bind-Value="_selectedCategory" T="TaskCategory?" Placeholder="All Categories" Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+        <MudSelect Value="_selectedCategory" T="TaskCategory?" Placeholder="All Categories" Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense" ValueChanged="OnCategoryChanged">
             @foreach (var category in Enum.GetValues<TaskCategory>())
             {
                 <MudSelectItem Value="@((TaskCategory?)category)">@GetCategoryName(category)</MudSelectItem>
@@ -164,6 +164,13 @@
         {
             _isLoading = false;
         }
+    }
+
+    private void OnCategoryChanged(TaskCategory? value)
+    {
+        _selectedCategory = value;
+        ApplyFilters();
+        StateHasChanged();
     }
 
     private void ApplyFilters()
