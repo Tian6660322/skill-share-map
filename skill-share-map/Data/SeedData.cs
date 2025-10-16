@@ -22,7 +22,7 @@ public static class SeedData
                 HomeBaseLatitude = -33.8836,
                 HomeBaseLongitude = 151.2006,
                 HomeBaseAddress = "15 Broadway, Ultimo NSW 2007",
-                ReputationLevel = 4.5
+                ReputationLevel = 0
             },
             new User
             {
@@ -38,7 +38,7 @@ public static class SeedData
                 HomeBaseLatitude = -33.8879,
                 HomeBaseLongitude = 151.1876,
                 HomeBaseAddress = "Camperdown NSW 2006",
-                ReputationLevel = 4.0
+                ReputationLevel = 0
             },
             new User
             {
@@ -54,7 +54,7 @@ public static class SeedData
                 HomeBaseLatitude = -33.9173,
                 HomeBaseLongitude = 151.2313,
                 HomeBaseAddress = "Kensington NSW 2052",
-                ReputationLevel = 5.0
+                ReputationLevel = 0
             },
             new User
             {

@@ -262,8 +262,10 @@
         {
             var filteredTasks = _tasks.AsEnumerable();
 
-            // Exclude cancelled tasks by default
-            filteredTasks = filteredTasks.Where(t => t.Status != SkillTaskStatus.Cancelled);
+            // Exclude cancelled and completed tasks by default
+            filteredTasks = filteredTasks.Where(t =>
+                t.Status != SkillTaskStatus.Cancelled &&
+                t.Status != SkillTaskStatus.Completed);
 
             // Filter by category
             if (_selectedCategory.HasValue)

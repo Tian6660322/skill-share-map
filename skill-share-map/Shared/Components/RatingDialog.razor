@@ -12,7 +12,7 @@
     </TitleContent>
     <DialogContent>
         <MudText Typo="Typo.subtitle2" Class="mb-2">How would you rate their work?</MudText>
-        <MudRating @bind-Value="_stars" Size="Size.Large" Class="mb-4" />
+        <MudRating @bind-SelectedValue="_stars" Size="Size.Large" Class="mb-4" />
 
         <MudTextField @bind-Value="_comment"
                       Label="Comment"
@@ -39,7 +39,7 @@
 
 @code {
     [CascadingParameter]
-    public required dynamic MudDialog { get; set; }
+    private IMudDialogInstance? MudDialog { get; set; }
 
     [Parameter]
     public int TaskId { get; set; }
@@ -90,7 +90,7 @@
             if (result != null)
             {
                 Snackbar.Add($"Rating submitted successfully! {result.XpAwarded} XP awarded to helper.", Severity.Success);
-                MudDialog?.Close();
+                MudDialog?.Close(DialogResult.Ok(true));
             }
             else
             {
@@ -100,7 +100,7 @@
         catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (ex.InnerException?.Message.Contains("UNIQUE") == true)
         {
             Snackbar.Add("This task has already been rated", Severity.Warning);
-            MudDialog?.Close();
+            MudDialog?.Close(DialogResult.Ok(true));
         }
         catch (ArgumentException ex)
         {

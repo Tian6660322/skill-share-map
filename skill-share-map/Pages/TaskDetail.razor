@@ -315,16 +315,16 @@ else
             // Calculate 10% deposit
             var depositAmount = _task.Budget * 0.1m;
 
-            // Process deposit (deduct from helper, add to creator)
+            // Process deposit (charge creator, credit helper)
             var depositSuccess = await WalletService.ProcessDepositAsync(_currentUserId, _task.Id, depositAmount);
 
             if (depositSuccess)
             {
-                Snackbar.Add($"Task accepted successfully! A deposit of ${depositAmount:F2} has been processed.", Severity.Success);
+                Snackbar.Add($"Task accepted successfully! The creator was charged a deposit of ${depositAmount:F2}.", Severity.Success);
             }
             else
             {
-                Snackbar.Add($"Task accepted, but deposit payment failed. Please ensure you have sufficient balance (${depositAmount:F2}).", Severity.Warning);
+                Snackbar.Add($"Task accepted, but deposit payment failed. The task creator might not have enough balance for the ${depositAmount:F2} deposit.", Severity.Warning);
             }
 
             // Reload the task to show updated status

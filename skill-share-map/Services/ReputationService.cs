@@ -33,8 +33,8 @@ public class ReputationService : IReputationService
 
         var averageRating = ratings.Average(r => r.Stars);
 
-        // Round to nearest integer (1-5)
-        return Math.Round(averageRating);
+        // Return average rating with one decimal place (e.g., 4.5)
+        return Math.Round(averageRating, 1);
     }
 
     /// <summary>

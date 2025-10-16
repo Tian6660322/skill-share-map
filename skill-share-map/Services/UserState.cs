@@ -11,8 +11,10 @@ public class UserState
     private readonly IAuthService _authService;
 
     public User? CurrentUser { get; private set; }
+    private bool _isInitialized;
 
     public bool IsAuthenticated => CurrentUser != null;
+    public bool IsInitialized => _isInitialized;
 
     public event Action? OnChange;
 
@@ -32,12 +34,16 @@ public class UserState
                 // Restore full user data from database using the session info
                 CurrentUser = await _authService.GetUserByIdAsync(session.Id);
             }
-            NotifyStateChanged();
         }
         catch
         {
             // If there's an error reading from storage, just continue with null user
             CurrentUser = null;
+        }
+        finally
+        {
+            _isInitialized = true;
+            NotifyStateChanged();
         }
     }
 

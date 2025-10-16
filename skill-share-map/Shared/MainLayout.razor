@@ -102,6 +102,11 @@
 
     private void EnsureAuthenticated()
     {
+        if (!UserState.IsInitialized)
+        {
+            return;
+        }
+
         var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
 
         if (IsPublicPage(relativePath))
