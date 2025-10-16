@@ -5,6 +5,7 @@
 @inject IJobService JobService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject UserState UserState
 
 <PageTitle>Job Details</PageTitle>
 
@@ -162,7 +163,7 @@ else
 
     private Job? _job;
     private MapComponent? _miniMap;
-    private int _currentUserId = 1; // TODO: Get from auth service
+    private int _currentUserId => UserState.CurrentUser?.Id ?? 0;
     private bool _isCompany => _job?.PostedById == _currentUserId;
 
     protected override async Task OnInitializedAsync()

@@ -168,14 +168,14 @@
 
     protected override void OnInitialized()
     {
-        if (!UserState.IsAuthenticated)
+        if (!UserState.IsAuthenticated || UserState.CurrentUser == null)
         {
             Navigation.NavigateTo("/login");
             return;
         }
 
         // Set the creator ID to the current logged-in user
-        _task.CreatorId = UserState.CurrentUser!.Id;
+        _task.CreatorId = UserState.CurrentUser.Id;
     }
 
     private async Task GetCurrentLocation()

@@ -197,10 +197,11 @@
         // Use user's homebase location if available
         if (UserState.IsAuthenticated && UserState.CurrentUser != null)
         {
-            if (UserState.CurrentUser.HomeBaseLatitude.HasValue && UserState.CurrentUser.HomeBaseLongitude.HasValue)
+            var currentUser = UserState.CurrentUser;
+            if (currentUser.HomeBaseLatitude.HasValue && currentUser.HomeBaseLongitude.HasValue)
             {
-                _userLat = UserState.CurrentUser.HomeBaseLatitude.Value;
-                _userLng = UserState.CurrentUser.HomeBaseLongitude.Value;
+                _userLat = currentUser.HomeBaseLatitude.Value;
+                _userLng = currentUser.HomeBaseLongitude.Value;
             }
         }
 

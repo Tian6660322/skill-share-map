@@ -12,6 +12,13 @@ public class GeoService : IGeoService
         _httpClient = httpClient;
         // Set User-Agent as required by Nominatim usage policy
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("SkillShareMap/1.0");
+
+        // NOTE: Nominatim Usage Policy requires maximum 1 request per second
+        // For production use, consider:
+        // 1. Implementing rate limiting (e.g., using SemaphoreSlim with delays)
+        // 2. Adding caching for frequently requested addresses
+        // 3. Using a commercial geocoding service (Google Maps, Mapbox, etc.)
+        // 4. Implementing retry logic with exponential backoff
     }
 
     /// <summary>
