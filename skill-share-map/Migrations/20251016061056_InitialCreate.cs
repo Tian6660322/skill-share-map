@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace skill_share_map.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTaskCompletionTracking : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -124,6 +124,7 @@ namespace skill_share_map.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Title = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
+                    ImageUrl = table.Column<string>(type: "TEXT", nullable: true),
                     Category = table.Column<int>(type: "INTEGER", nullable: false),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -138,7 +139,11 @@ namespace skill_share_map.Migrations
                     NegotiatedPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
                     DepositAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
                     IsDepositPaid = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsHelperConfirmedComplete = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsCreatorConfirmedComplete = table.Column<bool>(type: "INTEGER", nullable: false),
+                    HelperConfirmedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatorConfirmedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

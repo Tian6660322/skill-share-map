@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="writingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fa709a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fee140;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#writingGrad)"/>
+  <g transform="translate(400, 300)">
+    <path d="M -80 -100 L -60 80 L -40 80 L -60 -100 Z" fill="white" opacity="0.9"/>
+    <ellipse cx="-70" cy="-110" rx="15" ry="8" fill="white" opacity="0.9"/>
+    <line x1="-20" y1="-40" x2="100" y2="-40" stroke="white" stroke-width="3" opacity="0.6"/>
+    <line x1="-20" y1="0" x2="80" y2="0" stroke="white" stroke-width="3" opacity="0.6"/>
+    <line x1="-20" y1="40" x2="90" y2="40" stroke="white" stroke-width="3" opacity="0.6"/>
+    <text x="0" y="130" font-family="Arial, sans-serif" font-size="32" fill="white" text-anchor="middle" font-weight="bold">Creative Writing</text>
+  </g>
+</svg>

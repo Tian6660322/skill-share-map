@@ -11,8 +11,8 @@ using SkillShareMap.Data;
 namespace skill_share_map.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251015050402_AddTaskCompletionTracking")]
-    partial class AddTaskCompletionTracking
+    [Migration("20251016061056_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -253,6 +253,9 @@ namespace skill_share_map.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("CreatorConfirmedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("CreatorId")
                         .HasColumnType("INTEGER");
 
@@ -267,10 +270,22 @@ namespace skill_share_map.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("HelperConfirmedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsCreatorConfirmedComplete")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsDepositPaid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsHelperConfirmedComplete")
                         .HasColumnType("INTEGER");
 
                     b.Property<double?>("Latitude")

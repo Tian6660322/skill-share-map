@@ -23,6 +23,17 @@ else
             <!-- Main Content -->
             <MudItem xs="12" md="8">
                 <MudPaper Elevation="2" Class="pa-6">
+                    <!-- Task Image -->
+                    @if (!string.IsNullOrEmpty(_task.ImageUrl))
+                    {
+                        <MudImage Src="@_task.ImageUrl"
+                                  Alt="@_task.Title"
+                                  Height="300"
+                                  ObjectFit="ObjectFit.Cover"
+                                  Class="rounded mb-4"
+                                  Style="width: 100%;" />
+                    }
+
                     <!-- Header -->
                     <div class="d-flex justify-space-between align-center mb-4">
                         <div>

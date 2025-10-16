@@ -100,6 +100,16 @@
                                        OnClick="() => _selectedTask = null" />
                     </div>
 
+                    @if (!string.IsNullOrEmpty(_selectedTask.ImageUrl))
+                    {
+                        <MudImage Src="@_selectedTask.ImageUrl"
+                                  Alt="@_selectedTask.Title"
+                                  Height="150"
+                                  ObjectFit="ObjectFit.Cover"
+                                  Class="rounded mb-3"
+                                  Style="width: 100%;" />
+                    }
+
                     <MudGrid>
                         <MudItem xs="12" sm="6">
                             <MudText Typo="Typo.body2">

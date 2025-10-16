@@ -6,6 +6,7 @@ public class SkillTask
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
 
     // Task category (one of the 6 main categories)
     public TaskCategory Category { get; set; }

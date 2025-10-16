@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="webDevGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#webDevGrad)"/>
+  <g transform="translate(400, 300)">
+    <text x="0" y="-80" font-family="Arial, sans-serif" font-size="72" fill="white" text-anchor="middle" font-weight="bold">&lt;/&gt;</text>
+    <text x="0" y="20" font-family="Arial, sans-serif" font-size="36" fill="white" text-anchor="middle">Web Development</text>
+    <circle cx="-100" cy="100" r="15" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="0" cy="120" r="15" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="100" cy="100" r="15" fill="rgba(255,255,255,0.3)"/>
+  </g>
+</svg>

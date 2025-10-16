@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="photoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#photoGrad)"/>
+  <g transform="translate(400, 300)">
+    <rect x="-120" y="-80" width="240" height="160" rx="20" fill="white" opacity="0.9"/>
+    <rect x="-100" y="-60" width="200" height="120" rx="10" fill="#333"/>
+    <circle cx="0" cy="0" r="40" fill="white" opacity="0.3"/>
+    <circle cx="0" cy="0" r="25" fill="white" opacity="0.5"/>
+    <circle cx="60" cy="-40" r="12" fill="rgba(255,255,255,0.8)"/>
+    <text x="0" y="120" font-family="Arial, sans-serif" font-size="32" fill="white" text-anchor="middle" font-weight="bold">Photography</text>
+  </g>
+</svg>

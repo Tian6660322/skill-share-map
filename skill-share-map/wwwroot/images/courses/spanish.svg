@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="spanishGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff9a56;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6a88;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#spanishGrad)"/>
+  <g transform="translate(400, 300)">
+    <rect x="-120" y="-90" width="240" height="180" rx="10" fill="white" opacity="0.9"/>
+    <text x="0" y="-30" font-family="Arial, sans-serif" font-size="80" fill="#ff6a88" text-anchor="middle" font-weight="bold">Hola</text>
+    <text x="0" y="30" font-family="Arial, sans-serif" font-size="48" fill="#ff9a56" text-anchor="middle">¿Qué tal?</text>
+    <circle cx="-140" cy="-110" r="20" fill="rgba(255,255,255,0.6)"/>
+    <circle cx="140" cy="100" r="25" fill="rgba(255,255,255,0.6)"/>
+    <text x="0" y="140" font-family="Arial, sans-serif" font-size="32" fill="white" text-anchor="middle" font-weight="bold">Spanish for Beginners</text>
+  </g>
+</svg>

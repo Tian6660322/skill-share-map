@@ -270,6 +270,9 @@ namespace skill_share_map.Migrations
                     b.Property<DateTime?>("HelperConfirmedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
 

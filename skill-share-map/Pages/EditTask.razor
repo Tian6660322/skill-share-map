@@ -57,6 +57,22 @@ else
                               MaxLength="500"
                               Class="mb-4" />
 
+                <!-- Image URL -->
+                <MudTextField @bind-Value="_task.ImageUrl"
+                              Label="Image URL (optional)"
+                              Variant="Variant.Outlined"
+                              Placeholder="https://example.com/image.jpg"
+                              HelperText="Enter a URL to an image that represents your task"
+                              Class="mb-4" />
+
+                @if (!string.IsNullOrEmpty(_task.ImageUrl))
+                {
+                    <MudPaper Elevation="1" Class="pa-4 mb-4">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Image Preview:</MudText>
+                        <MudImage Src="@_task.ImageUrl" Alt="Task image preview" Height="200" ObjectFit="ObjectFit.Cover" Class="rounded" />
+                    </MudPaper>
+                }
+
                 <!-- Category -->
                 <MudSelect @bind-Value="_task.Category"
                            Label="Category"

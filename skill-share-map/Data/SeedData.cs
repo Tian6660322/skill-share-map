@@ -283,7 +283,7 @@ public static class SeedData
                 Duration = "6 weeks",
                 Difficulty = DifficultyLevel.Beginner,
                 InstructorName = "Dr. Sarah Tech",
-                ImageUrl = "/images/courses/web-dev.jpg",
+                ImageUrl = "/images/courses/web-dev.svg",
                 ExternalUrl = "https://example.com/web-dev"
             },
             new Course
@@ -295,7 +295,7 @@ public static class SeedData
                 Duration = "3 days",
                 Difficulty = DifficultyLevel.Intermediate,
                 InstructorName = "John Photographer",
-                ImageUrl = "/images/courses/photography.jpg"
+                ImageUrl = "/images/courses/photography.svg"
             },
             new Course
             {
@@ -306,7 +306,7 @@ public static class SeedData
                 Duration = "4 weeks",
                 Difficulty = DifficultyLevel.Beginner,
                 InstructorName = "Emma Writer",
-                ImageUrl = "/images/courses/writing.jpg"
+                ImageUrl = "/images/courses/writing.svg"
             },
             new Course
             {
@@ -317,7 +317,7 @@ public static class SeedData
                 Duration = "8 weeks",
                 Difficulty = DifficultyLevel.Beginner,
                 InstructorName = "Mark Designer",
-                ImageUrl = "/images/courses/graphic-design.jpg"
+                ImageUrl = "/images/courses/graphic-design.svg"
             },
             new Course
             {
@@ -328,7 +328,7 @@ public static class SeedData
                 Duration = "10 weeks",
                 Difficulty = DifficultyLevel.Beginner,
                 InstructorName = "Maria Garcia",
-                ImageUrl = "/images/courses/spanish.jpg"
+                ImageUrl = "/images/courses/spanish.svg"
             },
             new Course
             {
@@ -339,7 +339,7 @@ public static class SeedData
                 Duration = "5 weeks",
                 Difficulty = DifficultyLevel.Advanced,
                 InstructorName = "Prof. David Math",
-                ImageUrl = "/images/courses/math.jpg"
+                ImageUrl = "/images/courses/math.svg"
             }
         };
 
