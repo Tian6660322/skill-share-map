@@ -47,16 +47,36 @@
 
                     <!-- Distance Filter -->
                     <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Distance: @_distanceKm km</MudText>
-                    <MudSlider @bind-Value="_distanceKm" Min="1" Max="50" Step="1" Color="Color.Primary" />
+                    <MudSlider T="int"
+                               Value="_distanceKm"
+                               ValueChanged="OnDistanceChanged"
+                               Min="0"
+                               Max="50"
+                               Step="1"
+                               Color="Color.Primary"
+                               Immediate="true" />
+                    <MudText Typo="Typo.caption" Class="mt-1">
+                        Showing @_visibleTasks.Count task(s) within @_distanceKm km
+                    </MudText>
                 }
                 else
                 {
                     <!-- Distance Filter for Jobs -->
                     <MudText Typo="Typo.subtitle2" Class="mb-2">Distance: @_distanceKm km</MudText>
-                    <MudSlider @bind-Value="_distanceKm" Min="1" Max="50" Step="1" Color="Color.Secondary" />
+                    <MudSlider T="int"
+                               Value="_distanceKm"
+                               ValueChanged="OnDistanceChanged"
+                               Min="0"
+                               Max="50"
+                               Step="1"
+                               Color="Color.Secondary"
+                               Immediate="true" />
 
                     <MudText Typo="Typo.body2" Class="mt-4" Color="Color.Secondary">
                         Showing open job positions within @_distanceKm km
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                        Showing @_visibleJobs.Count job(s) within @_distanceKm km
                     </MudText>
                 }
 
@@ -74,6 +94,13 @@
                            OnClick="ResetFilters">
                     Reset
                 </MudButton>
+
+                @if (!string.IsNullOrEmpty(_noResultsMessage))
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Text" Class="mt-3">
+                        @_noResultsMessage
+                    </MudAlert>
+                }
             </MudPaper>
         </MudItem>
 
@@ -194,6 +221,9 @@
 
     private List<SkillTask> _tasks = new();
     private List<Job> _jobs = new();
+    private List<SkillTask> _visibleTasks = new();
+    private List<Job> _visibleJobs = new();
+    private string? _noResultsMessage;
 
     // User's current location (default: Sydney CBD)
     private double _userLat = -33.8688;
@@ -258,88 +288,108 @@
 
         await _mapComponent.ClearMarkersAsync();
 
+        _noResultsMessage = null;
+        var hasMarkers = false;
+
         if (_displayType == "tasks")
         {
-            var filteredTasks = _tasks.AsEnumerable();
+            _visibleJobs.Clear();
 
-            // Exclude cancelled and completed tasks by default
-            filteredTasks = filteredTasks.Where(t =>
-                t.Status != SkillTaskStatus.Cancelled &&
-                t.Status != SkillTaskStatus.Completed);
+            var filteredTasks = _tasks
+                .Where(t => t.Status != SkillTaskStatus.Cancelled && t.Status != SkillTaskStatus.Completed)
+                .Where(t => !_selectedCategory.HasValue || t.Category == _selectedCategory.Value)
+                .Where(t => !_selectedStatus.HasValue || t.Status == _selectedStatus.Value)
+                .Where(t => t.Latitude.HasValue && t.Longitude.HasValue)
+                .Where(t =>
+                {
+                    var distance = GeoService.CalculateDistance(
+                        _userLat, _userLng,
+                        t.Latitude!.Value, t.Longitude!.Value);
+                    return distance <= _distanceKm;
+                })
+                .ToList();
 
-            // Filter by category
-            if (_selectedCategory.HasValue)
-            {
-                filteredTasks = filteredTasks.Where(t => t.Category == _selectedCategory.Value);
-            }
-
-            // Filter by status
-            if (_selectedStatus.HasValue)
-            {
-                filteredTasks = filteredTasks.Where(t => t.Status == _selectedStatus.Value);
-            }
-
-            // Filter by distance
-            filteredTasks = filteredTasks.Where(t =>
-            {
-                if (!t.Latitude.HasValue || !t.Longitude.HasValue)
-                    return false;
-
-                var distance = GeoService.CalculateDistance(
-                    _userLat, _userLng,
-                    t.Latitude.Value, t.Longitude.Value
-                );
-
-                return distance <= _distanceKm;
-            });
+            _visibleTasks = filteredTasks;
 
             // Add markers for filtered tasks
-            foreach (var task in filteredTasks)
+            foreach (var task in _visibleTasks)
             {
-                if (task.Latitude.HasValue && task.Longitude.HasValue)
-                {
-                    await _mapComponent.AddMarkerAsync(
-                        task.Id,
-                        task.Latitude.Value,
-                        task.Longitude.Value,
-                        task.Title,
-                        "task"
-                    );
-                }
+                await _mapComponent.AddMarkerAsync(
+                    task.Id,
+                    task.Latitude!.Value,
+                    task.Longitude!.Value,
+                    task.Title,
+                    "task");
+                hasMarkers = true;
+            }
+
+            if (_visibleTasks.Count == 0)
+            {
+                _noResultsMessage = $"No tasks found within {_distanceKm} km of your location.";
+            }
+            else if (_selectedTask != null && !_visibleTasks.Any(t => t.Id == _selectedTask.Id))
+            {
+                _selectedTask = null;
             }
         }
         else // jobs
         {
+            _visibleTasks.Clear();
+
             // Filter jobs by distance
-            var filteredJobs = _jobs.Where(j =>
-            {
-                if (!j.Latitude.HasValue || !j.Longitude.HasValue)
-                    return false;
-
-                var distance = GeoService.CalculateDistance(
-                    _userLat, _userLng,
-                    j.Latitude.Value, j.Longitude.Value
-                );
-
-                return distance <= _distanceKm;
-            });
-
-            foreach (var job in filteredJobs)
-            {
-                if (job.Latitude.HasValue && job.Longitude.HasValue)
+            var filteredJobs = _jobs
+                .Where(j => j.Latitude.HasValue && j.Longitude.HasValue)
+                .Where(j =>
                 {
-                    await _mapComponent.AddMarkerAsync(
-                        job.Id,
-                        job.Latitude.Value,
-                        job.Longitude.Value,
-                        job.Title,
-                        "job"
-                    );
-                }
+                    var distance = GeoService.CalculateDistance(
+                        _userLat, _userLng,
+                        j.Latitude!.Value, j.Longitude!.Value);
+                    return distance <= _distanceKm;
+                })
+                .ToList();
+
+            _visibleJobs = filteredJobs;
+
+            foreach (var job in _visibleJobs)
+            {
+                await _mapComponent.AddMarkerAsync(
+                    job.Id,
+                    job.Latitude!.Value,
+                    job.Longitude!.Value,
+                    job.Title,
+                    "job");
+                hasMarkers = true;
+            }
+
+            if (_visibleJobs.Count == 0)
+            {
+                _noResultsMessage = $"No jobs found within {_distanceKm} km of your location.";
+            }
+            else if (_selectedJob != null && !_visibleJobs.Any(j => j.Id == _selectedJob.Id))
+            {
+                _selectedJob = null;
             }
         }
 
-        await _mapComponent.FitBoundsAsync();
+        if (hasMarkers)
+        {
+            await _mapComponent.FitBoundsAsync();
+        }
+        else
+        {
+            await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDistanceChanged(int value)
+    {
+        if (_distanceKm == value)
+            return;
+
+        _distanceKm = value;
+        await ApplyFilters();
     }
 
     private async Task ResetFilters()
@@ -349,6 +399,7 @@
         _distanceKm = 50; // Increase to 50km to surface more tasks after clearing filters
         _selectedTask = null;
         _selectedJob = null;
+        _noResultsMessage = null;
         await ApplyFilters();
     }
 
