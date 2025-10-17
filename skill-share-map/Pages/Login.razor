@@ -103,22 +103,31 @@
 
         try
         {
+            Console.WriteLine($"[Login] Attempting login for: {_username}");
             var user = await AuthService.LoginAsync(_username, _password);
 
             if (user != null)
             {
+                Console.WriteLine($"[Login] User authenticated: {user.Username}, ID: {user.Id}");
                 Snackbar.Add($"Welcome back, {user.Username}!", Severity.Success);
+
+                Console.WriteLine("[Login] Setting user state...");
                 await UserState.SetUserAsync(user);
+                Console.WriteLine($"[Login] User state set. IsAuthenticated: {UserState.IsAuthenticated}");
+
                 Navigation.NavigateTo("/");
             }
             else
             {
+                Console.WriteLine("[Login] Authentication failed - user is null");
                 Snackbar.Add("Invalid username or password", Severity.Error);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Snackbar.Add("An error occurred during login", Severity.Error);
+            Console.WriteLine($"[Login] Error during login: {ex.Message}");
+            Console.WriteLine($"[Login] Stack trace: {ex.StackTrace}");
+            Snackbar.Add($"An error occurred during login: {ex.Message}", Severity.Error);
         }
         finally
         {

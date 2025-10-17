@@ -80,10 +80,23 @@
         }
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
+        Console.WriteLine("[MainLayout] OnInitialized called");
         UserState.OnChange += HandleUserStateChanged;
-        await UserState.InitializeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Console.WriteLine("[MainLayout] OnAfterRenderAsync first render");
+            UserState.MarkAsRendered();
+            await UserState.InitializeAsync();
+            Console.WriteLine($"[MainLayout] After InitializeAsync - IsAuthenticated: {UserState.IsAuthenticated}");
+            EnsureAuthenticated();
+            StateHasChanged();
+        }
     }
 
     protected override void OnParametersSet()
@@ -102,21 +115,31 @@
 
     private void EnsureAuthenticated()
     {
+        Console.WriteLine($"[MainLayout] EnsureAuthenticated - IsInitialized: {UserState.IsInitialized}, IsAuthenticated: {UserState.IsAuthenticated}");
+
         if (!UserState.IsInitialized)
         {
+            Console.WriteLine("[MainLayout] Not initialized yet, skipping auth check");
             return;
         }
 
         var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Console.WriteLine($"[MainLayout] Current path: {relativePath}");
 
         if (IsPublicPage(relativePath))
         {
+            Console.WriteLine("[MainLayout] Public page, no auth required");
             return;
         }
 
         if (!UserState.IsAuthenticated)
         {
+            Console.WriteLine("[MainLayout] Not authenticated, redirecting to login");
             Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            Console.WriteLine($"[MainLayout] Authenticated as: {UserState.CurrentUser?.Username}");
         }
     }
 

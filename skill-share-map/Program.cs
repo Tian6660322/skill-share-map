@@ -31,6 +31,8 @@ builder.Services.AddScoped<IXpService, XpService>();
 builder.Services.AddScoped<IReputationService, ReputationService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IGeoService, GeoService>();
+
+// Register UserState as Scoped for circuit-level state
 builder.Services.AddScoped<UserState>();
 
 // Add HTTP client for external APIs

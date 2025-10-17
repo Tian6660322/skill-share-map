@@ -1,10 +1,12 @@
 @page "/post-task"
 @using SkillShareMap.Services
 @using SkillShareMap.Models
+@using Microsoft.JSInterop
 @inject ITaskService TaskService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject UserState UserState
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Post a Task - Skill Share Map</PageTitle>
 
@@ -199,22 +201,42 @@
         _isLoadingLocation = true;
         try
         {
-            // TODO: Implement geolocation service
-            // For now, use a default Sydney location
-            _task.Latitude = -33.8688;
-            _task.Longitude = 151.2093;
-            _task.LocationAddress = "Sydney, NSW";
+            // Use JavaScript Geolocation API to get actual location
+            var locationData = await JSRuntime.InvokeAsync<LocationData>(
+                "geolocationHelper.getCurrentLocationWithAddress"
+            );
 
-            Snackbar.Add("Location set successfully", Severity.Success);
+            if (locationData != null)
+            {
+                _task.Latitude = locationData.Latitude;
+                _task.Longitude = locationData.Longitude;
+                _task.LocationAddress = locationData.Address;
+
+                Snackbar.Add($"Location set: {locationData.Address}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Could not retrieve location", Severity.Warning);
+            }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Snackbar.Add("Could not get location", Severity.Warning);
+            Console.WriteLine($"Geolocation error: {ex.Message}");
+            Snackbar.Add($"Location error: {ex.Message}", Severity.Error);
         }
         finally
         {
             _isLoadingLocation = false;
         }
+    }
+
+    // Helper class to deserialize location data from JavaScript
+    private class LocationData
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public string Address { get; set; } = string.Empty;
+        public double Accuracy { get; set; }
     }
 
     private async Task SubmitTask()
