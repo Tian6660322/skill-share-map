@@ -21,4 +21,10 @@
     <PackageReference Include="MudBlazor" Version="7.22.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="SkillShareMap.Test\**\*.cs" />
+    <None Remove="SkillShareMap.Test\**\*" />
+  </ItemGroup>
+
+
 </Project>
