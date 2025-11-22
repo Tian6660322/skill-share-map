@@ -1,0 +1,266 @@
+@page "/ai-assistant"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@inject IAIAssistantService AIService
+@inject UserState UserState
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>AI Assistant</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+    <MudPaper Elevation="2" Class="pa-4 mb-4">
+        <div class="d-flex align-center justify-space-between">
+            <div class="d-flex align-center">
+                <MudAvatar Color="Color.Primary" Size="Size.Large" Class="mr-3">
+                    <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5">AI Assistant</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Your personal skill development companion
+                    </MudText>
+                </div>
+            </div>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="HandleClearConversation">
+                Clear Chat
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <MudPaper Elevation="2" Style="height: 600px; display: flex; flex-direction: column;">
+        <!-- Messages Area -->
+        <div id="aiMessageContainer" class="pa-4" style="flex: 1; overflow-y: auto; background-color: #f5f5f5;">
+            @if (!_messages.Any())
+            {
+                <div class="d-flex align-center justify-center flex-column" style="height: 100%;">
+                    <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Large" Color="Color.Primary" Class="mb-4" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-2">
+                        Welcome to Your AI Assistant!
+                    </MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="mb-4" Style="max-width: 500px;">
+                        I can help you find tasks, suggest skills to learn, and track your progress. Try asking:
+                    </MudText>
+                    <div class="d-flex flex-wrap gap-2 justify-center">
+                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SendQuickMessage("Recommend tasks for me"))">
+                            Recommend tasks
+                        </MudChip>
+                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SendQuickMessage("What skills should I learn?"))">
+                            Suggest skills
+                        </MudChip>
+                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SendQuickMessage("Show my profile stats"))">
+                            View my stats
+                        </MudChip>
+                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SendQuickMessage("Check my wallet balance"))">
+                            Check wallet
+                        </MudChip>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var message in _messages)
+                {
+                    var isUser = message.Role == AIMessageRole.User;
+                    var alignment = isUser ? "flex-end" : "flex-start";
+                    var bgColor = isUser ? "#1976d2" : "#ffffff";
+                    var textColor = isUser ? "#ffffff" : "#000000";
+                    var icon = isUser ? Icons.Material.Filled.Person : Icons.Material.Filled.SmartToy;
+
+                    <div class="d-flex mb-3" style="justify-content: @alignment;">
+                        <div style="max-width: 75%;">
+                            @if (!isUser)
+                            {
+                                <div class="d-flex align-center mb-1 ml-2">
+                                    <MudIcon Icon="@icon" Size="Size.Small" Color="Color.Primary" Class="mr-1" />
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        AI Assistant
+                                    </MudText>
+                                </div>
+                            }
+
+                            <MudPaper Class="pa-3" Style="@($"background-color: {bgColor}; color: {textColor};")">
+                                <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">@message.Content</MudText>
+                                <MudText Typo="Typo.caption" Style="@($"color: {(isUser ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)")};")">
+                                    @message.SentAt.ToLocalTime().ToString("hh:mm tt")
+                                </MudText>
+                            </MudPaper>
+                        </div>
+                    </div>
+                }
+
+                @if (_isTyping)
+                {
+                    <div class="d-flex mb-3">
+                        <div style="max-width: 75%;">
+                            <div class="d-flex align-center mb-1 ml-2">
+                                <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" Color="Color.Primary" Class="mr-1" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    AI Assistant
+                                </MudText>
+                            </div>
+                            <MudPaper Class="pa-3" Style="background-color: #ffffff;">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Thinking...
+                                </MudText>
+                            </MudPaper>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Quick Actions -->
+        @if (_messages.Any())
+        {
+            <div class="pa-3" style="background-color: #f9f9f9; border-top: 1px solid #e0e0e0;">
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">Quick Actions:</MudText>
+                <div class="d-flex gap-2 flex-wrap">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SendQuickMessage("Recommend tasks"))">
+                        Tasks
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SendQuickMessage("Suggest skills"))">
+                        Skills
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SendQuickMessage("My stats"))">
+                        Stats
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SendQuickMessage("Wallet"))">
+                        Wallet
+                    </MudChip>
+                </div>
+            </div>
+        }
+
+        <!-- Message Input Area -->
+        <MudDivider />
+        <div class="pa-4">
+            <div class="d-flex gap-2">
+                <MudTextField @bind-Value="_newMessage"
+                              Placeholder="Ask me anything..."
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              FullWidth="true"
+                              OnKeyUp="HandleKeyPress"
+                              Disabled="@_isTyping" />
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           OnClick="HandleSendMessage"
+                           Disabled="@(string.IsNullOrWhiteSpace(_newMessage) || _isTyping)">
+                    Send
+                </MudButton>
+            </div>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<AIMessage> _messages = new();
+    private string _newMessage = "";
+    private bool _isTyping = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserState.CurrentUser == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadConversationAsync();
+    }
+
+    private async Task LoadConversationAsync()
+    {
+        var conversation = await AIService.GetConversationAsync(UserState.CurrentUser!.Id);
+        if (conversation != null)
+        {
+            _messages = conversation.Messages.OrderBy(m => m.SentAt).ToList();
+        }
+    }
+
+    private async Task HandleSendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_newMessage) || UserState.CurrentUser == null || _isTyping)
+            return;
+
+        await SendMessageAsync(_newMessage);
+    }
+
+    private async Task SendQuickMessage(string message)
+    {
+        if (_isTyping) return;
+        await SendMessageAsync(message);
+    }
+
+    private async Task SendMessageAsync(string message)
+    {
+        // Add user message to UI immediately
+        _messages.Add(new AIMessage
+        {
+            Content = message,
+            Role = AIMessageRole.User,
+            SentAt = DateTime.UtcNow
+        });
+
+        _newMessage = "";
+        _isTyping = true;
+        StateHasChanged();
+
+        // Scroll to bottom
+        await Task.Delay(100);
+
+        try
+        {
+            // Get AI response
+            var response = await AIService.SendMessageAsync(UserState.CurrentUser!.Id, message);
+
+            // Add AI response to UI
+            _messages.Add(new AIMessage
+            {
+                Content = response,
+                Role = AIMessageRole.Assistant,
+                SentAt = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isTyping = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleClearConversation()
+    {
+        if (UserState.CurrentUser == null) return;
+
+        var success = await AIService.ClearConversationAsync(UserState.CurrentUser.Id);
+        if (success)
+        {
+            _messages.Clear();
+            Snackbar.Add("Conversation cleared", Severity.Success);
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_newMessage) && !_isTyping)
+        {
+            await HandleSendMessage();
+        }
+    }
+
+    public void Dispose()
+    {
+        // Cleanup if needed
+    }
+}

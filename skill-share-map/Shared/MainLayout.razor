@@ -3,6 +3,7 @@
 @namespace SkillShareMap.Shared
 @inject NavigationManager Navigation
 @inject SkillShareMap.Services.UserState UserState
+@inject SkillShareMap.Services.IChatService ChatService
 
 <MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
@@ -19,6 +20,12 @@
 
         @if (UserState.IsAuthenticated)
         {
+            <!-- AI Assistant -->
+            <MudIconButton Icon="@Icons.Material.Filled.SmartToy"
+                           Color="Color.Inherit"
+                           Href="/ai-assistant"
+                           Title="AI Assistant" />
+
             <!-- The Classroom -->
             <MudButton Href="/classroom"
                        StartIcon="@Icons.Material.Filled.School"
@@ -26,6 +33,13 @@
                        Variant="Variant.Text">
                 The Classroom
             </MudButton>
+
+            <!-- Messages -->
+            <MudBadge Content="@_unreadCount" Color="Color.Error" Overlap="true" Visible="@(_unreadCount > 0)" Class="ml-4">
+                <MudIconButton Icon="@Icons.Material.Filled.Chat"
+                               Color="Color.Inherit"
+                               Href="/chats" />
+            </MudBadge>
 
             <!-- Post a Task -->
             <MudButton Href="/post-task"
@@ -70,6 +84,9 @@
 </MudLayout>
 
 @code {
+    private int _unreadCount = 0;
+    private System.Threading.Timer? _unreadTimer;
+
     private MudTheme _theme = new MudTheme()
     {
         PaletteLight = new PaletteLight()
@@ -84,6 +101,16 @@
     {
         Console.WriteLine("[MainLayout] OnInitialized called");
         UserState.OnChange += HandleUserStateChanged;
+
+        // Set up timer to refresh unread count every 5 seconds
+        _unreadTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await UpdateUnreadCountAsync();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5));
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -155,6 +182,18 @@
             || relativePath.StartsWith("register", StringComparison.OrdinalIgnoreCase);
     }
 
+    private async Task UpdateUnreadCountAsync()
+    {
+        if (UserState.CurrentUser != null)
+        {
+            _unreadCount = await ChatService.GetUnreadCountAsync(UserState.CurrentUser.Id);
+        }
+        else
+        {
+            _unreadCount = 0;
+        }
+    }
+
     private async Task Logout()
     {
         await UserState.LogoutAsync();
@@ -164,5 +203,6 @@
     public void Dispose()
     {
         UserState.OnChange -= HandleUserStateChanged;
+        _unreadTimer?.Dispose();
     }
 }

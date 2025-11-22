@@ -31,6 +31,7 @@ builder.Services.AddScoped<IXpService, XpService>();
 builder.Services.AddScoped<IReputationService, ReputationService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IGeoService, GeoService>();
+builder.Services.AddScoped<IAIAssistantService, AIAssistantService>();
 
 // Register UserState as Scoped for circuit-level state
 builder.Services.AddScoped<UserState>();

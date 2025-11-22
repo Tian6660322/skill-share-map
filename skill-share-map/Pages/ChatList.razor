@@ -1,0 +1,235 @@
+@page "/chats"
+@using SkillShareMap.Services
+@using SkillShareMap.Models
+@using Microsoft.EntityFrameworkCore
+@inject IAuthService AuthService
+@inject IChatService ChatService
+@inject UserState UserState
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Messages</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+    <MudText Typo="Typo.h4" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.Chat" Class="mr-2" />
+        Messages
+    </MudText>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else if (!_conversations.Any())
+    {
+        <MudPaper Class="pa-8 d-flex flex-column align-center justify-center" Style="min-height: 400px;">
+            <MudIcon Icon="@Icons.Material.Filled.ChatBubbleOutline" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-2">No conversations yet</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Start chatting by accepting tasks or contacting task creators
+            </MudText>
+            <MudButton Href="/" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">
+                Browse Tasks
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Elevation="2">
+            <MudList T="string" Clickable="true">
+                @foreach (var conversation in _conversations.OrderByDescending(c => c.LastMessageTime))
+                {
+                    var unreadCount = conversation.UnreadCount;
+                    var hasUnread = unreadCount > 0;
+
+                    <MudListItem T="string" OnClick="@(() => NavigateToChat(conversation.OtherUser.Id, conversation.TaskId))">
+                        <div class="d-flex align-center pa-2">
+                            <MudBadge Content="@unreadCount" Color="Color.Error" Overlap="true" Visible="@hasUnread">
+                                <MudAvatar Color="Color.Primary" Size="Size.Large">
+                                    @conversation.OtherUser.Username?.Substring(0, 1).ToUpper()
+                                </MudAvatar>
+                            </MudBadge>
+
+                            <div class="flex-grow-1 ml-4">
+                                <div class="d-flex justify-space-between align-center mb-1">
+                                    <MudText Typo="Typo.subtitle1" Style="@(hasUnread ? "font-weight: bold;" : "")">
+                                        @conversation.OtherUser.Username
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @FormatTime(conversation.LastMessageTime)
+                                    </MudText>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(conversation.TaskTitle))
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
+                                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Small" Class="mr-1" />
+                                        @conversation.TaskTitle
+                                    </MudText>
+                                }
+
+                                <MudText Typo="Typo.body2" Color="Color.Secondary" Style="@(hasUnread ? "font-weight: 500;" : "")">
+                                    @if (conversation.LastMessageType == MessageType.PriceNegotiation)
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" Color="Color.Warning" Class="mr-1" />
+                                        <text>Price Negotiation: $@conversation.LastMessageContent</text>
+                                    }
+                                    else if (conversation.LastMessageType == MessageType.SystemNotification)
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Color="Color.Info" Class="mr-1" />
+                                        <text>@TruncateMessage(conversation.LastMessageContent)</text>
+                                    }
+                                    else
+                                    {
+                                        @TruncateMessage(conversation.LastMessageContent)
+                                    }
+                                </MudText>
+                            </div>
+
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Secondary" />
+                        </div>
+                    </MudListItem>
+                    <MudDivider />
+                }
+            </MudList>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private bool _loading = true;
+    private List<ConversationSummary> _conversations = new();
+    private System.Threading.Timer? _refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserState.CurrentUser == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadConversationsAsync();
+        _loading = false;
+
+        // Auto-refresh every 5 seconds
+        _refreshTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadConversationsAsync();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+    }
+
+    private async Task LoadConversationsAsync()
+    {
+        if (UserState.CurrentUser == null) return;
+
+        // Get all messages involving current user
+        var allMessages = await ChatService.GetUserMessagesAsync(UserState.CurrentUser.Id);
+
+        // Group by conversation (other user + optional task)
+        var grouped = allMessages
+            .GroupBy(m =>
+            {
+                var otherUserId = m.SenderId == UserState.CurrentUser.Id ? m.ReceiverId : m.SenderId;
+                return new { OtherUserId = otherUserId, TaskId = m.TaskId };
+            })
+            .Select(g => new
+            {
+                g.Key.OtherUserId,
+                g.Key.TaskId,
+                Messages = g.OrderByDescending(m => m.SentAt).ToList()
+            })
+            .ToList();
+
+        _conversations.Clear();
+
+        foreach (var group in grouped)
+        {
+            var otherUser = await AuthService.GetUserByIdAsync(group.OtherUserId);
+            if (otherUser == null) continue;
+
+            var lastMessage = group.Messages.First();
+            var unreadCount = group.Messages.Count(m =>
+                m.ReceiverId == UserState.CurrentUser.Id && !m.IsRead);
+
+            string taskTitle = "";
+            if (group.TaskId.HasValue)
+            {
+                taskTitle = $"Task #{group.TaskId}";
+            }
+
+            var lastContent = lastMessage.Type == MessageType.PriceNegotiation && lastMessage.ProposedPrice.HasValue
+                ? lastMessage.ProposedPrice.Value.ToString("F2")
+                : lastMessage.Content;
+
+            _conversations.Add(new ConversationSummary
+            {
+                OtherUser = otherUser,
+                TaskId = group.TaskId,
+                TaskTitle = taskTitle,
+                LastMessageContent = lastContent,
+                LastMessageType = lastMessage.Type,
+                LastMessageTime = lastMessage.SentAt,
+                UnreadCount = unreadCount
+            });
+        }
+    }
+
+    private void NavigateToChat(int userId, int? taskId)
+    {
+        var url = taskId.HasValue
+            ? $"/chat/{userId}?TaskId={taskId.Value}"
+            : $"/chat/{userId}";
+        Navigation.NavigateTo(url);
+    }
+
+    private string FormatTime(DateTime time)
+    {
+        var localTime = time.ToLocalTime();
+        var now = DateTime.Now;
+        var diff = now - localTime;
+
+        if (diff.TotalMinutes < 1)
+            return "Just now";
+        if (diff.TotalMinutes < 60)
+            return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24)
+            return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7)
+            return $"{(int)diff.TotalDays}d ago";
+
+        return localTime.ToString("MMM dd");
+    }
+
+    private string TruncateMessage(string message, int maxLength = 60)
+    {
+        if (string.IsNullOrEmpty(message))
+            return "";
+
+        return message.Length <= maxLength
+            ? message
+            : message.Substring(0, maxLength) + "...";
+    }
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+    }
+
+    private class ConversationSummary
+    {
+        public User OtherUser { get; set; } = null!;
+        public int? TaskId { get; set; }
+        public string TaskTitle { get; set; } = "";
+        public string LastMessageContent { get; set; } = "";
+        public MessageType LastMessageType { get; set; }
+        public DateTime LastMessageTime { get; set; }
+        public int UnreadCount { get; set; }
+    }
+}

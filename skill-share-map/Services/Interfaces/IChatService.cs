@@ -9,6 +9,7 @@ public interface IChatService
     Task<bool> RejectPriceNegotiationAsync(int messageId);
     Task<List<Message>> GetConversationAsync(int user1Id, int user2Id, int? taskId = null);
     Task<List<Message>> GetTaskMessagesAsync(int taskId);
+    Task<List<Message>> GetUserMessagesAsync(int userId);
     Task<int> GetUnreadCountAsync(int userId);
     Task MarkAsReadAsync(int messageId);
 }

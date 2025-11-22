@@ -2,6 +2,8 @@
 @using SkillShareMap.Services
 @using SkillShareMap.Models
 @inject IAuthService AuthService
+@inject IChatService ChatService
+@inject ITaskService TaskService
 @inject UserState UserState
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
@@ -34,34 +36,171 @@
             </div>
         </MudPaper>
 
-        <MudPaper Elevation="2" Style="height: 500px; display: flex; flex-direction: column;">
+        <MudPaper Elevation="2" Style="height: 600px; display: flex; flex-direction: column;">
             <!-- Messages Area -->
-            <div class="pa-4" style="flex: 1; overflow-y: auto;">
-                <div class="d-flex align-center justify-center flex-column" style="height: 100%;">
-                    <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
-                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-2">
-                        Chat Feature Coming Soon!
-                    </MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Start a conversation with @_otherUser.Username about @(_taskContext ?? "your collaboration")
-                    </MudText>
-                </div>
+            <div id="messageContainer" class="pa-4" style="flex: 1; overflow-y: auto; background-color: #f5f5f5;">
+                @if (_messages == null || !_messages.Any())
+                {
+                    <div class="d-flex align-center justify-center flex-column" style="height: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-2">
+                            No messages yet
+                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Start a conversation with @_otherUser.Username
+                        </MudText>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in _messages)
+                    {
+                        var isMyMessage = message.SenderId == UserState.CurrentUser?.Id;
+                        var alignment = isMyMessage ? "flex-end" : "flex-start";
+                        var bgColor = isMyMessage ? "#1976d2" : "#ffffff";
+                        var textColor = isMyMessage ? "#ffffff" : "#000000";
+
+                        <div class="d-flex mb-3" style="justify-content: @alignment;">
+                            <div style="max-width: 70%;">
+                                @if (!isMyMessage)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1 ml-2">
+                                        @message.Sender?.Username
+                                    </MudText>
+                                }
+
+                                @if (message.Type == MessageType.PriceNegotiation)
+                                {
+                                    <MudPaper Class="pa-3" Style="@($"background-color: #fff3cd; border-left: 4px solid #ffc107;")">
+                                        <div class="d-flex align-center mb-2">
+                                            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" Color="Color.Warning" Class="mr-2" />
+                                            <MudText Typo="Typo.subtitle2" Style="font-weight: bold;">Price Negotiation</MudText>
+                                        </div>
+                                        <MudText Typo="Typo.body2" Class="mb-2">@message.Content</MudText>
+                                        <MudText Typo="Typo.h6" Color="Color.Warning">$@message.ProposedPrice</MudText>
+
+                                        @if (message.IsAccepted.HasValue)
+                                        {
+                                            <MudChip T="string" Color="@(message.IsAccepted.Value ? Color.Success : Color.Error)"
+                                                     Size="Size.Small" Class="mt-2">
+                                                @(message.IsAccepted.Value ? "Accepted" : "Rejected")
+                                            </MudChip>
+                                        }
+                                        else if (!isMyMessage && message.ReceiverId == UserState.CurrentUser?.Id)
+                                        {
+                                            <div class="d-flex gap-2 mt-3">
+                                                <MudButton Size="Size.Small"
+                                                           Variant="Variant.Filled"
+                                                           Color="Color.Success"
+                                                           OnClick="@(() => HandleAcceptNegotiation(message.Id))">
+                                                    Accept
+                                                </MudButton>
+                                                <MudButton Size="Size.Small"
+                                                           Variant="Variant.Outlined"
+                                                           Color="Color.Error"
+                                                           OnClick="@(() => HandleRejectNegotiation(message.Id))">
+                                                    Reject
+                                                </MudButton>
+                                            </div>
+                                        }
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                                            @message.SentAt.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt")
+                                        </MudText>
+                                    </MudPaper>
+                                }
+                                else if (message.Type == MessageType.SystemNotification)
+                                {
+                                    <MudPaper Class="pa-3" Style="background-color: #e3f2fd; border-left: 4px solid #2196f3;">
+                                        <div class="d-flex align-center mb-1">
+                                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Color="Color.Info" Class="mr-2" />
+                                            <MudText Typo="Typo.subtitle2" Style="font-weight: bold;">System Notification</MudText>
+                                        </div>
+                                        <MudText Typo="Typo.body2">@message.Content</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                            @message.SentAt.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt")
+                                        </MudText>
+                                    </MudPaper>
+                                }
+                                else
+                                {
+                                    <MudPaper Class="pa-3" Style="@($"background-color: {bgColor}; color: {textColor};")">
+                                        <MudText Typo="Typo.body1">@message.Content</MudText>
+                                        <MudText Typo="Typo.caption" Style="@($"color: {(isMyMessage ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)")};")">
+                                            @message.SentAt.ToLocalTime().ToString("hh:mm tt")
+                                        </MudText>
+                                    </MudPaper>
+                                }
+
+                                @if (isMyMessage)
+                                {
+                                    <div class="d-flex justify-end mr-2">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.7rem;">
+                                            @(message.IsRead ? "Read" : "Sent")
+                                        </MudText>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
             </div>
 
-            <!-- Message Input Area (Disabled for now) -->
+            <!-- Message Input Area -->
             <MudDivider />
             <div class="pa-4">
+                @if (_showPriceNegotiation)
+                {
+                    <MudPaper Class="pa-3 mb-3" Style="background-color: #fff3cd;">
+                        <div class="d-flex align-center justify-space-between mb-2">
+                            <MudText Typo="Typo.subtitle2" Style="font-weight: bold;">
+                                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" Class="mr-1" />
+                                Propose New Price
+                            </MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                          Size="Size.Small"
+                                          OnClick="@(() => _showPriceNegotiation = false)" />
+                        </div>
+                        <div class="d-flex gap-2 align-end">
+                            <MudNumericField @bind-Value="_proposedPrice"
+                                            Label="Proposed Price"
+                                            Variant="Variant.Outlined"
+                                            Margin="Margin.Dense"
+                                            Min="0"
+                                            Step="10M"
+                                            Format="C2"
+                                            FullWidth="true"
+                                            Adornment="Adornment.Start"
+                                            AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+                            <MudButton Variant="Variant.Filled"
+                                      Color="Color.Warning"
+                                      OnClick="HandleSendPriceNegotiation"
+                                      Disabled="@(_proposedPrice <= 0)">
+                                Send Proposal
+                            </MudButton>
+                        </div>
+                    </MudPaper>
+                }
                 <div class="d-flex gap-2">
-                    <MudTextField Value="@_newMessage"
-                                  Placeholder="Chat feature coming soon..."
+                    <MudTextField @bind-Value="_newMessage"
+                                  Placeholder="Type your message..."
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   FullWidth="true"
-                                  Disabled="true" />
+                                  OnKeyUp="HandleKeyPress" />
+                    @if (TaskId.HasValue && _currentTask != null && _currentTask.Status == SkillTaskStatus.Open)
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Warning"
+                                   StartIcon="@Icons.Material.Filled.AttachMoney"
+                                   OnClick="@(() => _showPriceNegotiation = !_showPriceNegotiation)">
+                            Negotiate
+                        </MudButton>
+                    }
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Send"
-                               Disabled="true">
+                               OnClick="HandleSendMessage"
+                               Disabled="@string.IsNullOrWhiteSpace(_newMessage)">
                         Send
                     </MudButton>
                 </div>
@@ -87,8 +226,13 @@
     public int? TaskId { get; set; }
 
     private User? _otherUser;
+    private SkillTask? _currentTask;
+    private List<Message> _messages = new();
     private string _newMessage = "";
     private string? _taskContext;
+    private bool _showPriceNegotiation = false;
+    private decimal _proposedPrice = 0;
+    private System.Threading.Timer? _refreshTimer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -107,10 +251,156 @@
             return;
         }
 
-        // Set task context if available
+        // Load task context if available
         if (TaskId.HasValue)
         {
-            _taskContext = $"Task #{TaskId}";
+            _currentTask = await TaskService.GetTaskByIdAsync(TaskId.Value);
+            if (_currentTask != null)
+            {
+                _taskContext = _currentTask.Title;
+                _proposedPrice = _currentTask.Budget;
+            }
         }
+
+        // Load messages
+        await LoadMessagesAsync();
+
+        // Mark messages as read
+        await MarkMessagesAsReadAsync();
+
+        // Set up auto-refresh every 3 seconds
+        _refreshTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadMessagesAsync();
+                await MarkMessagesAsReadAsync();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
+    }
+
+    private async Task LoadMessagesAsync()
+    {
+        if (UserState.CurrentUser == null) return;
+
+        _messages = await ChatService.GetConversationAsync(
+            UserState.CurrentUser.Id,
+            UserId,
+            TaskId
+        );
+    }
+
+    private async Task MarkMessagesAsReadAsync()
+    {
+        if (UserState.CurrentUser == null) return;
+
+        var unreadMessages = _messages
+            .Where(m => m.ReceiverId == UserState.CurrentUser.Id && !m.IsRead)
+            .ToList();
+
+        foreach (var message in unreadMessages)
+        {
+            await ChatService.MarkAsReadAsync(message.Id);
+        }
+    }
+
+    private async Task HandleSendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_newMessage) || UserState.CurrentUser == null)
+            return;
+
+        var message = new Message
+        {
+            SenderId = UserState.CurrentUser.Id,
+            ReceiverId = UserId,
+            TaskId = TaskId,
+            Content = _newMessage,
+            Type = MessageType.Normal
+        };
+
+        var sent = await ChatService.SendMessageAsync(message);
+
+        if (sent != null)
+        {
+            _newMessage = "";
+            await LoadMessagesAsync();
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add("Failed to send message", Severity.Error);
+        }
+    }
+
+    private async Task HandleSendPriceNegotiation()
+    {
+        if (_proposedPrice <= 0 || !TaskId.HasValue || UserState.CurrentUser == null)
+            return;
+
+        var sent = await ChatService.SendPriceNegotiationAsync(
+            UserState.CurrentUser.Id,
+            UserId,
+            TaskId.Value,
+            _proposedPrice
+        );
+
+        if (sent != null)
+        {
+            _showPriceNegotiation = false;
+            _proposedPrice = _currentTask?.Budget ?? 0;
+            await LoadMessagesAsync();
+            StateHasChanged();
+            Snackbar.Add("Price negotiation sent", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Failed to send price negotiation", Severity.Error);
+        }
+    }
+
+    private async Task HandleAcceptNegotiation(int messageId)
+    {
+        var success = await ChatService.AcceptPriceNegotiationAsync(messageId);
+
+        if (success)
+        {
+            await LoadMessagesAsync();
+            StateHasChanged();
+            Snackbar.Add("Price negotiation accepted", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Failed to accept negotiation", Severity.Error);
+        }
+    }
+
+    private async Task HandleRejectNegotiation(int messageId)
+    {
+        var success = await ChatService.RejectPriceNegotiationAsync(messageId);
+
+        if (success)
+        {
+            await LoadMessagesAsync();
+            StateHasChanged();
+            Snackbar.Add("Price negotiation rejected", Severity.Info);
+        }
+        else
+        {
+            Snackbar.Add("Failed to reject negotiation", Severity.Error);
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_newMessage))
+        {
+            await HandleSendMessage();
+        }
+    }
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
     }
 }

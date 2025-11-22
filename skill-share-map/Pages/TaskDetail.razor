@@ -71,8 +71,18 @@ else
                         @GetCategoryName(_task.Category)
                     </MudText>
 
-                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Budget:</strong></MudText>
-                    <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Success">$@_task.Budget</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">
+                        <strong>@(_task.NegotiatedPrice.HasValue ? "Negotiated Price:" : "Budget:")</strong>
+                    </MudText>
+                    <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Success">
+                        $@(_task.NegotiatedPrice ?? _task.Budget)
+                    </MudText>
+                    @if (_task.NegotiatedPrice.HasValue)
+                    {
+                        <MudText Typo="Typo.caption" Class="mb-4" Color="Color.Secondary">
+                            Original Budget: $@_task.Budget
+                        </MudText>
+                    }
 
                     @if (_task.Deadline.HasValue)
                     {
@@ -312,8 +322,9 @@ else
 
         if (success)
         {
-            // Calculate 10% deposit
-            var depositAmount = _task.Budget * 0.1m;
+            // Calculate 10% deposit based on negotiated price or budget
+            var finalPrice = _task.NegotiatedPrice ?? _task.Budget;
+            var depositAmount = finalPrice * 0.1m;
 
             // Process deposit (charge creator, credit helper)
             var depositSuccess = await WalletService.ProcessDepositAsync(_currentUserId, _task.Id, depositAmount);

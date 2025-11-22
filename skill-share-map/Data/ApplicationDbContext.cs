@@ -21,6 +21,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Wallet> Wallets { get; set; } = null!;
     public DbSet<WalletTransaction> WalletTransactions { get; set; } = null!;
     public DbSet<Course> Courses { get; set; } = null!;
+    public DbSet<AIConversation> AIConversations { get; set; } = null!;
+    public DbSet<AIMessage> AIMessages { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -131,6 +133,19 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<WalletTransaction>()
             .Property(t => t.BalanceAfter)
             .HasPrecision(18, 2);
+
+        // Configure AIConversation relationships
+        modelBuilder.Entity<AIConversation>()
+            .HasOne(c => c.User)
+            .WithMany()
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AIMessage>()
+            .HasOne(m => m.Conversation)
+            .WithMany(c => c.Messages)
+            .HasForeignKey(m => m.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         base.OnModelCreating(modelBuilder);
     }

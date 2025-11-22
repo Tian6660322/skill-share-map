@@ -151,6 +151,19 @@ public class ChatService : IChatService
     }
 
     /// <summary>
+    /// Get all messages for a user (sent or received)
+    /// </summary>
+    public async Task<List<Message>> GetUserMessagesAsync(int userId)
+    {
+        return await _context.Messages
+            .Include(m => m.Sender)
+            .Include(m => m.Receiver)
+            .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+            .OrderBy(m => m.SentAt)
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// Get count of unread messages for a user
     /// </summary>
     public async Task<int> GetUnreadCountAsync(int userId)
