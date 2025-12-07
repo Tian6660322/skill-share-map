@@ -5,13 +5,13 @@
 @inject SkillShareMap.Services.UserState UserState
 @inject SkillShareMap.Services.IChatService ChatService
 
-<MudThemeProvider Theme="_theme" />
+<MudThemeProvider Theme="AppTheme.Default" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="2" Color="Color.Primary">
+    <MudAppBar Elevation="0" Color="Color.Transparent">
         <!-- Logo -->
         <MudIconButton Icon="@Icons.Material.Filled.Map" Color="Color.Inherit" Edge="Edge.Start" Href="/" />
         <MudText Typo="Typo.h6" Class="ml-2">Skill Share Map</MudText>
@@ -22,7 +22,7 @@
         {
             <!-- AI Assistant -->
             <MudIconButton Icon="@Icons.Material.Filled.SmartToy"
-                           Color="Color.Inherit"
+                           Color="Color.Secondary"
                            Href="/ai-assistant"
                            Title="AI Assistant" />
 
@@ -87,15 +87,6 @@
     private int _unreadCount = 0;
     private System.Threading.Timer? _unreadTimer;
 
-    private MudTheme _theme = new MudTheme()
-    {
-        PaletteLight = new PaletteLight()
-        {
-            Primary = "#1976d2",
-            Secondary = "#ff9800",
-            AppbarBackground = "#1976d2"
-        }
-    };
 
     protected override void OnInitialized()
     {

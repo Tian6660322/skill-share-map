@@ -1,10 +1,384 @@
-@page "/register"
+﻿@page "/register"
+@layout NoLayout
+@using SkillShareMap.Shared
+@using SkillShareMap.Models
+@using SkillShareMap.Services
+@inject IAuthService AuthService
+@inject IGeoService GeoService
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject UserState UserState
+
+<style>
+    .small-label-input .mud-input-label { font-size: 0.875rem !important; }
+    .small-label-input .mud-input-outlined-border { border-radius: 8px !important; }
+    
+    .role-selector-item {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border-radius: 12px;
+        padding: 16px;
+    }
+    .role-selector-item:hover {
+        background-color: rgba(255,255,255,0.1);
+    }
+</style>
+
+<MudGrid Spacing="0" Style="min-height: 100vh; background-color: #ffffff;">
+    
+    @* Left Black Side *@
+    <MudItem xs="12" md="4" Class="pa-13 d-none d-md-flex flex-column" Style="height: 100vh; position: sticky; top: 0;">
+        
+        <MudPaper Elevation="0" Class="pa-8 d-flex flex-column flex-grow-1 rounded-xl" 
+                  Style="background-color: #1B1B1B; color: white; width: 100%;">
+            
+            <div class="d-flex align-center mb-8 mt-4 pa-4">
+                <MudText Typo="Typo.h6" Style="font-weight: 700;">Join As</MudText>
+            </div>
+
+            <div class="role-selector-item d-flex align-center gap-4 mb-4" @onclick="() => SelectRole(UserRole.Student)">
+                <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Large" Style="@GetRoleIconStyle(UserRole.Student)" />
+                <MudText Typo="Typo.subtitle1" Style="@GetRoleTextStyle(UserRole.Student)">Student</MudText>
+            </div>
+
+            <div class="role-selector-item d-flex align-center gap-4 mb-4" @onclick="() => SelectRole(UserRole.Company)">
+                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Style="@GetRoleIconStyle(UserRole.Company)" />
+                <MudText Typo="Typo.subtitle1" Style="@GetRoleTextStyle(UserRole.Company)">Company</MudText>
+            </div>
+
+            <div class="role-selector-item d-flex align-center gap-4 mb-4" @onclick="() => SelectRole(UserRole.School)">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Large" Style="@GetRoleIconStyle(UserRole.School)" />
+                <MudText Typo="Typo.subtitle1" Style="@GetRoleTextStyle(UserRole.School)">School</MudText>
+            </div>
+
+            <MudSpacer />
+            
+            <MudButton StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="GoBack" Class="mb-4" Style="opacity: 0.7; justify-content: flex-start;">
+                Back to Login
+            </MudButton>
+
+            <MudText Typo="Typo.caption" Style="color: rgba(255,255,255,0.3);">
+                © 2025 Skill Share Map
+            </MudText>
+
+        </MudPaper>
+    </MudItem>
+
+
+    <MudItem xs="12" md="8" Class="px-8 pb-8 pt-6 d-flex flex-column">
+        
+        <MudPaper Elevation="0" Class="pa-4" Style="max-width: 800px; width: 100%;">
+            
+            <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-8" @bind-ActivePanelIndex="_activeStep" Color="Color.Transparent" SliderColor="Color.Primary">
+                
+                <MudTabPanel Text="BASIC INFO" Icon="@Icons.Material.Filled.Person">
+                    <MudText Typo="Typo.h6" Class="mb-4">@(_newUser.Role) Information</MudText>
+                    
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_newUser.Username" Label="Username" Required="true" Variant="Variant.Outlined" Class="mb-3 small-label-input" Immediate="false" Validation="@(new Func<string, Task<IEnumerable<string>>>(ValidateUniqueness))" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_newUser.Email" Label="Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3 small-label-input" Immediate="false"
+                                          Validation="@(new Func<string, Task<IEnumerable<string>>>(async (val) => {
+                                              // 1. format validation first
+                                              var formatErrors = ValidateEmailFormat(val);
+                                              if (formatErrors.Any()) return formatErrors;
+                  
+                                              // 2. uniqueness validation
+                                              return await ValidateUniqueness(val);
+                                          }))" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3 small-label-input" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_confirmPassword" Label="Confirm Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3 small-label-input" />
+                        </MudItem>
+
+                        @if (_newUser.Role == UserRole.Student)
+                        {
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="_newUser.FirstName" Label="First Name" Variant="Variant.Outlined" Class="mb-3 small-label-input" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="_newUser.LastName" Label="Last Name" Variant="Variant.Outlined" Class="mb-3 small-label-input" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="_newUser.SchoolName" Label="Current School Name" Variant="Variant.Outlined" Class="small-label-input" />
+                            </MudItem>
+                        }
+
+                        @if (_newUser.Role == UserRole.Company || _newUser.Role == UserRole.School)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="_newUser.CompanyName" 
+                                              Label="@(_newUser.Role == UserRole.School ? "School Name" : "Company Name")" 
+                                              Required="true" Variant="Variant.Outlined" Class="mb-3 small-label-input" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="_newUser.WebsiteUrl" Label="Website URL" Variant="Variant.Outlined" Class="mb-3 small-label-input" Placeholder="https://..." />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="_newUser.CompanyDescription" Label="Description" Lines="3" Variant="Variant.Outlined" Class="small-label-input" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-8 px-8" DisableElevation="true" Style="border-radius: 8px;" OnClick="() => _activeStep = 1">
+                        Next
+                    </MudButton>
+                </MudTabPanel>
+
+                @if (_newUser.Role == UserRole.Student)
+                {
+                    <MudTabPanel Text="SKILLS" Icon="@Icons.Material.Filled.Category">
+                        <MudText Typo="Typo.h6" Class="mb-4">Choose Skill Categories</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Select the categories you're interested in.</MudText>
+                        
+                        <MudGrid>
+                            @foreach (var category in Enum.GetValues<TaskCategory>())
+                            {
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudCheckBox T="bool" @bind-Checked="@_selectedCategories[category]" Color="Color.Primary" Dense="true">
+                                        @GetCategoryDisplayName(category)
+                                    </MudCheckBox>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                        
+                        <div class="d-flex gap-4 mt-8">
+                            <MudButton Variant="Variant.Text" OnClick="() => _activeStep = 0">Back</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true" Style="border-radius: 8px;" OnClick="() => _activeStep = 2">Next</MudButton>
+                        </div>
+                    </MudTabPanel>
+                }
+
+                <MudTabPanel Text="LOCATION" Icon="@Icons.Material.Filled.LocationOn">
+                     <MudText Typo="Typo.h6" Class="mb-4">Set Your Location</MudText>
+                     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                         We need your address to find nearby opportunities.
+                     </MudText>
+
+                     <MudTextField @bind-Value="_newUser.HomeBaseAddress"
+                                   Label="Full Address (e.g. 123 Main St, Sydney)"
+                                   Variant="Variant.Outlined"
+                                   FullWidth="true"
+                                   Class="mb-3 small-label-input" 
+                                   Placeholder="Enter address..." />
+
+                     <MudButton Variant="Variant.Outlined"
+                                Color="Color.Primary"
+                                StartIcon="@Icons.Material.Filled.Search"
+                                OnClick="GeocodeAddress"
+                                Disabled="_isGeocodingAddress"
+                                Class="mb-4">
+                         @if (_isGeocodingAddress)
+                         {
+                             <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                             <text>Finding...</text>
+                         }
+                         else
+                         {
+                             <text>Find Coordinates</text>
+                         }
+                     </MudButton>
+
+                     @if (_newUser.HomeBaseLatitude.HasValue)
+                     {
+                         <MudAlert Severity="Severity.Success" Class="mb-3" Variant="Variant.Filled">
+                             Coordinates found: @_newUser.HomeBaseLatitude?.ToString("F4"), @_newUser.HomeBaseLongitude?.ToString("F4")
+                         </MudAlert>
+                     }
+
+                     <div class="d-flex gap-4 mt-8">
+                         <MudButton Variant="Variant.Text" OnClick="() => _activeStep = (_newUser.Role == UserRole.Student ? 1 : 0)">Back</MudButton>
+                         
+                         <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="border-radius: 8px; font-weight: bold;" 
+                                    OnClick="HandleRegister" Disabled="_isLoading" DisableElevation="true" Size="Size.Large">
+                             @if (_isLoading) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Surface" /> }
+                             else { <text>Complete Registration</text> }
+                         </MudButton>
+                     </div>
+                </MudTabPanel>
+
+            </MudTabs>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
+    private int _activeStep = 0;
+    private User _newUser = new User { Role = UserRole.Student }; 
+    private string _password = "";
+    private string _confirmPassword = "";
+    private bool _isLoading = false;
+    private bool _isGeocodingAddress = false;
+    private Dictionary<TaskCategory, bool> _selectedCategories = new();
+
     protected override void OnInitialized()
     {
-        // Redirect old /register URL to login page where users can choose their registration type
-        Navigation.NavigateTo("/login", replace: true);
+        foreach (var category in Enum.GetValues<TaskCategory>())
+        {
+            _selectedCategories[category] = false;
+        }
+    }
+
+    private string GetRoleTextStyle(UserRole role)
+    {
+        bool isActive = _newUser.Role == role;
+        return isActive 
+            ? "color: #FFFFFF; font-weight: 700; opacity: 1;" 
+            : "color: #FFFFFF; font-weight: 400; opacity: 0.5;";
+    }
+
+    private string GetRoleIconStyle(UserRole role)
+    {
+        bool isActive = _newUser.Role == role;
+        return isActive 
+            ? "color: #FFFFFF; opacity: 1;" 
+            : "color: #FFFFFF; opacity: 0.5;";
+    }
+
+    private void SelectRole(UserRole role)
+    {
+        _newUser.Role = role;
+        _activeStep = 0; 
+        if (role == UserRole.Student) { _newUser.CompanyName = ""; }
+        StateHasChanged(); 
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private async Task GeocodeAddress()
+    {
+        if (string.IsNullOrWhiteSpace(_newUser.HomeBaseAddress))
+        {
+            Snackbar.Add("Please enter an address first", Severity.Warning);
+            return;
+        }
+
+        _isGeocodingAddress = true;
+        try
+        {
+            var result = await GeoService.GeocodeAddressAsync(_newUser.HomeBaseAddress);
+            if (result.HasValue)
+            {
+                _newUser.HomeBaseLatitude = result.Value.lat;
+                _newUser.HomeBaseLongitude = result.Value.lon;
+                Snackbar.Add("Location found!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Could not find location.", Severity.Warning);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error finding location.", Severity.Error);
+        }
+        finally
+        {
+            _isGeocodingAddress = false;
+        }
+    }
+
+    
+    private IEnumerable<string> ValidateEmailFormat(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            yield break;
+
+        // Check if email contains '@' and '.'
+        if (!email.Contains("@") || !email.Contains("."))
+        {
+            yield return "⚠️ Please enter a valid email address (e.g., user@example.com)";
+        }
+    }
+
+    // Validate uniqueness (username and email) - call backend
+    private async Task<IEnumerable<string>> ValidateUniqueness(string value)
+    {
+        // Wait a little to avoid sending request while user is still typing (optional)
+        await Task.Delay(300); 
+
+        if (string.IsNullOrWhiteSpace(value))
+            return Array.Empty<string>();
+
+        // Call CheckIdentifierExistsAsync from your AuthService
+        bool exists = await AuthService.CheckIdentifierExistsAsync(value);
+
+        if (exists)
+        {
+            // Determine if it's email or username and return different error messages
+            if (value.Contains("@"))
+                return new[] { "❌ Email address already in use." };
+            else
+                return new[] { "❌ User name already in use." };
+        }
+
+        return Array.Empty<string>();
+    }
+
+
+    private async Task HandleRegister()
+    {
+        _isLoading = true;
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_newUser.Username) || string.IsNullOrWhiteSpace(_password))
+            {
+                Snackbar.Add("Please fill in username and password", Severity.Warning);
+                return;
+            }
+
+            if (_password != _confirmPassword)
+            {
+                Snackbar.Add("Passwords do not match", Severity.Error);
+                return;
+            }
+
+            if (!_newUser.HomeBaseLatitude.HasValue)
+            {
+                Snackbar.Add("Please find coordinates for your location", Severity.Warning);
+                return;
+            }
+
+            if (_newUser.Role == UserRole.Student)
+            {
+                _newUser.SelectedCategories = _selectedCategories
+                    .Where(x => x.Value)
+                    .Select(x => x.Key)
+                    .ToList();
+            }
+
+            var user = await AuthService.RegisterAsync(_newUser, _password);
+
+            if (user != null)
+            {
+                Snackbar.Add("Registration successful! Welcome.", Severity.Success);
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                Snackbar.Add("Registration failed. Username already exist.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetCategoryDisplayName(TaskCategory category)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(category.ToString(), "(\\B[A-Z])", " $1");
     }
 }

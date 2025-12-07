@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SkillShareMap.Data;
 using SkillShareMap.Models;
+using System.Net.Mail;
 
 namespace SkillShareMap.Services;
 
@@ -18,14 +19,14 @@ public class AuthService : IAuthService
     /// </summary>
     public async Task<User?> RegisterAsync(User user, string password)
     {
-        // Check if username already exists
+        // 1. verify if username or email already exists
         var existingUser = await _context.Users
-            .FirstOrDefaultAsync(u => u.Username == user.Username);
+            .FirstOrDefaultAsync(u => u.Username == user.Username || u.Email == user.Email); // 👈 修正点
 
         if (existingUser != null)
             return null;
 
-        // Hash password (in production, use proper password hashing like BCrypt)
+        // Hash password 
         user.PasswordHash = HashPassword(password);
 
         _context.Users.Add(user);
@@ -44,20 +45,46 @@ public class AuthService : IAuthService
     }
 
     /// <summary>
-    /// Login user
+    /// Login user (using username OR email as identifier)
     /// </summary>
-    public async Task<User?> LoginAsync(string username, string password)
+    public async Task<User?> LoginAsync(string identifier, string password)
     {
-        var user = await _context.Users
+        // 1. verify if identifier is email
+        bool isValidEmail = false;
+        try
+        {
+            var addr = new MailAddress(identifier);
+            isValidEmail = (addr.Address == identifier);
+        }
+        catch
+        {
+            isValidEmail = false;
+        }
+
+        IQueryable<User> query = _context.Users
             .Include(u => u.Wallet)
             .Include(u => u.SkillProgress)
-            .Include(u => u.Badges)
-            .FirstOrDefaultAsync(u => u.Username == username);
+            .Include(u => u.Badges);
+
+        // 2. search by email or username
+        if (isValidEmail)
+        {
+            // if yes, search by email
+            query = query.Where(u => u.Email == identifier);
+        }
+        else
+        {
+            // if not, search by username
+            query = query.Where(u => u.Username == identifier);
+        }
+
+        // 3. search for user
+        var user = await query.FirstOrDefaultAsync();
 
         if (user == null)
             return null;
 
-        // Verify password
+        // 4. verify password
         if (!VerifyPassword(password, user.PasswordHash))
             return null;
 
@@ -85,6 +112,29 @@ public class AuthService : IAuthService
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>
+    /// Check if a username or email already exists.
+    /// </summary>
+    public async Task<bool> CheckIdentifierExistsAsync(string identifier)
+    {
+        bool isEmail = false;
+        try
+        {
+            new System.Net.Mail.MailAddress(identifier);
+            isEmail = true;
+        }
+        catch { /* not a valid email */ }
+
+        if (isEmail)
+        {
+            return await _context.Users.AnyAsync(u => u.Email == identifier);
+        }
+        else
+        {
+            return await _context.Users.AnyAsync(u => u.Username == identifier);
+        }
     }
 
     // Simple password hashing (use BCrypt in production)

@@ -1,4 +1,4 @@
-@page "/register/student"
+﻿@page "/register/student"
 @using SkillShareMap.Services
 @using SkillShareMap.Models
 @inject IAuthService AuthService
@@ -18,8 +18,15 @@
             <!-- Tab 1: Basic Info -->
             <MudTabPanel Text="Basic Info" Icon="@Icons.Material.Filled.Person">
                 <MudText Typo="Typo.h6" Class="mb-4">Student Information</MudText>
-                <MudTextField @bind-Value="_newUser.Username" Label="Username" Required="true" Variant="Variant.Outlined" Class="mb-3" />
-                <MudTextField @bind-Value="_newUser.Email" Label="Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="_newUser.Username" Label="Username" Required="true" Variant="Variant.Outlined" Class="mb-3 small-label-input" Validation="@((Func<string, Task<IEnumerable<string>>>)ValidateIdentifierUniqueness)"/>
+                <MudTextField @bind-Value="_newUser.Email" Label="Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3 small-label-input" 
+                  Rules="@(new Func<string, string[]>(v => {
+                      if (string.IsNullOrWhiteSpace(v)) return Array.Empty<string>();
+                      if (!v.Contains("@") || v.Split('@').Length != 2 || v.StartsWith("@") || v.EndsWith("@") || !v.Split('@')[1].Contains(".")) 
+                          return new[] { "⚠️ Please enter a valid email address that includes '@' and a domain name." };
+                      return Array.Empty<string>();
+                  }))" 
+                  Validation="@((Func<string, Task<IEnumerable<string>>>)ValidateIdentifierUniqueness)" />
                 <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3" />
                 <MudTextField @bind-Value="_confirmPassword" Label="Confirm Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3" />
                 <MudTextField @bind-Value="_newUser.FirstName" Label="First Name" Variant="Variant.Outlined" Class="mb-3" />
@@ -248,5 +255,28 @@
             TaskCategory.LanguageHelp => "Language Help",
             _ => category.ToString()
         };
+    }
+
+    /// <summary>
+    /// verifys the uniqueness of a username or email by calling the backend service.
+    /// </summary>
+    private async Task<IEnumerable<string>> ValidateIdentifierUniqueness(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Array.Empty<string>(); 
+
+        if (await AuthService.CheckIdentifierExistsAsync(value))
+        {
+            if (value.Contains("@"))
+            {
+                return new[] { "❌ Email address already in use." };
+            }
+            else
+            {
+                return new[] { "❌ User name already in use." };
+            }
+        }
+
+        return Array.Empty<string>();
     }
 }

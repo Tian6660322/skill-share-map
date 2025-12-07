@@ -1,4 +1,4 @@
-@page "/register/company"
+﻿@page "/register/company"
 @using SkillShareMap.Services
 @using SkillShareMap.Models
 @inject IAuthService AuthService
@@ -19,8 +19,14 @@
             <MudTabPanel Text="Account" Icon="@Icons.Material.Filled.AccountCircle">
                 <MudText Typo="Typo.h6" Class="mb-4">Account Information</MudText>
                 <MudTextField @bind-Value="_newUser.Username" Label="Username" Required="true" Variant="Variant.Outlined" Class="mb-3" />
-                <MudTextField @bind-Value="_newUser.Email" Label="Company Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3" />
-                <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="_newUser.Email" Label="Company Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3" Immediate="false"
+                            Validation="@(new Func<string, Task<IEnumerable<string>>>(ValidateUniqueness))" />
+                <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3" Immediate="false"
+                              Validation="@(new Func<string, Task<IEnumerable<string>>>(async (val) => {
+                                  var formatErrors = ValidateEmailFormat(val);
+                                  if (formatErrors.Any()) return formatErrors;
+                                  return await ValidateUniqueness(val);
+                              }))" />
                 <MudTextField @bind-Value="_confirmPassword" Label="Confirm Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" />
 
                 <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4" OnClick="() => _activeStep = 1">
@@ -166,6 +172,37 @@
         {
             _isGeocodingAddress = false;
         }
+    }
+    
+    private IEnumerable<string> ValidateEmailFormat(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            yield break;
+
+        if (!email.Contains("@") || !email.Contains("."))
+        {
+            yield return "⚠️ Please enter a valid email address that includes '@' and a domain name.";
+        }
+    }
+
+    private async Task<IEnumerable<string>> ValidateUniqueness(string value)
+    {
+        await Task.Delay(300);
+
+        if (string.IsNullOrWhiteSpace(value))
+            return Array.Empty<string>();
+
+        bool exists = await AuthService.CheckIdentifierExistsAsync(value);
+
+        if (exists)
+        {
+            if (value.Contains("@"))
+                return new[] { "❌ Email address already in use." };
+            else
+                return new[] { "❌ User name already in use." };
+        }
+
+        return Array.Empty<string>();
     }
 
     private async Task HandleRegister()
