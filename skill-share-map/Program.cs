@@ -8,7 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor().AddCircuitOptions(options => {
+    options.DetailedErrors = true;});
 
 // Add MudBlazor for UI components
 builder.Services.AddMudServices();

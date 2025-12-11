@@ -31,58 +31,58 @@ namespace SkillShareMap.Shared
             {
                 Default = new DefaultTypography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" }
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
                 },
                 H1 = new H1Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" },
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "700"
                 },
                 H2 = new H2Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" },
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "700"
                 },
                 H3 = new H3Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" },
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "600"
                 },
                 H4 = new H4Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" },
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "600"
                 },
                 H5 = new H5Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" },
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "600"
                 },
                 H6 = new H6Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" },
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "600"
                 },
                 Button = new ButtonTypography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" },
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "600"
                 },
                 Body1 = new Body1Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" }
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
                 },
                 Body2 = new Body2Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" }
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
                 },
                 Subtitle1 = new Subtitle1Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" }
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
                 },
                 Subtitle2 = new Subtitle2Typography()
                 {
-                    FontFamily = new[] { "Montserrat", "Mona Sans", "sans-serif" }
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
                 }
             }
         };

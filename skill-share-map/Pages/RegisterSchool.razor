@@ -21,11 +21,11 @@
                 <MudTextField @bind-Value="_newUser.Username" Label="Username" Required="true" Variant="Variant.Outlined" Class="mb-3" Immediate="false"
                             Validation="@(new Func<string, Task<IEnumerable<string>>>(ValidateUniqueness))"/>
                 <MudTextField @bind-Value="_newUser.Email" Label="School Email" InputType="InputType.Email" Required="true" Variant="Variant.Outlined" Class="mb-3" Immediate="false"
-              Validation="@(new Func<string, Task<IEnumerable<string>>>(async (val) => {
-                  var formatErrors = ValidateEmailFormat(val);
-                  if (formatErrors.Any()) return formatErrors;
-                  return await ValidateUniqueness(val);
-              }))" />
+                              Validation="@(new Func<string, Task<IEnumerable<string>>>(async (val) => {
+                                  var formatErrors = ValidateEmailFormat(val);
+                                  if (formatErrors.Any()) return formatErrors;
+                                  return await ValidateUniqueness(val);
+                              }))" />
                 <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Class="mb-3" />
                 <MudTextField @bind-Value="_confirmPassword" Label="Confirm Password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" />
 

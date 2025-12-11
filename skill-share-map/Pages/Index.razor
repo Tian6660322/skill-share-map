@@ -10,202 +10,154 @@
 
 <PageTitle>Skill Share Map</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="pa-0" Style="height: calc(100vh - 64px);">
-    <MudGrid Spacing="0" Style="height: 100%;">
-        <!-- Left Sidebar - Filters -->
-        <MudItem xs="12" md="3" Style="height: 100%; overflow-y: auto; border-right: 1px solid #e0e0e0;">
-            <MudPaper Elevation="0" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Filters</MudText>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8 mb-8">
+    <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="mb-8 text-center">
+        <MudText Typo="Typo.h3" Style="font-weight: 700;">Get Paid For What You Know</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-2">Explore the campus map, click on a task, and start earning</MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Dark" 
+                   Size="Size.Large" 
+                   Class="mt-4 rounded-pill px-8 py-2"
+                   Style="background-color: #2b2b3d; color: white;">
+            Post a Task Now
+        </MudButton>
+    </MudStack>
 
-                <!-- Type Filter -->
-                <MudText Typo="Typo.subtitle2" Class="mb-2">Display Type</MudText>
-                <MudRadioGroup @bind-Value="_displayType" T="string">
-                    <MudRadio T="string" Value="@("tasks")" Color="Color.Primary">Tasks</MudRadio>
-                    <MudRadio T="string" Value="@("jobs")" Color="Color.Secondary">Jobs</MudRadio>
-                </MudRadioGroup>
+    <MudPaper Elevation="4" Class="rounded-xl overflow-hidden" Style="height: 600px; border: 1px solid #e0e0e0;">
+        <MudGrid Spacing="0" Style="height: 100%;">
+            
+            <MudItem xs="12" md="3" Style="height: 100%; background-color: #1a1b1e; overflow-y: auto;">
+                <MudPaper Elevation="0" Class="pa-6" Style="background-color: transparent; color: white;">
+                    <MudText Typo="Typo.h6" Class="mb-6" Style="font-weight: bold;">Filter</MudText>
 
-                <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #a0a0a0;">Display Type</MudText>
+                    <MudRadioGroup @bind-Value="_displayType" T="string">
+                        <MudRadio T="string" Value="@("tasks")" Color="Color.Primary" Class="mr-3" Style="color: white;">Tasks</MudRadio>
+                        <MudRadio T="string" Value="@("jobs")" Color="Color.Secondary" Style="color: white;">Jobs</MudRadio>
+                    </MudRadioGroup>
 
-                @if (_displayType == "tasks")
-                {
-                    <!-- Category Filter -->
-                    <MudText Typo="Typo.subtitle2" Class="mb-2">Category</MudText>
-                    <MudSelect @bind-Value="_selectedCategory" T="TaskCategory?" Placeholder="All Categories" Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
-                        @foreach (var category in Enum.GetValues<TaskCategory>())
-                        {
-                            <MudSelectItem Value="@((TaskCategory?)category)">@GetCategoryName(category)</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <MudDivider Class="my-4" Style="background-color: #404040;" />
 
-                    <!-- Status Filter -->
-                    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Status</MudText>
-                    <MudSelect @bind-Value="_selectedStatus" T="SkillTaskStatus?" Placeholder="All Statuses" Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
-                        <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.Open)">Open</MudSelectItem>
-                        <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.Assigned)">Assigned</MudSelectItem>
-                        <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.PendingCompletion)">In Progress</MudSelectItem>
-                    </MudSelect>
-
-                    <!-- Distance Filter -->
-                    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Distance: @_distanceKm km</MudText>
-                    <MudSlider T="int"
-                               Value="_distanceKm"
-                               ValueChanged="OnDistanceChanged"
-                               Min="0"
-                               Max="50"
-                               Step="1"
-                               Color="Color.Primary"
-                               Immediate="true" />
-                    <MudText Typo="Typo.caption" Class="mt-1">
-                        Showing @_visibleTasks.Count task(s) within @_distanceKm km
-                    </MudText>
-                }
-                else
-                {
-                    <!-- Distance Filter for Jobs -->
-                    <MudText Typo="Typo.subtitle2" Class="mb-2">Distance: @_distanceKm km</MudText>
-                    <MudSlider T="int"
-                               Value="_distanceKm"
-                               ValueChanged="OnDistanceChanged"
-                               Min="0"
-                               Max="50"
-                               Step="1"
-                               Color="Color.Secondary"
-                               Immediate="true" />
-
-                    <MudText Typo="Typo.body2" Class="mt-4" Color="Color.Secondary">
-                        Showing open job positions within @_distanceKm km
-                    </MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
-                        Showing @_visibleJobs.Count job(s) within @_distanceKm km
-                    </MudText>
-                }
-
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           FullWidth="true"
-                           Class="mt-6"
-                           OnClick="ApplyFilters">
-                    Apply Filters
-                </MudButton>
-
-                <MudButton Variant="Variant.Text"
-                           FullWidth="true"
-                           Class="mt-2"
-                           OnClick="ResetFilters">
-                    Reset
-                </MudButton>
-
-                @if (!string.IsNullOrEmpty(_noResultsMessage))
-                {
-                    <MudAlert Severity="Severity.Info" Variant="Variant.Text" Class="mt-3">
-                        @_noResultsMessage
-                    </MudAlert>
-                }
-            </MudPaper>
-        </MudItem>
-
-        <!-- Main Map Area -->
-        <MudItem xs="12" md="9" Style="height: 100%; position: relative;">
-            <MapComponent @ref="_mapComponent"
-                          OnMarkerClick="HandleMarkerClick"
-                          MapId="mainMap"
-                          Height="100%"
-                          InitialLat="@_userLat"
-                          InitialLng="@_userLng"
-                          InitialZoom="13" />
-
-            <!-- Task Summary Card (Slides up when item clicked) -->
-            @if (_selectedTask != null)
-            {
-                <MudPaper Elevation="8"
-                          Class="pa-4"
-                          Style="position: absolute; bottom: 0; left: 0; right: 0; max-height: 40%; overflow-y: auto; z-index: 1000;">
-                    <div class="d-flex justify-space-between align-center mb-3">
-                        <MudText Typo="Typo.h6">@_selectedTask.Title</MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                       Size="Size.Small"
-                                       OnClick="() => _selectedTask = null" />
-                    </div>
-
-                    @if (!string.IsNullOrEmpty(_selectedTask.ImageUrl))
+                    @if (_displayType == "tasks")
                     {
-                        <MudImage Src="@_selectedTask.ImageUrl"
-                                  Alt="@_selectedTask.Title"
-                                  Height="150"
-                                  ObjectFit="ObjectFit.Cover"
-                                  Class="rounded mb-3"
-                                  Style="width: 100%;" />
+                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #a0a0a0;">Category</MudText>
+                        <MudSelect @bind-Value="_selectedCategory" T="TaskCategory?"
+                                   Placeholder="All Categories" 
+                                   Clearable="true" 
+                                   Variant="Variant.Outlined" 
+                                   Margin="Margin.Dense"
+                                   Class="mb-4"
+                                   Style="background-color: #2c2d30; color: white;"
+                                   AdornmentColor="Color.Default">
+                            @foreach (var category in Enum.GetValues<TaskCategory>())
+                            {
+                                <MudSelectItem Value="@((TaskCategory?)category)">@GetCategoryName(category)</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #a0a0a0;">Status</MudText>
+                        <MudSelect @bind-Value="_selectedStatus" T="SkillTaskStatus?"
+                                   Placeholder="All Statuses" 
+                                   Clearable="true" 
+                                   Variant="Variant.Outlined" 
+                                   Margin="Margin.Dense"
+                                   Style="background-color: #2c2d30; color: white;"
+                                   AdornmentColor="Color.Default">
+                            <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.Open)">Open</MudSelectItem>
+                            <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.Assigned)">Assigned</MudSelectItem>
+                            <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.PendingCompletion)">In Progress</MudSelectItem>
+                        </MudSelect>
+
+                        <MudText Typo="Typo.subtitle2" Class="mt-6 mb-2" Style="color: #a0a0a0;">Distance: @_distanceKm km</MudText>
+                        <MudSlider T="int"
+                                   Value="_distanceKm"
+                                   ValueChanged="OnDistanceChanged"
+                                   Min="0"
+                                   Max="50"
+                                   Step="1"
+                                   Color="Color.Primary"
+                                   Immediate="true" />
+                        <MudText Typo="Typo.caption" Class="mt-1" Style="color: #808080;">
+                            Showing @_visibleTasks.Count task(s) within @_distanceKm km
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #a0a0a0;">Distance: @_distanceKm km</MudText>
+                        <MudSlider T="int"
+                                   Value="_distanceKm"
+                                   ValueChanged="OnDistanceChanged"
+                                   Min="0"
+                                   Max="50"
+                                   Step="1"
+                                   Color="Color.Secondary"
+                                   Immediate="true" />
+                        <MudText Typo="Typo.caption" Class="mt-1" Style="color: #808080;">
+                            Showing @_visibleJobs.Count job(s) within @_distanceKm km
+                        </MudText>
                     }
 
-                    <MudGrid>
-                        <MudItem xs="12" sm="6">
-                            <MudText Typo="Typo.body2">
-                                <strong>Posted by:</strong> @_selectedTask.Creator?.Username
-                            </MudText>
-                            <MudText Typo="Typo.body2">
-                                <strong>Location:</strong> @_selectedTask.LocationAddress
-                            </MudText>
-                            <MudText Typo="Typo.body2">
-                                <strong>@(_selectedTask.NegotiatedPrice.HasValue ? "Negotiated Price:" : "Budget:")</strong>
-                                $@(_selectedTask.NegotiatedPrice ?? _selectedTask.Budget)
-                            </MudText>
-                        </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudText Typo="Typo.body2">
-                                <strong>Status:</strong>
-                                <MudChip T="string" Size="Size.Small" Color="GetStatusColor(_selectedTask.Status)">
-                                    @_selectedTask.Status
-                                </MudChip>
-                            </MudText>
-                            <MudText Typo="Typo.body2">
-                                <strong>Category:</strong>
-                                <CategoryIcon Category="_selectedTask.Category" IconSize="Size.Small" />
-                                @GetCategoryName(_selectedTask.Category)
-                            </MudText>
-                        </MudItem>
-                    </MudGrid>
-
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
-                               Class="mt-4"
-                               Href="@($"/task/{_selectedTask.Id}")">
-                        View Details
+                               FullWidth="true"
+                               Class="mt-8 py-2"
+                               Style="background-color: #7da0fa; color: #000; font-weight: bold;"
+                               OnClick="ApplyFilters">
+                        Apply Filters
                     </MudButton>
-                </MudPaper>
-            }
 
-            @if (_selectedJob != null)
-            {
-                <MudPaper Elevation="8"
-                          Class="pa-4"
-                          Style="position: absolute; bottom: 0; left: 0; right: 0; max-height: 40%; overflow-y: auto; z-index: 1000;">
-                    <div class="d-flex justify-space-between align-center mb-3">
-                        <MudText Typo="Typo.h6">@_selectedJob.Title</MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                       Size="Size.Small"
-                                       OnClick="() => _selectedJob = null" />
-                    </div>
-
-                    <MudText Typo="Typo.body2">
-                        <strong>Company:</strong> @_selectedJob.PostedBy?.CompanyName
-                    </MudText>
-                    <MudText Typo="Typo.body2">
-                        <strong>Type:</strong> @_selectedJob.EmploymentType
-                    </MudText>
-                    <MudText Typo="Typo.body2">
-                        <strong>Location:</strong> @_selectedJob.LocationAddress
-                    </MudText>
-
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Secondary"
-                               Class="mt-4"
-                               Href="@($"/job/{_selectedJob.Id}")">
-                        View Details
+                    <MudButton Variant="Variant.Text"
+                               FullWidth="true"
+                               Class="mt-2"
+                               Style="color: #a0a0a0;"
+                               OnClick="ResetFilters">
+                        Reset
                     </MudButton>
+
+                    @if (!string.IsNullOrEmpty(_noResultsMessage))
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Text" Class="mt-3" Style="color: white;">
+                            @_noResultsMessage
+                        </MudAlert>
+                    }
                 </MudPaper>
-            }
-        </MudItem>
-    </MudGrid>
+            </MudItem>
+
+            <MudItem xs="12" md="9" Style="height: 100%; position: relative;">
+                <MapComponent @ref="_mapComponent"
+                              OnMarkerClick="HandleMarkerClick"
+                              MapId="mainMap"
+                              Height="100%"
+                              InitialLat="@_userLat"
+                              InitialLng="@_userLng"
+                              InitialZoom="13" />
+
+                @if (_selectedTask != null)
+                {
+                    <MudPaper Elevation="8" Class="pa-4 mx-4 mb-4 rounded-lg"
+                              Style="position: absolute; bottom: 0; left: 0; right: 0; max-height: 40%; overflow-y: auto; z-index: 1000;">
+                        <div class="d-flex justify-space-between align-center mb-3">
+                            <MudText Typo="Typo.h6">@_selectedTask.Title</MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => _selectedTask = null" />
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" Href="@($"/task/{_selectedTask.Id}")">View Details</MudButton>
+                    </MudPaper>
+                }
+
+                @if (_selectedJob != null)
+                {
+                    <MudPaper Elevation="8" Class="pa-4 mx-4 mb-4 rounded-lg"
+                              Style="position: absolute; bottom: 0; left: 0; right: 0; max-height: 40%; overflow-y: auto; z-index: 1000;">
+                        <div class="d-flex justify-space-between align-center mb-3">
+                            <MudText Typo="Typo.h6">@_selectedJob.Title</MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => _selectedJob = null" />
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4" Href="@($"/job/{_selectedJob.Id}")">View Details</MudButton>
+                    </MudPaper>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
 </MudContainer>
 
 @implements IDisposable

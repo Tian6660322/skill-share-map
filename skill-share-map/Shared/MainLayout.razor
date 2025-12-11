@@ -1,199 +1,84 @@
 ﻿@inherits LayoutComponentBase
-@implements IDisposable
+
 @namespace SkillShareMap.Shared
 @inject NavigationManager Navigation
 @inject SkillShareMap.Services.UserState UserState
 @inject SkillShareMap.Services.IChatService ChatService
 
-<MudThemeProvider Theme="AppTheme.Default" />
 <MudPopoverProvider />
+<MudThemeProvider Theme="AppTheme.Default" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="0" Color="Color.Transparent">
-        <!-- Logo -->
-        <MudIconButton Icon="@Icons.Material.Filled.Map" Color="Color.Inherit" Edge="Edge.Start" Href="/" />
-        <MudText Typo="Typo.h6" Class="ml-2">Skill Share Map</MudText>
+    <MudAppBar Elevation="0" Fixed="true" Style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0; color: #4a4a4a;">
+        
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mr-8 cursor-pointer" onclick="location.href='/'">
+            <MudImage Src="images/logo.png" Height="40" Alt="Logo" Class="mr-2"/>
+        </MudStack>
+
+        <MudStack Row="true" Spacing="8" AlignItems="AlignItems.Center" Class="d-none d-md-flex">
+            
+            <MudLink Href="/" Underline="Underline.None" Color="Color.Secondary" Style="font-weight: 500;">Home</MudLink>
+            
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mx-2">/</MudText>
+
+            <MudLink Href="/classroom" Underline="Underline.None" Color="Color.Secondary" Style="font-weight: 500;">Classroom</MudLink>
+            
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mx-2">/</MudText>
+
+            <MudLink Href="/ai-assistant" Underline="Underline.None" Color="Color.Secondary" Style="font-weight: 500;">AI Coach</MudLink>
+        
+        </MudStack>
+
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Secondary" 
+                   Href="/post-task"
+                   Class="ml-12 px-6 rounded"
+                   Style="color: white; text-transform: none; font-weight: 600;">
+            Post a Task
+        </MudButton>
 
         <MudSpacer />
 
-        @if (UserState.IsAuthenticated)
-        {
-            <!-- AI Assistant -->
-            <MudIconButton Icon="@Icons.Material.Filled.SmartToy"
-                           Color="Color.Secondary"
-                           Href="/ai-assistant"
-                           Title="AI Assistant" />
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+            
+            <MudTooltip Text="Messages">
+                <MudIconButton Icon="@Icons.Material.Outlined.ChatBubbleOutline" Color="Color.Inherit" Href="/chats" />
+            </MudTooltip>
 
-            <!-- The Classroom -->
-            <MudButton Href="/classroom"
-                       StartIcon="@Icons.Material.Filled.School"
-                       Color="Color.Inherit"
-                       Variant="Variant.Text">
-                The Classroom
-            </MudButton>
+                 @if (UserState.IsAuthenticated)
+                {
+                    <MudButton Variant="Variant.Text" 
+                               Color="Color.Inherit" 
+                               Href="/profile" 
+                               StartIcon="@Icons.Material.Filled.Person"
+                               Style="text-transform: none; font-weight: 600;">
+                        My Profile
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Text" 
+                               Color="Color.Inherit" 
+                               Href="/login"
+                               Style="text-transform: none; font-weight: 600;">
+                        Log in
+                    </MudButton>
+                
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Inherit" 
+                               Href="/register"
+                               Class="rounded-pill px-4"
+                               Style="text-transform: none; font-weight: 600; border-color: #333;">
+                        Sign up
+                    </MudButton>
+                }
+        </MudStack>
 
-            <!-- Messages -->
-            <MudBadge Content="@_unreadCount" Color="Color.Error" Overlap="true" Visible="@(_unreadCount > 0)" Class="ml-4">
-                <MudIconButton Icon="@Icons.Material.Filled.Chat"
-                               Color="Color.Inherit"
-                               Href="/chats" />
-            </MudBadge>
-
-            <!-- Post a Task -->
-            <MudButton Href="/post-task"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       Color="Color.Secondary"
-                       Variant="Variant.Filled"
-                       Class="ml-4">
-                Post a Task
-            </MudButton>
-
-            <!-- Profile -->
-            <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
-                     Color="Color.Inherit"
-                     AnchorOrigin="Origin.BottomRight"
-                     Class="ml-4">
-                <MudMenuItem Href="/profile" Icon="@Icons.Material.Filled.Person">My Profile</MudMenuItem>
-                <MudMenuItem Href="/wallet" Icon="@Icons.Material.Filled.AccountBalanceWallet">Wallet</MudMenuItem>
-                <MudDivider />
-                <MudMenuItem OnClick="Logout" Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
-            </MudMenu>
-        }
-        else
-        {
-            <MudButton Href="/login"
-                       Color="Color.Inherit"
-                       Variant="Variant.Text">
-                Login
-            </MudButton>
-
-            <MudButton Href="/register"
-                       Color="Color.Secondary"
-                       Variant="Variant.Filled"
-                       Class="ml-2">
-                Sign Up
-            </MudButton>
-        }
     </MudAppBar>
 
-    <MudMainContent>
+    <MudMainContent Class="pt-20">
         @Body
     </MudMainContent>
 </MudLayout>
-
-@code {
-    private int _unreadCount = 0;
-    private System.Threading.Timer? _unreadTimer;
-
-
-    protected override void OnInitialized()
-    {
-        Console.WriteLine("[MainLayout] OnInitialized called");
-        UserState.OnChange += HandleUserStateChanged;
-
-        // Set up timer to refresh unread count every 5 seconds
-        _unreadTimer = new System.Threading.Timer(async _ =>
-        {
-            await InvokeAsync(async () =>
-            {
-                await UpdateUnreadCountAsync();
-                StateHasChanged();
-            });
-        }, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5));
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            Console.WriteLine("[MainLayout] OnAfterRenderAsync first render");
-            UserState.MarkAsRendered();
-            await UserState.InitializeAsync();
-            Console.WriteLine($"[MainLayout] After InitializeAsync - IsAuthenticated: {UserState.IsAuthenticated}");
-            EnsureAuthenticated();
-            StateHasChanged();
-        }
-    }
-
-    protected override void OnParametersSet()
-    {
-        EnsureAuthenticated();
-    }
-
-    private void HandleUserStateChanged()
-    {
-        InvokeAsync(() =>
-        {
-            StateHasChanged();
-            EnsureAuthenticated();
-        });
-    }
-
-    private void EnsureAuthenticated()
-    {
-        Console.WriteLine($"[MainLayout] EnsureAuthenticated - IsInitialized: {UserState.IsInitialized}, IsAuthenticated: {UserState.IsAuthenticated}");
-
-        if (!UserState.IsInitialized)
-        {
-            Console.WriteLine("[MainLayout] Not initialized yet, skipping auth check");
-            return;
-        }
-
-        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
-        Console.WriteLine($"[MainLayout] Current path: {relativePath}");
-
-        if (IsPublicPage(relativePath))
-        {
-            Console.WriteLine("[MainLayout] Public page, no auth required");
-            return;
-        }
-
-        if (!UserState.IsAuthenticated)
-        {
-            Console.WriteLine("[MainLayout] Not authenticated, redirecting to login");
-            Navigation.NavigateTo("/login");
-        }
-        else
-        {
-            Console.WriteLine($"[MainLayout] Authenticated as: {UserState.CurrentUser?.Username}");
-        }
-    }
-
-    private static bool IsPublicPage(string? relativePath)
-    {
-        if (string.IsNullOrWhiteSpace(relativePath))
-        {
-            return false;
-        }
-
-        relativePath = relativePath.TrimStart('/');
-        return relativePath.StartsWith("login", StringComparison.OrdinalIgnoreCase)
-            || relativePath.StartsWith("register", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private async Task UpdateUnreadCountAsync()
-    {
-        if (UserState.CurrentUser != null)
-        {
-            _unreadCount = await ChatService.GetUnreadCountAsync(UserState.CurrentUser.Id);
-        }
-        else
-        {
-            _unreadCount = 0;
-        }
-    }
-
-    private async Task Logout()
-    {
-        await UserState.LogoutAsync();
-        Navigation.NavigateTo("/login");
-    }
-
-    public void Dispose()
-    {
-        UserState.OnChange -= HandleUserStateChanged;
-        _unreadTimer?.Dispose();
-    }
-}
