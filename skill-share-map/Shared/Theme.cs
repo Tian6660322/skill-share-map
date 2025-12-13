@@ -17,9 +17,6 @@ namespace SkillShareMap.Shared
                 // deep greyish blue
                 Tertiary = "#7B9CC9",
 
-                // bright orange
-                //Quaternary = "#dc4910",
-
                 // deep blue
                 AppbarBackground = "#1976d2",
 
@@ -58,7 +55,7 @@ namespace SkillShareMap.Shared
                     FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "600"
                 },
-                H6 = new H6Typography()
+                H6 = new H6Typography() // 20px
                 {
                     FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "600"
@@ -68,22 +65,38 @@ namespace SkillShareMap.Shared
                     FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
                     FontWeight = "600"
                 },
-                Body1 = new Body1Typography()
+                Body1 = new Body1Typography() // 16px
                 {
                     FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
                 },
-                Body2 = new Body2Typography()
+                Body2 = new Body2Typography() // 14px
                 {
                     FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
                 },
-                Subtitle1 = new Subtitle1Typography()
+                Subtitle1 = new Subtitle1Typography() // 16px
                 {
                     FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
                 },
-                Subtitle2 = new Subtitle2Typography()
+                Subtitle2 = new Subtitle2Typography() // 14px
                 {
                     FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" }
+                },
+                Caption = new CaptionTypography()
+                {
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
+                    FontSize = "12px",
+                    LineHeight = "1.5",
+                    FontWeight = "500"
+                },
+                Overline = new OverlineTypography()
+                {
+                    FontFamily = new[] { "IBM Plex Sans", "Mona Sans", "sans-serif" },
+                    FontSize = "10px",
+                    LineHeight = "1.5",
+                    LetterSpacing = "0",
+                    TextTransform = "none"
                 }
+
             }
         };
     }

@@ -10,65 +10,99 @@
 
 <PageTitle>Skill Share Map</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8 mb-8">
-    <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="mb-8 text-center">
-        <MudText Typo="Typo.h3" Style="font-weight: 700;">Get Paid For What You Know</MudText>
-        <MudText Typo="Typo.subtitle1" Class="mt-2">Explore the campus map, click on a task, and start earning</MudText>
-        <MudButton Variant="Variant.Filled" 
-                   Color="Color.Dark" 
-                   Size="Size.Large" 
-                   Class="mt-4 rounded-pill px-8 py-2"
-                   Style="background-color: #2b2b3d; color: white;">
-            Post a Task Now
-        </MudButton>
-    </MudStack>
+<div style="width: 100%; 
+            position: relative;
+            background-color: #FFFFFF;">
 
-    <MudPaper Elevation="4" Class="rounded-xl overflow-hidden" Style="height: 600px; border: 1px solid #e0e0e0;">
+    <div style="position: absolute; 
+                bottom: -150px;
+                left: 50%; 
+                transform: translateX(-50%); 
+                width: 600px; 
+                height: 300px; 
+                background: radial-gradient(ellipse at center, rgba(74, 117, 176, 0.25) 0%, transparent 70%);
+                filter: blur(60px);
+                z-index: 0;
+                pointer-events: none;"> 
+    </div>
+
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pt-12 pb-20" Style="position: relative; z-index: 1;">
+        <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="text-center">
+            <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Secondary" Style="font-weight: 700;">
+                Get Paid <br /> For What You Know
+            </MudText>
+
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Secondary" Class="mt-2">
+                Explore the campus map <br /> click on a task <br /> and start earning
+            </MudText>
+            
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Dark" 
+                       Size="Size.Large" 
+                       Class="mt-8 rounded-pill px-8 py-2"
+                       Style="background-color: #2b2b3d; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                Post a Task Now
+            </MudButton>
+        </MudStack>
+    </MudContainer>
+
+</div> <MudContainer MaxWidth="MaxWidth.Large" Class="my-12" Style="position: relative; z-index: 2; width: 80%; max-width: 1400px; margin: 0 auto;">
+    
+    <MudPaper Elevation="4" Class="rounded-xl overflow-hidden" Style="height: 650px; border: 1px solid #e0e0e0;">
         <MudGrid Spacing="0" Style="height: 100%;">
             
             <MudItem xs="12" md="3" Style="height: 100%; background-color: #1a1b1e; overflow-y: auto;">
                 <MudPaper Elevation="0" Class="pa-6" Style="background-color: transparent; color: white;">
                     <MudText Typo="Typo.h6" Class="mb-6" Style="font-weight: bold;">Filter</MudText>
 
-                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #a0a0a0;">Display Type</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Display Type</MudText>
                     <MudRadioGroup @bind-Value="_displayType" T="string">
                         <MudRadio T="string" Value="@("tasks")" Color="Color.Primary" Class="mr-3" Style="color: white;">Tasks</MudRadio>
-                        <MudRadio T="string" Value="@("jobs")" Color="Color.Secondary" Style="color: white;">Jobs</MudRadio>
+                        <MudRadio T="string" Value="@("jobs")" Color="Color.Primary" Class="mr-3" Style="color: white;">Jobs</MudRadio>
                     </MudRadioGroup>
 
                     <MudDivider Class="my-4" Style="background-color: #404040;" />
 
                     @if (_displayType == "tasks")
                     {
-                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #a0a0a0;">Category</MudText>
-                        <MudSelect @bind-Value="_selectedCategory" T="TaskCategory?"
-                                   Placeholder="All Categories" 
-                                   Clearable="true" 
-                                   Variant="Variant.Outlined" 
+                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Category</MudText>
+                        <MudSelect T="TaskCategory?"
+                                   MultiSelection="true" 
+                                   @bind-SelectedValues="_selectedCategories"
+                                   Placeholder="Select Categories"
+                                   Clearable="true"
+                                   Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
-                                   Class="mb-4"
+                                   Class="mb-4 white-placeholder glow-focus" 
+                                   PopoverClass="fancy-menu"
                                    Style="background-color: #2c2d30; color: white;"
                                    AdornmentColor="Color.Default">
                             @foreach (var category in Enum.GetValues<TaskCategory>())
                             {
-                                <MudSelectItem Value="@((TaskCategory?)category)">@GetCategoryName(category)</MudSelectItem>
+                                <MudSelectItem T="TaskCategory?" Value="@((TaskCategory?)category)">
+                                    @GetCategoryName(category)
+                                </MudSelectItem>
                             }
                         </MudSelect>
 
-                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #a0a0a0;">Status</MudText>
-                        <MudSelect @bind-Value="_selectedStatus" T="SkillTaskStatus?"
-                                   Placeholder="All Statuses" 
-                                   Clearable="true" 
-                                   Variant="Variant.Outlined" 
+                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Status</MudText>
+                        <MudSelect T="SkillTaskStatus?"
+                                   MultiSelection="true"
+                                   @bind-SelectedValues="_selectedStatuses"
+                                   Placeholder="Select Statuses"
+                                   Clearable="true"
+                                   Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
+                                   Class="mb-4 white-placeholder glow-focus"
+                                   PopoverClass="fancy-menu"
                                    Style="background-color: #2c2d30; color: white;"
                                    AdornmentColor="Color.Default">
-                            <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.Open)">Open</MudSelectItem>
-                            <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.Assigned)">Assigned</MudSelectItem>
-                            <MudSelectItem Value="@((SkillTaskStatus?)SkillTaskStatus.PendingCompletion)">In Progress</MudSelectItem>
+                            <MudSelectItem T="SkillTaskStatus?" Value="@((SkillTaskStatus?)SkillTaskStatus.Open)">Open</MudSelectItem>
+                            <MudSelectItem T="SkillTaskStatus?" Value="@((SkillTaskStatus?)SkillTaskStatus.Assigned)">Assigned</MudSelectItem>
+                            <MudSelectItem T="SkillTaskStatus?" Value="@((SkillTaskStatus?)SkillTaskStatus.PendingCompletion)">In Progress</MudSelectItem>
                         </MudSelect>
 
-                        <MudText Typo="Typo.subtitle2" Class="mt-6 mb-2" Style="color: #a0a0a0;">Distance: @_distanceKm km</MudText>
+                        <MudText Typo="Typo.subtitle2" Class="mt-6 mb-2" Style="color: #FFFFFF;">Distance: @_distanceKm km</MudText>
                         <MudSlider T="int"
                                    Value="_distanceKm"
                                    ValueChanged="OnDistanceChanged"
@@ -77,7 +111,7 @@
                                    Step="1"
                                    Color="Color.Primary"
                                    Immediate="true" />
-                        <MudText Typo="Typo.caption" Class="mt-1" Style="color: #808080;">
+                        <MudText Typo="Typo.caption" Class="mt-1" Style="color: #e0e0e0;">
                             Showing @_visibleTasks.Count task(s) within @_distanceKm km
                         </MudText>
                     }
@@ -92,7 +126,7 @@
                                    Step="1"
                                    Color="Color.Secondary"
                                    Immediate="true" />
-                        <MudText Typo="Typo.caption" Class="mt-1" Style="color: #808080;">
+                        <MudText Typo="Typo.caption" Class="mt-1" Style="color: #e0e0e0;">
                             Showing @_visibleJobs.Count job(s) within @_distanceKm km
                         </MudText>
                     }
@@ -158,6 +192,7 @@
             </MudItem>
         </MudGrid>
     </MudPaper>
+    
 </MudContainer>
 
 @implements IDisposable
@@ -165,9 +200,9 @@
 @code {
     private MapComponent? _mapComponent;
     private string _displayType = "tasks";
-    private TaskCategory? _selectedCategory;
-    private SkillTaskStatus? _selectedStatus;
-    private int _distanceKm = 50; // Default to 50km to show more tasks
+    private IEnumerable<TaskCategory?> _selectedCategories = new HashSet<TaskCategory?>();
+    private IEnumerable<SkillTaskStatus?> _selectedStatuses = new HashSet<SkillTaskStatus?>();
+    private int _distanceKm = 50; 
 
     private SkillTask? _selectedTask;
     private Job? _selectedJob;
@@ -178,16 +213,13 @@
     private List<Job> _visibleJobs = new();
     private string? _noResultsMessage;
 
-    // User's current location (default: Sydney CBD)
     private double _userLat = -33.8688;
     private double _userLng = 151.2093;
 
     protected override async Task OnInitializedAsync()
     {
-        // Subscribe to navigation events to reload data when returning to this page
         Navigation.LocationChanged += OnLocationChanged;
 
-        // Use user's homebase location if available
         if (UserState.IsAuthenticated && UserState.CurrentUser != null)
         {
             var currentUser = UserState.CurrentUser;
@@ -205,14 +237,13 @@
     {
         if (firstRender)
         {
-            await Task.Delay(500); // Wait for map to initialize
+            await Task.Delay(500);
             await ApplyFilters();
         }
     }
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        // Reload data when navigating back to this page
         if (e.Location.EndsWith("/") || e.Location.EndsWith("/index"))
         {
             InvokeAsync(async () =>
@@ -231,7 +262,6 @@
 
     public void Dispose()
     {
-        // Unsubscribe from navigation events
         Navigation.LocationChanged -= OnLocationChanged;
     }
 
@@ -250,8 +280,8 @@
 
             var filteredTasks = _tasks
                 .Where(t => t.Status != SkillTaskStatus.Cancelled && t.Status != SkillTaskStatus.Completed)
-                .Where(t => !_selectedCategory.HasValue || t.Category == _selectedCategory.Value)
-                .Where(t => !_selectedStatus.HasValue || t.Status == _selectedStatus.Value)
+                .Where(t => !_selectedCategories.Any() || _selectedCategories.Contains(t.Category))
+                .Where(t => !_selectedStatuses.Any() || _selectedStatuses.Contains(t.Status))
                 .Where(t => t.Latitude.HasValue && t.Longitude.HasValue)
                 .Where(t =>
                 {
@@ -264,7 +294,6 @@
 
             _visibleTasks = filteredTasks;
 
-            // Add markers for filtered tasks
             foreach (var task in _visibleTasks)
             {
                 await _mapComponent.AddMarkerAsync(
@@ -289,7 +318,6 @@
         {
             _visibleTasks.Clear();
 
-            // Filter jobs by distance
             var filteredJobs = _jobs
                 .Where(j => j.Latitude.HasValue && j.Longitude.HasValue)
                 .Where(j =>
@@ -347,9 +375,11 @@
 
     private async Task ResetFilters()
     {
-        _selectedCategory = null;
-        _selectedStatus = null;
-        _distanceKm = 50; // Increase to 50km to surface more tasks after clearing filters
+        // 清空集合
+        _selectedCategories = new HashSet<TaskCategory?>();
+        _selectedStatuses = new HashSet<SkillTaskStatus?>();
+    
+        _distanceKm = 50; 
         _selectedTask = null;
         _selectedJob = null;
         _noResultsMessage = null;
@@ -400,3 +430,84 @@
         return InvokeAsync(StateHasChanged);
     }
 }
+
+<style>
+    /* placeholder */
+    .white-placeholder .mud-input-slot {
+        font-size: 12px !important;
+        padding-top: 2px; /* position */
+        color: #ffffff !important;
+    }
+
+    .white-placeholder .mud-input-slot::placeholder {
+        color: #e0e0e0 !important;
+        opacity: 1 !important;
+    }
+    
+    .white-placeholder input::-webkit-input-placeholder {
+        color: #e0e0e0 !important;
+        opacity: 1 !important;
+    }
+
+    /* Multi Choice */
+    /* 1. 输入框点击后的荧光包边效果 */
+    .glow-focus.mud-input-control-focused .mud-input-outlined-border {
+        border-color: #4a75b0 !important;
+        box-shadow: 0 0 10px rgba(138, 43, 226, 0.6); /* 荧光晕影 */
+    }
+
+    /* 2. 下拉菜单整体背景 */
+    .mud-popover.fancy-menu .mud-list {
+        background-color: #ffffff !important; /* 菜单白底，看着干净 */
+        padding: 8px;
+    }
+
+    /* 3. 每一个选项的样式 (默认状态) */
+    .mud-popover.fancy-menu .mud-list-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;      /* 圆角 */
+        margin-bottom: 6px;      /* 选项之间的间距 */
+        color: #333 !important;  /* 默认文字黑色 */
+        transition: all 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px !important;
+    }
+
+    /* 4. 隐藏 MudBlazor 自带的复选框 (方框) */
+    .mud-popover.fancy-menu .mud-checkbox {
+        display: none !important;
+    }
+
+    /* 5. 选中状态：紫色背景 + 白字 */
+    .mud-popover.fancy-menu .mud-selected-item {
+        background-color: #4a75b0 !important; /* 选中后的紫色 */
+        color: white !important;
+        border-color: #4a75b0;
+    }
+    
+    /* 选中状态：鼠标悬停也是紫色 */
+    .mud-popover.fancy-menu .mud-selected-item:hover {
+        background-color: #4a75b0 !important;
+    }
+
+    /* 6. 选中后，在右侧添加一个打勾图标 (✔) */
+    .mud-popover.fancy-menu .mud-selected-item::after {
+        content: "✓";
+        font-weight: bold;
+        font-size: 16px;
+        color: white;
+        margin-right: 10px;
+    }
+    
+    /* 普通悬停效果 */
+    .mud-popover.fancy-menu .mud-list-item:not(.mud-selected-item):hover {
+        background-color: #f5f5f5 !important;
+    }
+
+    /* 占位符样式保持之前的 */
+    .white-placeholder .mud-input-slot { font-size: 12px !important; }
+    .white-placeholder .mud-input-slot::placeholder { color: #e0e0e0 !important; opacity: 1 !important; }
+    .white-placeholder input::-webkit-input-placeholder { color: #e0e0e0 !important; opacity: 1 !important; }
+</style>

@@ -11,7 +11,8 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="0" Fixed="true" Style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0; color: #4a4a4a;">
+    @* Top width *@
+    <MudAppBar Elevation="0" Fixed="true" Class="px-12 pt-2" Style="height: 80px; background-color: #ffffff; color: #4a4a4a;">
         
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="mr-8 cursor-pointer" onclick="location.href='/'">
             <MudImage Src="images/logo.png" Height="40" Alt="Logo" Class="mr-2"/>
@@ -19,23 +20,23 @@
 
         <MudStack Row="true" Spacing="8" AlignItems="AlignItems.Center" Class="d-none d-md-flex">
             
-            <MudLink Href="/" Underline="Underline.None" Color="Color.Secondary" Style="font-weight: 500;">Home</MudLink>
+            <MudLink Href="/" Class="nav-hover-effect">Home</MudLink>
             
             <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mx-2">/</MudText>
 
-            <MudLink Href="/classroom" Underline="Underline.None" Color="Color.Secondary" Style="font-weight: 500;">Classroom</MudLink>
+            <MudLink Href="/classroom" Class="nav-hover-effect">Classroom</MudLink>
             
             <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mx-2">/</MudText>
 
-            <MudLink Href="/ai-assistant" Underline="Underline.None" Color="Color.Secondary" Style="font-weight: 500;">AI Coach</MudLink>
+            <MudLink Href="/ai-assistant" Class="nav-hover-effect">AI Coach</MudLink>
         
         </MudStack>
 
         <MudButton Variant="Variant.Filled" 
-                   Color="Color.Secondary" 
                    Href="/post-task"
-                   Class="ml-12 px-6 rounded"
-                   Style="color: white; text-transform: none; font-weight: 600;">
+                   Class="ml-12 px-8 py-2 rounded-pill post-task-btn"
+                   DropShadow="false"
+                   Style="background-color: #2b2b3d; color: white; text-transform: none; font-weight: 600; font-size: 16px;">
             Post a Task
         </MudButton>
 
@@ -44,18 +45,54 @@
         <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
             
             <MudTooltip Text="Messages">
-                <MudIconButton Icon="@Icons.Material.Outlined.ChatBubbleOutline" Color="Color.Inherit" Href="/chats" />
+                <MudIconButton Icon="@Icons.Material.Outlined.ChatBubbleOutline" Color="Color.Secondary" Href="/chats" />
             </MudTooltip>
 
                  @if (UserState.IsAuthenticated)
                 {
-                    <MudButton Variant="Variant.Text" 
-                               Color="Color.Inherit" 
-                               Href="/profile" 
-                               StartIcon="@Icons.Material.Filled.Person"
-                               Style="text-transform: none; font-weight: 600;">
-                        My Profile
-                    </MudButton>
+                    <MudMenu AnchorOrigin="Origin.BottomRight" 
+                             TransformOrigin="Origin.TopRight"
+                             PopoverClass="menu-paper-rounded"
+                             ListClass="pa-3"
+                             LockScroll="true">
+        
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Text" 
+                                       Class="rounded-circle d-flex justify-center align-center" 
+                                       Style="width: 48px; height: 48px; min-width: 48px; padding: 0;">
+        
+                                <MudAvatar Color="Color.Primary" 
+                                           Style="height: 32px; width: 32px; font-size: 14px;">
+                                    @UserState.CurrentUser?.Username?.Substring(0, 1).ToUpper()
+                                </MudAvatar>
+        
+                            </MudButton>
+                        </ActivatorContent>
+
+                        <ChildContent>
+                            <div class="d-flex flex-column align-center justify-center pa-4 gap-2" style="border-radius: 15px; min-width: 200px; background-color: #f8f9fa;">
+                                <MudAvatar Color="Color.Primary" Size="Size.Large">
+                                    @UserState.CurrentUser?.Username?.Substring(0, 1).ToUpper()
+                                </MudAvatar>
+                                <MudText Typo="Typo.subtitle1" Class="fw-bold">@UserState.CurrentUser?.Username</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@UserState.CurrentUser?.Email</MudText>
+                            </div>
+
+                            <MudMenuItem Href="/profile" Icon="@Icons.Material.Filled.PersonOutline">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Profile Details</MudText>
+                            </MudMenuItem>
+
+                            <MudMenuItem Href="/wallet" Icon="@Icons.Material.Filled.AccountBalanceWallet">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Wallet</MudText>
+                            </MudMenuItem>
+
+                            <MudDivider Class="my-1"/>
+
+                            <MudMenuItem OnClick="HandleLogout" Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Sign Out</MudText>
+                            </MudMenuItem>
+                        </ChildContent>
+                    </MudMenu>
                 }
                 else
                 {
@@ -82,3 +119,77 @@
         @Body
     </MudMainContent>
 </MudLayout>
+
+<style>
+    /* 1. New style specifically for 'home', 'AI Coach' and 'Classroom' */
+    .nav-hover-effect {
+        position: relative;
+        color: #1B1B1B !important; /* Deep grey */
+        text-decoration: none !important; /* no line */
+        font-weight: 500;
+        transition: color 0.3s;
+        display: inline-block;
+    }
+    .nav-hover-effect::after {
+        content: '';
+        position: absolute;
+        width: 0%;
+        height: 2px; /* width */
+        bottom: -10px; /* distance between texts and line */
+
+        left: 50%;
+        transform: translateX(-50%);
+        
+        background-color: #4a75b0; 
+        transition: width 0.3s ease-in-out; /* animation effects */
+    }
+
+    /* Hover style */
+    .nav-hover-effect:hover {
+        /* color changed */
+        color: #4a75b0 !important; 
+    }
+    .nav-hover-effect:hover::after {
+        width: 130%; 
+    }
+
+    /* 2. New style specifically for the Post Task Button */
+    .post-task-btn {
+        transition: all 0.3s ease-in-out; /* Smooth transition animation */
+    }
+
+    .post-task-btn:hover {
+        /* Change background to Blue-Grey */
+        background-color: #4a75b0 !important; 
+        
+        /* Change text color to Black */
+        color: #FFFFFF !important;
+    }
+
+    /* 3. menu-rounded setting */
+    .menu-paper-rounded {
+        border-radius: 15px !important;
+        overflow: hidden;
+        box-shadow: 0 0px 10px rgba(0,0,0,0.15) !important;
+    }
+
+    /* 4. ICON size in child menu */
+    .menu-paper-rounded .mud-icon-root {
+            font-size: 20px !important;  /* 👈 在这里改大小！推荐 18px-20px */
+        
+            /* 可选：如果你觉得图标和文字太近了，可以微调间距 */
+            margin-right: 12px !important; 
+            min-width: 20px !important;
+        }
+
+</style>
+
+
+@code {
+    private async Task HandleLogout()
+    {
+        await UserState.LogoutAsync();
+
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}
