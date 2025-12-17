@@ -8,5 +8,6 @@ public interface IAuthService
     Task<User?> GetUserByIdAsync(int userId);
     Task<bool> CheckIdentifierExistsAsync(string identifier);
     Task<bool> UpdateUserAsync(User user);
+    Task<bool> ChangePasswordAsync(int userId, string oldPassword, string newPassword);
 }
 

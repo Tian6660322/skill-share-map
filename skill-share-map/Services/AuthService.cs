@@ -149,4 +149,19 @@ public class AuthService : IAuthService
         var testHash = HashPassword(password);
         return testHash == hash;
     }
+
+    public async Task<bool> ChangePasswordAsync(int userId, string oldPassword, string newPassword)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return false;
+
+        if (!VerifyPassword(oldPassword, user.PasswordHash))
+            return false;
+
+        user.PasswordHash = HashPassword(newPassword);
+
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

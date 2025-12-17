@@ -5,12 +5,15 @@
 @inject IAuthService AuthService
 @inject ITaskService TaskService
 @inject IRatingService RatingService
+@inject IWalletService WalletService
+@inject IChatService ChatService
 @inject NavigationManager Navigation
 @inject UserState UserState
+@inject ISnackbar Snackbar
 
-<PageTitle>Profile - Skill Share Map</PageTitle>
+<PageTitle>My Profile</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="my-8">
+<MudContainer MaxWidth="MaxWidth.False" Class="pt-8 px-12 pb-16">
     @if (_isLoading)
     {
         <div class="d-flex justify-center align-center" style="min-height: 400px;">
@@ -19,251 +22,544 @@
     }
     else if (_user != null)
     {
-        <MudGrid>
-            <!-- Profile Card -->
-            <MudItem xs="12" md="4">
-                <MudPaper Elevation="3" Class="pa-6">
-                    <div class="d-flex flex-column align-center">
-                        <MudAvatar Size="Size.Large" Class="mb-4" Style="width: 120px; height: 120px;">
-                            @if (!string.IsNullOrEmpty(_user.AvatarUrl))
-                            {
-                                <MudImage Src="@_user.AvatarUrl" />
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" />
-                            }
-                        </MudAvatar>
+        <MudGrid Spacing="0">
+            <MudItem xs="12" sm="2" Class="pl-md-8">
+                <div class="d-flex flex-column gap-2">
 
-                        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-2">
-                            @(_user.Role == UserRole.Student ? $"{_user.FirstName} {_user.LastName}" : _user.CompanyName)
-                        </MudText>
+                    <div @onclick="@(() => _activeTab = "Profile")"
+                         class="@GetSidebarClass("Profile")">
+                        <MudImage Src="images/profile_icon.svg" Class="mr-4" Width="24" Height="24" ObjectFit="ObjectFit.Contain" />
+                        <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Profile")">Profile</MudText>
+                    </div>
 
-                        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mb-2">
-                            @("@" + _user.Username)
-                        </MudText>
+                    <div @onclick="@(() => _activeTab = "Task")"
+                         class="@GetSidebarClass("Task")">
+                        <MudImage Src="images/task_icon.svg" Class="mr-4" Width="24" Height="24" ObjectFit="ObjectFit.Contain" />
+                        <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Task")">Task</MudText>
+                    </div>
 
-                        <MudChip T="string" Color="@(_user.Role == UserRole.Student ? Color.Primary : Color.Secondary)" Size="Size.Small" Class="mb-3">
-                            @_user.Role
-                        </MudChip>
+                    @if (_user.Role == UserRole.Student)
+                    {
+                        <div @onclick="@(() => _activeTab = "Badges")"
+                             class="@GetSidebarClass("Badges")">
+                            <MudImage Src="images/badge_icon.svg" Class="mr-4" Width="24" Height="24" ObjectFit="ObjectFit.Contain" />
+                            <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Badges")">Badges</MudText>
+                        </div>
+                    }
 
-                        @if (_user.IsVerified)
+                    @if (_isCurrentUser)
+                    {
+                        <div @onclick="@(() => _activeTab = "Wallet")"
+                             class="@GetSidebarClass("Wallet")">
+                            <MudImage Src="images/wallet_icon.svg" Class="mr-4" Width="24" Height="24" ObjectFit="ObjectFit.Contain" />
+                            <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Wallet")">Wallet</MudText>
+                        </div>
+
+                        <div @onclick="@(() => _activeTab = "Chat")"
+                             class="@GetSidebarClass("Chat")">
+                            <MudImage Src="images/chat_icon.svg" Class="mr-4" Width="24" Height="24" ObjectFit="ObjectFit.Contain" />
+                            <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Chat")">Chat</MudText>
+                        </div>
+
+                        <div @onclick="@(() => _activeTab = "Setting")"
+                             class="@GetSidebarClass("Setting")">
+                            <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-4" Size="Size.Medium" Style="color: #000000;"/>
+                            <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Setting")">Setting</MudText>
+                        </div>
+                    }
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="9" Class="pl-sm-12">
+
+                @if (_activeTab == "Task")
+                {
+                     <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">Search Recent Task</MudText>
+
+                    <MudPaper Elevation="0" Class="d-flex align-center pa-2 rounded-pill mb-10"
+                              Style="background-color: #F3F4F6; width: 100%;">
+                        <MudTextField @bind-Value="_searchString" 
+                                      Placeholder="Search task" 
+                                      Class="flex-grow-1 ml-4 mr-4 hide-idle-line" 
+                                      Style="background-color: transparent;" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" Variant="Variant.Filled" Size="Size.Medium"
+                                       Class="rounded-circle" Style="background-color: #4a75b0; color: white; width: 48px; height: 48px;" />
+                    </MudPaper>
+
+                    <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">My Tasks</MudText>
+
+                    <div class="d-flex gap-4 mb-8">
+                        <MudButton Variant="@(_showCreatedTasks ? Variant.Filled : Variant.Outlined)"
+                                   OnClick="@(() => _showCreatedTasks = true)"
+                                   Style="@(_showCreatedTasks ? "background-color: #2b2b3d; color: white; border-radius: 16px; font-weight: 600; padding: 12px 32px;" : "background-color: white; color: #1B1B1B; border-color: #E0E0E0; border-radius: 16px; font-weight: 600; padding: 12px 32px;")"
+                                   DisableElevation="true">Created Tasks</MudButton>
+
+                        <MudButton Variant="@(!_showCreatedTasks ? Variant.Filled : Variant.Outlined)"
+                                   OnClick="@(() => _showCreatedTasks = false)"
+                                   Style="@(!_showCreatedTasks ? "background-color: #2b2b3d; color: white; border-radius: 16px; font-weight: 600; padding: 12px 32px;" : "background-color: white; color: #1B1B1B; border-color: #E0E0E0; border-radius: 16px; font-weight: 600; padding: 12px 32px;")"
+                                   DisableElevation="true">Accepted Tasks</MudButton>
+                    </div>
+
+                    <MudPaper Elevation="0" Class="pa-8 rounded-xl" Style="background-color: #F8F9FA; min-height: 400px;">
+                        @{ var displayedTasks = GetDisplayedTasks(); }
+                        @if (displayedTasks.Any())
                         {
-                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.Verified" Class="mb-3">
-                                Verified
-                            </MudChip>
-                        }
-
-                        @if (_user.Role == UserRole.Student)
-                        {
-                            <MudDivider Class="my-4" />
-
-                            <div class="d-flex align-center mb-2">
-                                <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Class="mr-2" />
-                                <MudText Typo="Typo.body2">@_user.SchoolName</MudText>
-                            </div>
+                            @foreach (var task in displayedTasks)
+                            {
+                                <MudPaper Elevation="0" Class="pa-6 mb-4 rounded-xl d-flex justify-space-between align-center hover-card"
+                                          Style="background-color: #FFFFFF; cursor: pointer;"
+                                          @onclick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">
+                                    <div>
+                                        <div class="d-flex align-center mb-3">
+                                            <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B; margin-right: 32px;">@task.Title</MudText>
+                                            <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;">$@task.Budget</MudText>
+                                        </div>
+                                        <div class="d-flex align-center mb-2">
+                                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Style="color: #9E9E9E; margin-right: 8px;" />
+                                            <MudText Typo="Typo.caption" Style="color: #9E9E9E; font-size: 13px;">@task.LocationAddress (@task.Category)</MudText>
+                                        </div>
+                                        <div class="d-flex align-center">
+                                            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" Style="color: #9E9E9E; margin-right: 8px;" />
+                                            <MudText Typo="Typo.caption" Style="color: #9E9E9E; font-size: 13px;">
+                                                @(task.Deadline.HasValue ? $"Due {task.Deadline.Value.ToString("MMM dd")}" : "No Deadline")
+                                            </MudText>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <MudChip T="string" Style="@($"{GetStatusStyle(task.Status)} border-radius: 20px; font-size: 14px;")" Label="true" Class="px-4 py-2 fw-bold">@task.Status</MudChip>
+                                    </div>
+                                </MudPaper>
+                            }
                         }
                         else
                         {
-                            <MudDivider Class="my-4" />
-
-                            @if (!string.IsNullOrEmpty(_user.WebsiteUrl))
-                            {
-                                <MudButton Variant="Variant.Text"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.Language"
-                                           Href="@_user.WebsiteUrl"
-                                           Target="_blank"
-                                           FullWidth="true"
-                                           Class="mb-2">
-                                    Visit Website
-                                </MudButton>
-                            }
-                        }
-
-                        <MudDivider Class="my-4" />
-
-                        <div class="d-flex align-center mb-2">
-                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-2" />
-                            <MudText Typo="Typo.body2">@_user.HomeBaseAddress</MudText>
-                        </div>
-
-                        <div class="d-flex align-center mb-2">
-                            <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Class="mr-2" />
-                            <MudText Typo="Typo.body2">@_user.Email</MudText>
-                        </div>
-
-                        @if (_user.ReputationLevel > 0)
-                        {
-                            <MudDivider Class="my-4" />
-
-                            <div class="d-flex align-center justify-center">
-                                <MudRating ReadOnly="true" SelectedValue="@((int)_user.ReputationLevel)" />
-                                <MudText Typo="Typo.body2" Class="ml-2">
-                                    @_user.ReputationLevel.ToString("F1")
-                                </MudText>
+                            <div class="d-flex flex-column align-center justify-center pt-8">
+                                <MudIcon Icon="@Icons.Material.Outlined.Assignment" Size="Size.Large" style="color: #BDBDBD;" />
+                                <MudText Typo="Typo.body1" Class="mt-4" Style="color: #9E9E9E;">No tasks found.</MudText>
                             </div>
                         }
-                    </div>
-                </MudPaper>
-
-                @if (_user.Role == UserRole.Student && _badges.Any())
-                {
-                    <MudPaper Elevation="3" Class="pa-6 mt-4">
-                        <MudText Typo="Typo.h6" Class="mb-4">
-                            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
-                            Badges
-                        </MudText>
-
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach (var badge in _badges)
-                            {
-                                <MudTooltip Text="@($"{GetCategoryName(badge.Category)} - {badge.Tier}")">
-                                    <MudChip T="string" Color="@GetBadgeColor(badge.Tier)" Icon="@Icons.Material.Filled.Stars">
-                                        @GetCategoryName(badge.Category)
-                                    </MudChip>
-                                </MudTooltip>
-                            }
-                        </div>
                     </MudPaper>
                 }
-            </MudItem>
+                
+                else if (_activeTab == "Profile")
+                {
 
-            <!-- Main Content -->
-            <MudItem xs="12" md="8">
-                <!-- Bio / Description -->
-                <MudPaper Elevation="3" Class="pa-6 mb-4">
-                    <MudText Typo="Typo.h6" Class="mb-3">
-                        @(_user.Role == UserRole.Student ? "Bio" : "About")
-                    </MudText>
-                    <MudText Typo="Typo.body1">
-                        @(_user.Role == UserRole.Student ? _user.Bio : _user.CompanyDescription)
-                    </MudText>
-                </MudPaper>
-
-                <!-- Tasks -->
-                <MudPaper Elevation="3" Class="pa-6 mb-4">
-                    <MudText Typo="Typo.h6" Class="mb-4">
-                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="mr-2" />
-                        Tasks
-                    </MudText>
-
-                    @{
-                        var createdTasks = _userTasks.Where(t => t.CreatorId == _user.Id).ToList();
-                        var acceptedTasks = _userTasks.Where(t => t.AssignedToId == _user.Id).ToList();
-                    }
-
-                    @if (createdTasks.Any() || acceptedTasks.Any())
-                    {
-                        <MudTabs Rounded="true">
-                            <MudTabPanel Text="Created Tasks">
-                                @if (createdTasks.Any())
-                                {
-                                    <MudList T="string">
-                                        @foreach (var task in createdTasks)
-                                        {
-                                            <MudListItem T="string" OnClick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">
-                                                <div class="d-flex justify-space-between align-center">
-                                                    <div>
-                                                        <MudText Typo="Typo.subtitle1">@task.Title</MudText>
-                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                                            @task.Category | $@task.Budget
-                                                        </MudText>
-                                                    </div>
-                                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(task.Status)">
-                                                        @task.Status
-                                                    </MudChip>
-                                                </div>
-                                            </MudListItem>
-                                            <MudDivider />
-                                        }
-                                    </MudList>
-                                }
-                                else
-                                {
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="pa-4">
-                                        No created tasks yet
-                                    </MudText>
-                                }
-                            </MudTabPanel>
-
-                            <MudTabPanel Text="Accepted Tasks">
-                                @if (acceptedTasks.Any())
-                                {
-                                    <MudList T="string">
-                                        @foreach (var task in acceptedTasks)
-                                        {
-                                            <MudListItem T="string" OnClick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">
-                                                <div class="d-flex justify-space-between align-center">
-                                                    <div>
-                                                        <MudText Typo="Typo.subtitle1">@task.Title</MudText>
-                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                                            @task.Category | $@task.Budget
-                                                        </MudText>
-                                                    </div>
-                                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(task.Status)">
-                                                        @task.Status
-                                                    </MudChip>
-                                                </div>
-                                            </MudListItem>
-                                            <MudDivider />
-                                        }
-                                    </MudList>
-                                }
-                                else
-                                {
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="pa-4">
-                                        No accepted tasks yet
-                                    </MudText>
-                                }
-                            </MudTabPanel>
-                        </MudTabs>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="pa-4">
-                            No tasks yet
-                        </MudText>
-                    }
-                </MudPaper>
-
-                <!-- Ratings -->
-                <MudPaper Elevation="3" Class="pa-6">
-                    <MudText Typo="Typo.h6" Class="mb-4">
-                        <MudIcon Icon="@Icons.Material.Filled.Star" Class="mr-2" />
-                        Recent Reviews
-                    </MudText>
-
-                    @if (_ratings.Any())
-                    {
-                        <MudList T="string">
-                            @foreach (var rating in _ratings.Take(5))
-                            {
-                                <MudListItem T="string">
-                                    <div>
-                                        <div class="d-flex align-center mb-2">
-                                            <MudRating ReadOnly="true" SelectedValue="@rating.Stars" Size="Size.Small" />
-                                            <MudText Typo="Typo.caption" Class="ml-2" Color="Color.Secondary">
-                                                by @rating.FromUser?.Username
-                                            </MudText>
-                                        </div>
-                                        @if (!string.IsNullOrEmpty(rating.Comment))
-                                        {
-                                            <MudText Typo="Typo.body2">@rating.Comment</MudText>
-                                        }
-                                    </div>
-                                </MudListItem>
-                                <MudDivider />
+                    <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl d-flex align-center" Style="border: 1px solid #e0e0e0;">
+                        <MudAvatar Style="height: 100px; width: 100px; font-size: 2rem;" Class="mr-6">
+                            @if (!string.IsNullOrEmpty(_user.AvatarUrl)) 
+                            { 
+                                <MudImage Src="@_user.AvatarUrl" /> 
                             }
-                        </MudList>
+                            else 
+                            { 
+                                @_user.Username?.Substring(0, 1).ToUpper()
+                            }
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #1B1B1B;">@_user.Username</MudText>
+                            <MudText Typo="Typo.h6" Style="color: #666;">@_user.Role</MudText>
+                            <div class="d-flex align-center mt-1">
+                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Color="Color.Secondary" Class="mr-1"/>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@(_user.HomeBaseAddress ?? "Location not set")</MudText>
+                            </div>
+                        </div>
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                        <div class="d-flex justify-space-between align-center mb-6">
+                            <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;">Personal Information</MudText>
+                            @if (_isCurrentUser)
+                            {
+                                <MudButton Variant="@(_isEditingProfile ? Variant.Filled : Variant.Outlined)"
+                                           Color="Color.Primary"
+                                           Size="Size.Small" 
+                                           DisableElevation="true" 
+                                           Style="border-radius: 8px;"
+                                           OnClick="@ToggleEditProfile">
+                                    @(_isEditingProfile ? "Save" : "Edit")
+                                </MudButton>
+                            }
+                        </div>
+
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.caption" Color="Color.Primary">Username</MudText>
+                                @if (_isEditingProfile)
+                                {
+                                    <MudTextField @bind-Value="_user.Username" 
+                                                  Variant="Variant.Outlined" 
+                                                  Margin="Margin.Dense"
+                                                  HelperText="Log in with the new username next time" />
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mt-1" Style="font-weight: 500;"  Color="Color.Secondary">@_user.Username</MudText>
+                                }
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.caption" Color="Color.Primary">Full Name</MudText>
+                                @if (_isEditingProfile)
+                                {
+                                    <div class="d-flex gap-2">
+                                        <MudTextField @bind-Value="_user.FirstName" Label="First Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                        <MudTextField @bind-Value="_user.LastName" Label="Last Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mt-1" Style="font-weight: 500;" Color="Color.Secondary">@_user.FirstName @_user.LastName</MudText>
+                                }
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.caption" Color="Color.Primary">Email Address</MudText>
+                                @if (_isEditingProfile)
+                                {
+                                    <MudTextField @bind-Value="_user.Email" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mt-1" Style="font-weight: 500;" Color="Color.Secondary">@_user.Email</MudText>
+                                }
+                            </MudItem>
+    
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.caption" Color="Color.Primary">User Role</MudText>
+                                <MudText Typo="Typo.subtitle2" Class="mt-1" Style="font-weight: 500;" Color="Color.Secondary">@_user.Role</MudText>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.caption" Color="Color.Primary">School / Institution</MudText>
+                                @if (_isEditingProfile)
+                                {
+                                    <MudTextField @bind-Value="_user.SchoolName" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mt-1" Style="font-weight: 500;" Color="Color.Secondary">@(_user.SchoolName ?? "N/A")</MudText>
+                                }
+                            </MudItem>
+    
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.caption" Color="Color.Primary">Degree / Major</MudText>
+                                @if (_isEditingProfile)
+                                {
+                                    <MudTextField @bind-Value="_user.Degree" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mt-1" Style="font-weight: 500;" Color="Color.Secondary">@_user.Degree</MudText>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+
+                     <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                        <div class="d-flex justify-space-between align-center mb-6">
+                            <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;">Address</MudText>
+                            @if (_isCurrentUser)
+                            {
+                                <MudButton Variant="@(_isEditingAddress ? Variant.Filled : Variant.Outlined)"
+                                           Color="Color.Primary"
+                                           Size="Size.Small" 
+                                           Style="border-radius: 8px;"
+                                           OnClick="@ToggleEditAddress">
+                                     @(_isEditingAddress ? "Save" : "Edit")
+                                </MudButton>
+                            }
+                        </div>
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudText Typo="Typo.caption" Color="Color.Primary">Full Address</MudText>
+                                @if (_isEditingAddress)
+                                {
+                                     <MudTextField @bind-Value="_user.HomeBaseAddress" 
+                                                   Variant="Variant.Outlined" 
+                                                   Lines="3" 
+                                                   Placeholder="Enter your address here..." />
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mt-1" Style="font-weight: 500;" Color="Color.Secondary">
+                                        @(_user.HomeBaseAddress ?? "No address provided")
+                                    </MudText>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                         <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700; color: #1B1B1B;">My Skills</MudText>
+                         @if (_isCurrentUser)
+                         {
+                             <MudSelect T="TaskCategory" Label="Select Skills" MultiSelection="true" @bind-SelectedValues="_selectedSkills" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Class="my-small-select" PopoverClass="my-dropdown-menu">
+                                @foreach (var category in Enum.GetValues<TaskCategory>())
+                                {
+                                    <MudSelectItem Value="@category">@category</MudSelectItem>
+                                }
+                             </MudSelect>
+                         }
+                         
+                         <div class="d-flex flex-wrap gap-2 mt-4">
+                             @if (_selectedSkills != null && _selectedSkills.Any())
+                             {
+                                 @foreach (var skill in _selectedSkills)
+                                 {
+                                     <MudChip T="string" Color="Color.Primary" Variant="Variant.Text">@skill</MudChip>
+                                 }
+                             }
+                             else
+                             {
+                                 <MudText Typo="Typo.body2" Color="Color.Secondary">No skills selected yet.</MudText>
+                             }
+                         </div>
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                        <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700; color: #1B1B1B;">Portfolio / CV</MudText>
+                        
+                        <MudStack Style="width: 100%">
+                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Filled" 
+                                               Color="Color.Primary" 
+                                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                                               Style="border-radius: 8px;">
+                                        Upload Documents
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+
+                            @if (_uploadedFileName != null)
+                            {
+                                <MudAlert Severity="Severity.Info" Class="mt-2" NoIcon="false">
+                                    Uploaded: <strong>@_uploadedFileName</strong>
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">Upload your CV, Portfolio PDF, or other relevant documents here.</MudText>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                }
+
+                else if (_activeTab == "Badges")
+                {
+                    <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">My Badges</MudText>
+                    
+                    @if (_badges.Any())
+                    {
+                        <MudPaper Elevation="0" Class="pa-8 rounded-xl" Style="background-color: #F8F9FA; min-height: 400px;">
+                            <div class="d-flex flex-wrap gap-4">
+                                @foreach (var badge in _badges)
+                                {
+                                    <MudPaper Class="d-flex flex-column align-center pa-4 rounded-xl" Elevation="0" Style="background-color: white; min-width: 150px;">
+                                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Large" Color="@GetBadgeColor(badge.Tier)" Class="mb-2" />
+                                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">@GetCategoryName(badge.Category)</MudText>
+                                        <MudChip T="string" Color="@GetBadgeColor(badge.Tier)" Size="Size.Small" Class="mt-2">@badge.Tier</MudChip>
+                                    </MudPaper>
+                                }
+                            </div>
+                        </MudPaper>
                     }
                     else
                     {
-                        <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center" Class="pa-4">
-                            No reviews yet
-                        </MudText>
+                        <MudPaper Class="pa-8 d-flex flex-column align-center justify-center rounded-xl" Elevation="0" Style="background-color: #F8F9FA; min-height: 400px;">
+                            <MudIcon Icon="@Icons.Material.Outlined.EmojiEvents" Size="Size.Large" Color="Color.Default" />
+                            <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">No badges earned yet.</MudText>
+                        </MudPaper>
                     }
-                </MudPaper>
+                }
+
+                else if (_activeTab == "Wallet")
+                {
+                    <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">My Wallet</MudText>
+
+                    @if (_wallet != null)
+                    {
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudPaper Elevation="0" Class="pa-6 rounded-xl mb-4" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="opacity: 0.8;">Available Balance</MudText>
+                                    <MudText Typo="Typo.h3" Class="mb-4" Style="font-weight: 700;">$@_wallet.Balance.ToString("N2")</MudText>
+                                    <div class="d-flex gap-2">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Surface" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Class="rounded-lg">Top Up</MudButton>
+                                    </div>
+                                </MudPaper>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudPaper Elevation="0" Class="pa-6 rounded-xl mb-4" Style="background-color: #F8F9FA;">
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2" Color="Color.Secondary">Transactions</MudText>
+                                    @if (_walletTransactions.Any())
+                                    {
+                                        <MudList T="string" Dense="true" DisablePadding="true">
+                                            @foreach (var trans in _walletTransactions.Take(3))
+                                            {
+                                                <MudListItem T="string">
+                                                    <div class="d-flex justify-space-between align-center width-100">
+                                                        <div>
+                                                            <MudText Typo="Typo.body2" Style="font-weight: 600;">@trans.Type</MudText>
+                                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@trans.CreatedAt.ToString("MMM dd")</MudText>
+                                                        </div>
+                                                        <MudText Typo="Typo.body2" Color="@(trans.Amount > 0 ? Color.Success : Color.Error)" Style="font-weight: 700;">
+                                                            @(trans.Amount > 0 ? "+" : "")$@trans.Amount.ToString("N2")
+                                                        </MudText>
+                                                    </div>
+                                                </MudListItem>
+                                                <MudDivider />
+                                            }
+                                        </MudList>
+                                        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true" Href="/wallet" Class="mt-2">View All</MudButton>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">No recent transactions.</MudText>
+                                    }
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+                    }
+                    else
+                    {
+                         <MudProgressCircular Indeterminate="true" />
+                    }
+                }
+
+                else if (_activeTab == "Chat")
+                {
+                     <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">Recent Messages</MudText>
+                     
+                     <MudPaper Elevation="0" Class="pa-4 rounded-xl" Style="background-color: #F8F9FA; min-height: 400px;">
+                        @if (_conversations.Any())
+                        {
+                            <MudList T="string" Clickable="true">
+                                @foreach (var chat in _conversations)
+                                {
+                                    <MudPaper Elevation="0" Class="mb-2 rounded-lg" Style="background-color: white;">
+                                        <MudListItem T="string" OnClick="@(() => Navigation.NavigateTo($"/chat/{chat.OtherUser.Id}?TaskId={chat.TaskId}"))">
+                                            <div class="d-flex align-center">
+                                                <MudBadge Dot="true" Color="Color.Error" Visible="@(chat.UnreadCount > 0)" Overlap="true" Bordered="true">
+                                                    <MudAvatar Color="Color.Primary" Size="Size.Medium">@chat.OtherUser.Username?.Substring(0, 1).ToUpper()</MudAvatar>
+                                                </MudBadge>
+                                                <div class="ml-4 flex-grow-1">
+                                                    <div class="d-flex justify-space-between">
+                                                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">@chat.OtherUser.Username</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@chat.LastMessageTime.ToString("MMM dd")</MudText>
+                                                    </div>
+                                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                                                        @chat.LastMessageContent
+                                                    </MudText>
+                                                </div>
+                                            </div>
+                                        </MudListItem>
+                                    </MudPaper>
+                                }
+                            </MudList>
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-column align-center justify-center pt-8">
+                                <MudIcon Icon="@Icons.Material.Outlined.ChatBubbleOutline" Size="Size.Large" style="color: #BDBDBD;" />
+                                <MudText Typo="Typo.body1" Class="mt-4" Style="color: #9E9E9E;">No messages yet.</MudText>
+                            </div>
+                        }
+                     </MudPaper>
+                }
+
+                else if (_activeTab == "Setting")
+                {
+                    <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">Security Settings</MudText>
+
+                    <MudPaper Elevation="0" Class="pa-8 rounded-xl" Style="border: 1px solid #e0e0e0; max-width: 600px;">
+                        <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700;">Change Password</MudText>
+        
+                        <MudForm @ref="_passwordForm">
+                            <MudTextField T="string" Label="Current Password" 
+                                          InputType="InputType.Password"
+                                          Variant="Variant.Outlined" 
+                                          Class="mb-4"
+                                          @bind-Value="_currentPassword"
+                                          Required="true"
+                                          RequiredError="Current password is required"/>
+
+                            <MudTextField T="string" Label="New Password" 
+                                          InputType="InputType.Password"
+                                          Variant="Variant.Outlined" 
+                                          Class="mb-4"
+                                          @bind-Value="_newPassword"
+                                          Required="true"
+                                          RequiredError="New password is required"/>
+
+                            <MudTextField T="string" Label="Confirm New Password" 
+                                          InputType="InputType.Password"
+                                          Variant="Variant.Outlined" 
+                                          Class="mb-6"
+                                          @bind-Value="_confirmPassword"
+                                          Required="true"
+                                          Validation="@(new Func<string, string>(PasswordMatch))"/>
+
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Primary" 
+                                       Size="Size.Large"
+                                       OnClick="ChangePassword"
+                                       DisableElevation="true"
+                                       Style="border-radius: 8px;">
+                                Update Password
+                            </MudButton>
+                        </MudForm>
+                    </MudPaper>
+
+
+                    <MudPaper Elevation="0" Class="pa-8 mt-6 rounded-xl" Style="border: 1px solid #e0e0e0; max-width: 600px;">
+                        <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700;">Identity & Certificates</MudText>
+                        
+                        <MudText Typo="Typo.body2" Class="mb-4" Color="Color.Secondary">
+                            Upload your professional certificates or student ID to get the "Verified" badge.
+                        </MudText>
+
+                        <div class="d-flex align-center mb-6">
+                            <MudText Typo="Typo.subtitle2" Class="mr-2">Current Status:</MudText>
+                            @if (_isVerified)
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">Verified</MudChip>
+                            }
+                            else if (_hasPendingRequest)
+                            {
+                                <MudChip T="string" Color="Color.Warning" Size="Size.Small" Icon="@Icons.Material.Filled.HourglassEmpty">Pending Review</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Default" Size="Size.Small">Unverified</MudChip>
+                            }
+                        </div>
+
+                        <MudStack Style="width: 100%">
+                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadCertificate">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Filled" 
+                                               Color="Color.Secondary" 
+                                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                                               Style="border-radius: 8px;"
+                                               Disabled="@(_isVerified || _hasPendingRequest)">
+                                        @(_hasPendingRequest ? "Processing..." : "Upload Certificate (PDF/JPG)")
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+
+                            @if (_uploadedCertName != null)
+                            {
+                                <MudAlert Severity="Severity.Info" Class="mt-2" NoIcon="false">
+                                    File selected: <strong>@_uploadedCertName</strong>
+                                    <br/>
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SubmitVerification">Submit for Review</MudButton>
+                                </MudAlert>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                }
+
             </MudItem>
         </MudGrid>
     }
@@ -273,7 +569,69 @@
     }
 </MudContainer>
 
-@code {
+<style>
+    /* Card Hover Effect */
+    .hover-card {
+        transition: all 0.2s ease-in-out;
+        border: 1px solid transparent;
+    }
+    .hover-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        border-color: #E0E0E0;
+    }
+    
+    /* Menu Hover Effect */
+    .hover-menu-item {
+        border-radius: 16px; 
+        transition: background-color 0.2s;
+    }
+    .hover-menu-item:hover {
+        background-color: #F5F5F5;
+    }
+
+    /* Selected Sidebar Item Style */
+    .sidebar-selected {
+        background-color: #F8F7F4 !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .hover-menu-item {
+        border-radius: 9999px !important;
+        transition: background-color 0.2s;
+    }
+    
+    .hover-menu-item:hover {
+        background-color: #F8F7F4;
+    }
+
+    .my-small-select .mud-input-slot {
+    font-size: 14px !important;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    }
+
+    .my-dropdown-menu .mud-typography {
+    font-size: 14px !important;
+    }
+
+    /* Search line state*/
+    .hide-idle-line .mud-input-underline:before {
+        display: none !important;
+        border-bottom: none !important;
+    }
+
+    .hide-idle-line .mud-input-underline:hover:not(.mud-disabled):before {
+        border-bottom: none !important;
+    }
+
+    .hide-idle-line .mud-input-underline:after {
+        border-bottom-color: #4a75b0 !important;
+        border-bottom-width: 1px !important;
+</style>
+
+    @code {
+
     [Parameter]
     public int? UserId { get; set; }
 
@@ -281,7 +639,40 @@
     private List<SkillTask> _userTasks = new();
     private List<Rating> _ratings = new();
     private List<UserBadge> _badges = new();
+
+    // Explicitly using Models namespace to avoid conflict with Page class name
+    private SkillShareMap.Models.Wallet? _wallet;
+    private List<WalletTransaction> _walletTransactions = new();
+
+    // Chat Data
+    private List<ConversationSummary> _conversations = new();
+
     private bool _isLoading = true;
+    private bool _isCurrentUser = false;
+
+    // UI State
+    private string _activeTab = "Task"; 
+    private string _searchString = "";
+    private bool _showCreatedTasks = true;
+
+    // --- Profile Editing State (Added these missing variables) ---
+    private bool _isEditingProfile = false;
+    private bool _isEditingAddress = false;
+
+    // New Fields for Profile (Skills & File Upload)
+    private IEnumerable<TaskCategory> _selectedSkills = new HashSet<TaskCategory>();
+    private string? _uploadedFileName;
+
+    // --- Password Change State ---
+    private MudForm _passwordForm;
+    private string _currentPassword = "";
+    private string _newPassword = "";
+    private string _confirmPassword = "";
+
+    // --- Verification State ---
+    private string? _uploadedCertName;
+    private bool _isVerified = false;
+    private bool _hasPendingRequest = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -293,32 +684,36 @@
         _isLoading = true;
         try
         {
-            // If UserId is provided, show that user's profile
-            // Otherwise, show the current logged-in user's profile
-            int profileUserId = UserId ?? UserState.CurrentUser?.Id ?? 0;
+            int currentUserId = UserState.CurrentUser?.Id ?? 0;
+            int profileUserId = UserId ?? currentUserId;
 
             if (profileUserId == 0)
             {
-                // No user specified and not logged in
                 Navigation.NavigateTo("/login");
                 return;
             }
 
+            _isCurrentUser = (currentUserId == profileUserId);
             _user = await AuthService.GetUserByIdAsync(profileUserId);
 
             if (_user != null)
             {
-                // Load user's tasks (both created and accepted)
-                _userTasks = await TaskService.GetTasksAsync();
-                _userTasks = _userTasks.Where(t => t.CreatorId == _user.Id || t.AssignedToId == _user.Id).ToList();
+                // 1. Load Tasks
+                var allTasks = await TaskService.GetTasksAsync();
+                _userTasks = allTasks.Where(t => t.CreatorId == _user.Id || t.AssignedToId == _user.Id).ToList();
 
-                // Load ratings
+                // 2. Load Ratings & Badges
                 _ratings = await RatingService.GetRatingsForUserAsync(_user.Id);
-
-                // Load badges if student
                 if (_user.Role == UserRole.Student)
                 {
                     _badges = await RatingService.GetUserBadgesAsync(_user.Id);
+                }
+
+                // 3. Load Private Data (Wallet & Chat) only if viewing own profile
+                if (_isCurrentUser) 
+                {
+                    await LoadWalletData(profileUserId);
+                    await LoadChatData(profileUserId);
                 }
             }
         }
@@ -328,43 +723,259 @@
         }
     }
 
-    private string GetCategoryName(TaskCategory category)
+    private async Task LoadWalletData(int userId)
     {
-        return category switch
+        _wallet = await WalletService.GetWalletByUserIdAsync(userId);
+        if (_wallet != null)
         {
-            TaskCategory.StudyHelp => "Study Help",
-            TaskCategory.TechHelp => "Tech Help",
-            TaskCategory.CreativeDesign => "Creative Design",
-            TaskCategory.PhotoVideo => "Photo & Video",
-            TaskCategory.WritingEditing => "Writing & Editing",
-            TaskCategory.LanguageHelp => "Language Help",
-            _ => category.ToString()
-        };
+            _walletTransactions = await WalletService.GetTransactionHistoryAsync(userId);
+        }
     }
 
-    private Color GetStatusColor(SkillTaskStatus status)
+    private async Task LoadChatData(int userId)
+    {
+        var allMessages = await ChatService.GetUserMessagesAsync(userId);
+
+        var grouped = allMessages
+            .GroupBy(m => new { 
+                OtherUserId = m.SenderId == userId ? m.ReceiverId : m.SenderId, 
+                TaskId = m.TaskId 
+            })
+            .Select(g => new
+            {
+                g.Key.OtherUserId,
+                g.Key.TaskId,
+                Messages = g.OrderByDescending(m => m.SentAt).ToList()
+            })
+            .ToList();
+
+        _conversations.Clear();
+
+        foreach (var group in grouped)
+        {
+            var otherUser = await AuthService.GetUserByIdAsync(group.OtherUserId);
+            if (otherUser == null) continue;
+
+            var lastMessage = group.Messages.First();
+            var unreadCount = group.Messages.Count(m => m.ReceiverId == userId && !m.IsRead);
+
+            _conversations.Add(new ConversationSummary
+            {
+                OtherUser = otherUser,
+                TaskId = group.TaskId,
+                LastMessageContent = lastMessage.Type == MessageType.PriceNegotiation ? $"Negotiation: ${lastMessage.ProposedPrice}" : lastMessage.Content,
+                LastMessageTime = lastMessage.SentAt,
+                UnreadCount = unreadCount
+            });
+        }
+
+        _conversations = _conversations.OrderByDescending(c => c.LastMessageTime).ToList();
+    }
+
+    // --- Task UI Helpers ---
+    private List<SkillTask> GetDisplayedTasks()
+    {
+        IEnumerable<SkillTask> query = _userTasks;
+
+        if (_showCreatedTasks) 
+            query = query.Where(t => t.CreatorId == _user?.Id);
+        else 
+            query = query.Where(t => t.AssignedToId == _user?.Id);
+
+        if (!string.IsNullOrWhiteSpace(_searchString))
+            query = query.Where(t => t.Title.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+
+        return query.OrderByDescending(t => t.CreatedAt).ToList();
+    }
+
+    private string GetStatusStyle(SkillTaskStatus status)
     {
         return status switch
         {
-            SkillTaskStatus.Open => Color.Success,
-            SkillTaskStatus.Assigned => Color.Info,
-            SkillTaskStatus.PendingDeposit => Color.Warning,
-            SkillTaskStatus.Completed => Color.Default,
-            SkillTaskStatus.Cancelled => Color.Error,
-            _ => Color.Default
+            SkillTaskStatus.Assigned => "background-color: #e45f2b; color: white;",
+            SkillTaskStatus.Open => "background-color: #a0e548; color: white;",
+            SkillTaskStatus.Completed => "background-color: #f6c445; color: white;",
+            _ => "background-color: #E0E0E0; color: #616161;"
         };
     }
 
-    private Color GetBadgeColor(BadgeTier tier)
+    // --- Sidebar Helpers ---
+    private string GetSidebarClass(string tabName)
     {
-        return tier switch
+        string commonClass = "d-flex align-center py-3 px-6 rounded-pill cursor-pointer";
+
+        if (_activeTab == tabName)
+            // 选中状态：添加我们刚才定义的 .sidebar-selected 类
+            return $"{commonClass} sidebar-selected"; 
+        else
+            return $"{commonClass} hover-menu-item"; 
+    }
+
+    private string GetSidebarTextStyle(string tabName)
+    {
+        if (_activeTab == tabName)
+            return "font-weight: 700; color: #000000;"; // Selected: Bold Black
+        else
+            return "font-weight: 500; color: #4a4a4a;"; // Unselected: Dark Grey
+    }
+
+    private string GetCategoryName(TaskCategory category) => category.ToString();
+
+    private Color GetBadgeColor(BadgeTier tier) 
+    {
+        return tier switch 
         {
-            BadgeTier.Newbie => Color.Default,
-            BadgeTier.Skilled => Color.Info,
-            BadgeTier.Advanced => Color.Primary,
             BadgeTier.Expert => Color.Warning,
-            BadgeTier.Master => Color.Error,
-            _ => Color.Default
+            BadgeTier.Advanced => Color.Info,
+            _ => Color.Primary
         };
     }
+
+    // --- Profile Editing Handlers ---
+    private async Task ToggleEditProfile()
+    {
+        if (_isEditingProfile)
+        {
+            // User clicked "Save"
+            if (_user != null)
+            {
+                // 1. Call backend service to persist data
+                bool success = await AuthService.UpdateUserAsync(_user);
+
+                if (success)
+                {
+                    Snackbar.Add("Profile updated successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to update profile.", Severity.Error);
+                    return; // Keep in edit mode on failure
+                }
+            }
+        }
+
+        _isEditingProfile = !_isEditingProfile;
+    }
+
+    private async Task ToggleEditAddress()
+    {
+        if (_isEditingAddress)
+        {
+            // User clicked "Save"
+            if (_user != null)
+            {
+                // 1. Call backend service to persist data
+                bool success = await AuthService.UpdateUserAsync(_user);
+
+                if (success)
+                {
+                    Snackbar.Add("Address updated successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to update address.", Severity.Error);
+                    return;
+                }
+            }
+        }
+
+        _isEditingAddress = !_isEditingAddress;
+    }
+
+    // --- File Upload Helper ---
+    private void UploadFiles(IBrowserFile file)
+    {
+        // For demonstration, we just store the name. In a real app, upload to server.
+        _uploadedFileName = file.Name;
+        Snackbar.Add($"File {_uploadedFileName} selected (Demo Mode)", Severity.Info);
+    }
+
+    // Helper Class for Chat Summary
+    public class ConversationSummary
+    {
+        public User OtherUser { get; set; } = null!;
+        public int? TaskId { get; set; }
+        public string LastMessageContent { get; set; } = "";
+        public DateTime LastMessageTime { get; set; }
+        public int UnreadCount { get; set; }
+    }
+
+    // Password Match Validation
+    private string PasswordMatch(string arg)
+    {
+        if (_newPassword != arg)
+            return "Passwords do not match";
+        return null;
+    }
+
+
+
+    // Password Change Handler
+
+    private async Task ChangePassword()
+
+    {
+
+        await _passwordForm.Validate();
+
+        if (!_passwordForm.IsValid) return;
+
+
+
+        if (_user == null) return;
+
+
+
+        var success = await AuthService.ChangePasswordAsync(_user.Id, _currentPassword, _newPassword);
+
+
+
+        if (success)
+
+        {
+
+            Snackbar.Add("Password updated successfully!", Severity.Success);
+
+
+
+            _currentPassword = "";
+
+            _newPassword = "";
+
+            _confirmPassword = "";
+
+
+
+            await _passwordForm.ResetAsync();
+
+        }
+
+        else
+
+        {
+
+            Snackbar.Add("Failed to update password. Check your current password.", Severity.Error);
+
+        }
+
+    }
+
+    private void UploadCertificate(IBrowserFile file)
+    {
+        _uploadedCertName = file.Name;
+        Snackbar.Add($"Certificate {_uploadedCertName} selected", Severity.Info);
+    }
+
+    private async Task SubmitVerification()
+    {
+        _isLoading = true;
+        await Task.Delay(1000);
+        
+        _hasPendingRequest = true;
+        _uploadedCertName = null;
+        _isLoading = false;
+        
+        Snackbar.Add("Certificate submitted for review! An admin will check it soon.", Severity.Success);
+    }
+
 }

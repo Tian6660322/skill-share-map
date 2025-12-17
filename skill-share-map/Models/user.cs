@@ -26,6 +26,7 @@ public class User
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? SchoolName { get; set; }
+    public string? Degree { get; set; }
     public string? StudentCardUrl { get; set; } // URL to student card image
     public bool IsVerified { get; set; } = false;
 
