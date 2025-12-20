@@ -56,7 +56,9 @@
                     <MudText Typo="Typo.h6" Class="mb-6" Style="font-weight: bold;">Filter</MudText>
 
                     <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Display Type</MudText>
-                    <MudRadioGroup @bind-Value="_displayType" T="string">
+                    <MudRadioGroup T="string" 
+                                   Value="_displayType" 
+                                   ValueChanged="OnDisplayTypeChanged">
                         <MudRadio T="string" Value="@("tasks")" Color="Color.Primary" Class="mr-3" Style="color: white;">Tasks</MudRadio>
                         <MudRadio T="string" Value="@("jobs")" Color="Color.Primary" Class="mr-3" Style="color: white;">Jobs</MudRadio>
                     </MudRadioGroup>
@@ -110,7 +112,7 @@
                                    Max="50"
                                    Step="1"
                                    Color="Color.Primary"
-                                   Immediate="true" />
+                                   Immediate="false" />
                         <MudText Typo="Typo.caption" Class="mt-1" Style="color: #e0e0e0;">
                             Showing @_visibleTasks.Count task(s) within @_distanceKm km
                         </MudText>
@@ -124,8 +126,8 @@
                                    Min="0"
                                    Max="50"
                                    Step="1"
-                                   Color="Color.Secondary"
-                                   Immediate="true" />
+                                   Color="Color.Primary"
+                                   Immediate="false" />
                         <MudText Typo="Typo.caption" Class="mt-1" Style="color: #e0e0e0;">
                             Showing @_visibleJobs.Count job(s) within @_distanceKm km
                         </MudText>
@@ -428,6 +430,14 @@
         }
 
         return InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDisplayTypeChanged(string type)
+    {
+        _displayType = type;
+        _selectedTask = null;
+        _selectedJob = null;
+        await ApplyFilters(); 
     }
 }
 

@@ -49,8 +49,8 @@
 
                     @if (_isCurrentUser)
                     {
-                        <div @onclick="@(() => _activeTab = "Wallet")"
-                             class="@GetSidebarClass("Wallet")">
+                        <div @onclick="@(() => _activeTab = "Wallet")" 
+                            class="@GetSidebarClass("Wallet")">
                             <MudImage Src="images/wallet_icon.svg" Class="mr-4" Width="24" Height="24" ObjectFit="ObjectFit.Contain" />
                             <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Wallet")">Wallet</MudText>
                         </div>
@@ -379,93 +379,121 @@
 
                     @if (_wallet != null)
                     {
-                        <MudGrid>
+                        <MudGrid Class="mb-6">
                             <MudItem xs="12" md="6">
-                                <MudPaper Elevation="0" Class="pa-6 rounded-xl mb-4" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="opacity: 0.8;">Available Balance</MudText>
-                                    <MudText Typo="Typo.h3" Class="mb-4" Style="font-weight: 700;">$@_wallet.Balance.ToString("N2")</MudText>
-                                    <div class="d-flex gap-2">
-                                        <MudButton Variant="Variant.Filled" Color="Color.Surface" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Class="rounded-lg">Top Up</MudButton>
+                                <MudPaper Elevation="0" Class="pa-8 rounded-xl d-flex flex-column justify-center" 
+                                          Style="border: 1px solid #e0e0e0; height: 100%;">
+                                    
+                                    <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">Available Balance</MudText>
+                                    
+                                    <MudText Typo="Typo.h2" Class="mb-8" Style="font-weight: 700; color: #1B1B1B;">
+                                        $@_wallet.Balance.ToString("N2")
+                                    </MudText>
+                                    
+                                    <div class="d-flex gap-3">
+                                        <MudButton Variant="Variant.Filled" 
+                                                   OnClick="OpenAddFundsDialog" 
+                                                   DisableElevation="true"
+                                                   StartIcon="@Icons.Material.Filled.Add"
+                                                   Style="background-color: #1B1B1B; color: white; border-radius: 12px; font-weight: 600; padding: 10px 24px;">
+                                            Top Up
+                                        </MudButton>
+
+                                        <MudButton Variant="Variant.Outlined" 
+                                                   OnClick="OpenWithdrawDialog" 
+                                                   StartIcon="@Icons.Material.Filled.ArrowOutward"
+                                                   Style="background-color: transparent; color: #1B1B1B; border: 1px solid #E0E0E0; border-radius: 12px; font-weight: 600; padding: 10px 24px;">
+                                            Withdraw
+                                        </MudButton>
                                     </div>
                                 </MudPaper>
                             </MudItem>
+
                             <MudItem xs="12" md="6">
-                                <MudPaper Elevation="0" Class="pa-6 rounded-xl mb-4" Style="background-color: #F8F9FA;">
-                                    <MudText Typo="Typo.subtitle2" Class="mb-2" Color="Color.Secondary">Transactions</MudText>
-                                    @if (_walletTransactions.Any())
-                                    {
-                                        <MudList T="string" Dense="true" DisablePadding="true">
-                                            @foreach (var trans in _walletTransactions.Take(3))
-                                            {
-                                                <MudListItem T="string">
-                                                    <div class="d-flex justify-space-between align-center width-100">
-                                                        <div>
-                                                            <MudText Typo="Typo.body2" Style="font-weight: 600;">@trans.Type</MudText>
-                                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@trans.CreatedAt.ToString("MMM dd")</MudText>
-                                                        </div>
-                                                        <MudText Typo="Typo.body2" Color="@(trans.Amount > 0 ? Color.Success : Color.Error)" Style="font-weight: 700;">
-                                                            @(trans.Amount > 0 ? "+" : "")$@trans.Amount.ToString("N2")
-                                                        </MudText>
-                                                    </div>
-                                                </MudListItem>
-                                                <MudDivider />
-                                            }
-                                        </MudList>
-                                        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true" Href="/wallet" Class="mt-2">View All</MudButton>
-                                    }
-                                    else
-                                    {
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">No recent transactions.</MudText>
-                                    }
+                                <MudPaper Elevation="0" Class="pa-6 rounded-xl h-100" Style="border: 1px solid #e0e0e0;">
+                                    <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700; color: #1B1B1B;">Overview</MudText>
+                                    
+                                    <MudGrid>
+                                        <MudItem xs="6">
+                                            <div class="pa-4 rounded-xl" style="background-color: #F8F9FA;">
+                                                <div class="d-flex align-center gap-2 mb-1">
+                                                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Style="color: #a0e548;" Size="Size.Small"/>
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Earned</MudText>
+                                                </div>
+                                                <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;">$@_totalEarned.ToString("N2")</MudText>
+                                            </div>
+                                        </MudItem>
+                                        <MudItem xs="6">
+                                            <div class="pa-4 rounded-xl" style="background-color: #F8F9FA;">
+                                                <div class="d-flex align-center gap-2 mb-1">
+                                                    <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Style="color: #e45f2b;" Size="Size.Small"/>
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Spent</MudText>
+                                                </div>
+                                                <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;">$@_totalSpent.ToString("N2")</MudText>
+                                            </div>
+                                        </MudItem>
+                                        <MudItem xs="12">
+                                            <div class="pa-4 rounded-xl d-flex justify-space-between align-center" style="background-color: #FFF8E1;">
+                                                <div>
+                                                    <MudText Typo="Typo.caption" Style="color: #B78103;">Pending Transactions</MudText>
+                                                    <MudText Typo="Typo.h6" Style="font-weight: 700; color: #B78103;">$@_pendingAmount.ToString("N2")</MudText>
+                                                </div>
+                                                <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Style="color: #B78103;" />
+                                            </div>
+                                        </MudItem>
+                                    </MudGrid>
                                 </MudPaper>
                             </MudItem>
                         </MudGrid>
+
+                        <MudPaper Elevation="0" Class="pa-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                             <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700; color: #1B1B1B;">Transaction History</MudText>
+
+                             @if (_walletTransactions.Any())
+                             {
+                                <MudTable Items="@_walletTransactions" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0" Dense="true">
+                                    <HeaderContent>
+                                        <MudTh>Date</MudTh>
+                                        <MudTh>Type</MudTh>
+                                        <MudTh>Description</MudTh>
+                                        <MudTh>Amount</MudTh>
+                                        <MudTh>Status</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Date">@context.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")</MudTd>
+                                        <MudTd DataLabel="Type">
+                                            <MudChip T="string" Size="Size.Small" Color="@GetTransactionTypeColor(context.Type)" Variant="Variant.Text" Style="font-weight:600;">
+                                                @context.Type
+                                            </MudChip>
+                                        </MudTd>
+                                        <MudTd DataLabel="Description">@GetTransactionDescription(context)</MudTd>
+                                        <MudTd DataLabel="Amount">
+                                            <MudText Typo="Typo.body2" Color="@(context.Amount > 0 ? Color.Success : Color.Error)" Style="font-weight: 700;">
+                                                @(context.Amount > 0 ? "+" : "")$@context.Amount.ToString("N2")
+                                            </MudText>
+                                        </MudTd>
+                                        <MudTd DataLabel="Status">
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Style="border-radius: 6px;">Completed</MudChip>
+                                        </MudTd>
+                                    </RowTemplate>
+                                    <PagerContent>
+                                        <MudTablePager />
+                                    </PagerContent>
+                                </MudTable>
+                             }
+                             else
+                             {
+                                <div class="d-flex flex-column align-center justify-center pt-8 pb-8">
+                                    <MudIcon Icon="@Icons.Material.Outlined.ReceiptLong" Size="Size.Large" style="color: #BDBDBD;" />
+                                    <MudText Typo="Typo.body1" Class="mt-4" Style="color: #9E9E9E;">No transactions yet.</MudText>
+                                </div>
+                             }
+                        </MudPaper>
                     }
                     else
                     {
                          <MudProgressCircular Indeterminate="true" />
                     }
-                }
-
-                else if (_activeTab == "Chat")
-                {
-                     <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">Recent Messages</MudText>
-                     
-                     <MudPaper Elevation="0" Class="pa-4 rounded-xl" Style="background-color: #F8F9FA; min-height: 400px;">
-                        @if (_conversations.Any())
-                        {
-                            <MudList T="string" Clickable="true">
-                                @foreach (var chat in _conversations)
-                                {
-                                    <MudPaper Elevation="0" Class="mb-2 rounded-lg" Style="background-color: white;">
-                                        <MudListItem T="string" OnClick="@(() => Navigation.NavigateTo($"/chat/{chat.OtherUser.Id}?TaskId={chat.TaskId}"))">
-                                            <div class="d-flex align-center">
-                                                <MudBadge Dot="true" Color="Color.Error" Visible="@(chat.UnreadCount > 0)" Overlap="true" Bordered="true">
-                                                    <MudAvatar Color="Color.Primary" Size="Size.Medium">@chat.OtherUser.Username?.Substring(0, 1).ToUpper()</MudAvatar>
-                                                </MudBadge>
-                                                <div class="ml-4 flex-grow-1">
-                                                    <div class="d-flex justify-space-between">
-                                                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">@chat.OtherUser.Username</MudText>
-                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@chat.LastMessageTime.ToString("MMM dd")</MudText>
-                                                    </div>
-                                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
-                                                        @chat.LastMessageContent
-                                                    </MudText>
-                                                </div>
-                                            </div>
-                                        </MudListItem>
-                                    </MudPaper>
-                                }
-                            </MudList>
-                        }
-                        else
-                        {
-                            <div class="d-flex flex-column align-center justify-center pt-8">
-                                <MudIcon Icon="@Icons.Material.Outlined.ChatBubbleOutline" Size="Size.Large" style="color: #BDBDBD;" />
-                                <MudText Typo="Typo.body1" Class="mt-4" Style="color: #9E9E9E;">No messages yet.</MudText>
-                            </div>
-                        }
-                     </MudPaper>
                 }
 
                 else if (_activeTab == "Setting")
@@ -651,11 +679,11 @@
     private bool _isCurrentUser = false;
 
     // UI State
-    private string _activeTab = "Task"; 
+    private string _activeTab = "Profile"; 
     private string _searchString = "";
     private bool _showCreatedTasks = true;
 
-    // --- Profile Editing State (Added these missing variables) ---
+    // Profile Editing State
     private bool _isEditingProfile = false;
     private bool _isEditingAddress = false;
 
@@ -663,16 +691,22 @@
     private IEnumerable<TaskCategory> _selectedSkills = new HashSet<TaskCategory>();
     private string? _uploadedFileName;
 
-    // --- Password Change State ---
+    // Password Change State
     private MudForm _passwordForm;
     private string _currentPassword = "";
     private string _newPassword = "";
     private string _confirmPassword = "";
 
-    // --- Verification State ---
+    // Verification State
     private string? _uploadedCertName;
     private bool _isVerified = false;
     private bool _hasPendingRequest = false;
+
+    // wallet
+    private decimal _totalEarned = 0;
+    private decimal _totalSpent = 0;
+    private decimal _pendingAmount = 0;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -729,6 +763,17 @@
         if (_wallet != null)
         {
             _walletTransactions = await WalletService.GetTransactionHistoryAsync(userId);
+            
+            // Calculate Stats
+            _totalEarned = _walletTransactions
+                .Where(t => t.Amount > 0)
+                .Sum(t => t.Amount);
+            
+            _totalSpent = _walletTransactions
+                .Where(t => t.Amount < 0)
+                .Sum(t => Math.Abs(t.Amount));
+                
+            _pendingAmount = 0; // Future: Implement pending logic
         }
     }
 
@@ -799,13 +844,17 @@
         };
     }
 
+    private void SwitchTab(string tabName)
+    {
+        Navigation.NavigateTo($"/profile?tab={tabName}");
+    }
+
     // --- Sidebar Helpers ---
     private string GetSidebarClass(string tabName)
     {
         string commonClass = "d-flex align-center py-3 px-6 rounded-pill cursor-pointer";
 
         if (_activeTab == tabName)
-            // 选中状态：添加我们刚才定义的 .sidebar-selected 类
             return $"{commonClass} sidebar-selected"; 
         else
             return $"{commonClass} hover-menu-item"; 
@@ -920,42 +969,21 @@
 
         if (!_passwordForm.IsValid) return;
 
-
-
         if (_user == null) return;
-
-
-
         var success = await AuthService.ChangePasswordAsync(_user.Id, _currentPassword, _newPassword);
 
-
-
         if (success)
-
         {
-
             Snackbar.Add("Password updated successfully!", Severity.Success);
-
-
-
             _currentPassword = "";
-
             _newPassword = "";
-
             _confirmPassword = "";
-
-
-
             await _passwordForm.ResetAsync();
-
         }
 
         else
-
         {
-
             Snackbar.Add("Failed to update password. Check your current password.", Severity.Error);
-
         }
 
     }
@@ -976,6 +1004,46 @@
         _isLoading = false;
         
         Snackbar.Add("Certificate submitted for review! An admin will check it soon.", Severity.Success);
+    }
+
+    // Wallet
+    private void OpenAddFundsDialog()
+    {
+        Snackbar.Add("Add funds feature coming soon", Severity.Info);
+    }
+
+    private void OpenWithdrawDialog()
+    {
+        Snackbar.Add("Withdraw feature coming soon", Severity.Info);
+    }
+
+    private string GetTransactionDescription(WalletTransaction transaction)
+    {
+        if (!string.IsNullOrEmpty(transaction.Description))
+            return transaction.Description;
+
+        return transaction.Type switch
+        {
+            TransactionType.TaskPayment => "Payment received",
+            TransactionType.TaskDeposit => "Deposit paid",
+            TransactionType.TaskRefund => "Refund received",
+            TransactionType.Deposit => "Funds added",
+            TransactionType.Withdrawal => "Funds withdrawn",
+            _ => "Transaction"
+        };
+    }
+
+    private Color GetTransactionTypeColor(TransactionType type)
+    {
+        return type switch
+        {
+            TransactionType.TaskPayment => Color.Success,
+            TransactionType.Deposit => Color.Success,
+            TransactionType.TaskDeposit => Color.Error,
+            TransactionType.Withdrawal => Color.Error,
+            TransactionType.TaskRefund => Color.Info,
+            _ => Color.Default
+        };
     }
 
 }

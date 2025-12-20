@@ -14,49 +14,48 @@
 
 @if (_task == null)
 {
-    <MudProgressCircular Indeterminate="true" />
+    <div class="d-flex justify-center align-center" style="min-height: 400px;">
+        <MudProgressCircular Indeterminate="true" />
+    </div>
 }
 else
 {
-    <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
-        <MudGrid>
-            <!-- Main Content -->
+    <MudContainer MaxWidth="MaxWidth.Large" Class="py-8">
+        <MudGrid Spacing="4">
             <MudItem xs="12" md="8">
-                <MudPaper Elevation="2" Class="pa-6">
-                    <!-- Task Image -->
+                <MudPaper Elevation="0" Class="pa-8 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                    
                     @if (!string.IsNullOrEmpty(_task.ImageUrl))
                     {
                         <MudImage Src="@_task.ImageUrl"
                                   Alt="@_task.Title"
                                   Height="300"
                                   ObjectFit="ObjectFit.Cover"
-                                  Class="rounded mb-4"
+                                  Class="rounded-xl mb-6"
                                   Style="width: 100%;" />
                     }
 
-                    <!-- Header -->
-                    <div class="d-flex justify-space-between align-center mb-4">
+                    <div class="d-flex justify-space-between align-start mb-4">
                         <div>
-                            <MudText Typo="Typo.h4" GutterBottom="true">@_task.Title</MudText>
-                            <MudChip T="string" Color="GetStatusColor(_task.Status)" Size="Size.Small">
+                            <MudText Typo="Typo.h4" Style="font-weight: 700; color: #1B1B1B; line-height: 1.2;" Class="mb-3">@_task.Title</MudText>
+                            <MudChip T="string" Variant="Variant.Text" Color="GetStatusColor(_task.Status)" Size="Size.Small" Class="fw-bold">
                                 @_task.Status
                             </MudChip>
                         </div>
-                        <CategoryIcon Category="_task.Category" IconSize="Size.Large" />
+                        <div class="pa-2 rounded-circle" style="background-color: #F5F5F5;">
+                            <CategoryIcon Category="_task.Category" IconSize="Size.Large" />
+                        </div>
                     </div>
 
-                    <MudDivider Class="my-4" />
+                    <MudDivider Class="my-6" />
 
-                    <!-- Posted By -->
-                    <MudText Typo="Typo.subtitle1" Class="mb-2">
-                        <strong>Posted by:</strong>
-                    </MudText>
-                    <div class="d-flex align-center mb-4">
-                        <MudAvatar Color="Color.Primary" Class="mr-2">
+                    <MudText Typo="Typo.subtitle1" Class="mb-3" Style="font-weight: 700; color: #1B1B1B;">Posted by</MudText>
+                    <div class="d-flex align-center mb-6 pa-4 rounded-xl" style="background-color: #F8F9FA;">
+                        <MudAvatar Color="Color.Primary" Class="mr-4" Size="Size.Medium">
                             @_task.Creator?.Username?.Substring(0, 1).ToUpper()
                         </MudAvatar>
                         <div>
-                            <MudText Typo="Typo.body1">@_task.Creator?.Username</MudText>
+                            <MudText Typo="Typo.body1" Style="font-weight: 600; color: #1B1B1B;">@_task.Creator?.Username</MudText>
                             @if (_task.Creator != null)
                             {
                                 <StarRating Rating="_task.Creator.ReputationLevel" ShowRating="true" />
@@ -64,104 +63,79 @@ else
                         </div>
                     </div>
 
-                    <!-- Details -->
-                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Category:</strong></MudText>
-                    <MudText Typo="Typo.body1" Class="mb-4">
-                        <CategoryIcon Category="_task.Category" IconSize="Size.Small" />
-                        @GetCategoryName(_task.Category)
-                    </MudText>
+                    <MudGrid Class="mb-4">
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-1">Category</MudText>
+                            <div class="d-flex align-center">
+                                <CategoryIcon Category="_task.Category" IconSize="Size.Small" />
+                                <MudText Typo="Typo.body1" Class="ml-2" Style="color: #1B1B1B;">@GetCategoryName(_task.Category)</MudText>
+                            </div>
+                        </MudItem>
 
-                    <MudText Typo="Typo.subtitle1" Class="mb-2">
-                        <strong>@(_task.NegotiatedPrice.HasValue ? "Negotiated Price:" : "Budget:")</strong>
-                    </MudText>
-                    <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Success">
-                        $@(_task.NegotiatedPrice ?? _task.Budget)
-                    </MudText>
-                    @if (_task.NegotiatedPrice.HasValue)
-                    {
-                        <MudText Typo="Typo.caption" Class="mb-4" Color="Color.Secondary">
-                            Original Budget: $@_task.Budget
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-1">
+                                @(_task.NegotiatedPrice.HasValue ? "Negotiated Price" : "Budget")
+                            </MudText>
+                            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #1B1B1B;">
+                                $@(_task.NegotiatedPrice ?? _task.Budget)
+                            </MudText>
+                            @if (_task.NegotiatedPrice.HasValue)
+                            {
+                                <MudText Typo="Typo.caption" Style="color: #9E9E9E; text-decoration: line-through;">
+                                    Original Budget: $@_task.Budget
+                                </MudText>
+                            }
+                        </MudItem>
+
+                        @if (_task.Deadline.HasValue)
+                        {
+                            <MudItem xs="12">
+                                <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-1">Deadline</MudText>
+                                <MudText Typo="Typo.body1" Style="color: #1B1B1B;">
+                                    @_task.Deadline.Value.ToString("MMM dd, yyyy")
+                                </MudText>
+                            </MudItem>
+                        }
+                    </MudGrid>
+
+                    <div class="mb-6">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-weight: 700; color: #1B1B1B;">Description</MudText>
+                        <MudText Typo="Typo.body1" Style="color: #4a4a4a; line-height: 1.6;">
+                            @_task.Description
                         </MudText>
-                    }
+                    </div>
 
-                    @if (_task.Deadline.HasValue)
-                    {
-                        <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Deadline:</strong></MudText>
-                        <MudText Typo="Typo.body1" Class="mb-4">
-                            @_task.Deadline.Value.ToString("MMM dd, yyyy")
-                        </MudText>
-                    }
-
-                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Description:</strong></MudText>
-                    <MudText Typo="Typo.body1" Class="mb-4">
-                        @_task.Description
-                    </MudText>
-
-                    <!-- Action Buttons -->
-                    <MudDivider Class="my-4" />
+                    <MudDivider Class="my-6" />
 
                     @if (_isCreator)
                     {
                         @if (_task.Status == SkillTaskStatus.Cancelled)
                         {
-                            <MudAlert Severity="Severity.Warning" Class="mb-4">
-                                This task has been cancelled.
-                            </MudAlert>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Success"
-                                       StartIcon="@Icons.Material.Filled.Publish"
-                                       OnClick="RepublishTask">
-                                Republish Task
-                            </MudButton>
+                            <MudAlert Severity="Severity.Warning" Class="mb-4 rounded-lg" Variant="Variant.Outlined">This task has been cancelled.</MudAlert>
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Publish" OnClick="RepublishTask" Style="border-radius: 12px;">Republish Task</MudButton>
                         }
                         else if (_task.Status == SkillTaskStatus.PendingCompletion)
                         {
-                            <MudAlert Severity="Severity.Info" Class="mb-4">
-                                The helper has marked this task as complete. Please review and confirm completion.
-                            </MudAlert>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Success"
-                                       StartIcon="@Icons.Material.Filled.CheckCircle"
-                                       OnClick="ConfirmTaskComplete">
-                                Confirm Task Complete
-                            </MudButton>
+                            <MudAlert Severity="Severity.Info" Class="mb-4 rounded-lg" Variant="Variant.Outlined">The helper has marked this task as complete. Please review and confirm.</MudAlert>
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ConfirmTaskComplete" Style="border-radius: 12px;">Confirm Task Complete</MudButton>
                         }
                         else if (_task.Status == SkillTaskStatus.Completed)
                         {
-                            <MudAlert Severity="Severity.Success" Class="mb-4">
-                                This task has been completed successfully!
-                            </MudAlert>
+                            <MudAlert Severity="Severity.Success" Class="mb-4 rounded-lg" Variant="Variant.Outlined">This task has been completed successfully!</MudAlert>
                             @if (_task.Rating == null)
                             {
-                                <MudButton Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.Star"
-                                           OnClick="OpenRatingDialog">
-                                    Rate Helper
-                                </MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Star" OnClick="OpenRatingDialog" Style="border-radius: 12px;">Rate Helper</MudButton>
                             }
                             else
                             {
-                                <MudAlert Severity="Severity.Info">
-                                    You have already rated this task.
-                                </MudAlert>
+                                <MudAlert Severity="Severity.Info" Class="rounded-lg">You have already rated this task.</MudAlert>
                             }
                         }
                         else
                         {
-                            <div class="d-flex gap-2">
-                                <MudButton Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.Edit"
-                                           Href="@($"/task/{_task.Id}/edit")">
-                                    Edit
-                                </MudButton>
-                                <MudButton Variant="Variant.Outlined"
-                                           Color="Color.Error"
-                                           StartIcon="@Icons.Material.Filled.Cancel"
-                                           OnClick="CancelTask">
-                                    Cancel Task
-                                </MudButton>
+                            <div class="d-flex gap-3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" Href="@($"/task/{_task.Id}/edit")" Style="border-radius: 12px;">Edit</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="CancelTask" Style="border-radius: 12px;">Cancel Task</MudButton>
                             </div>
                         }
                     }
@@ -169,111 +143,123 @@ else
                     {
                         @if (_task.Status == SkillTaskStatus.Assigned)
                         {
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Success"
-                                       StartIcon="@Icons.Material.Filled.Done"
-                                       OnClick="MarkTaskDone">
-                                Mark Task as Done
-                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Done" OnClick="MarkTaskDone" Style="border-radius: 12px; padding: 12px 24px;">Mark Task as Done</MudButton>
                         }
                         else if (_task.Status == SkillTaskStatus.PendingCompletion)
                         {
-                            <MudAlert Severity="Severity.Info" Class="mb-4">
-                                Waiting for creator to confirm task completion.
-                            </MudAlert>
+                            <MudAlert Severity="Severity.Info" Class="mb-4 rounded-lg" Variant="Variant.Outlined">Waiting for creator to confirm task completion.</MudAlert>
                         }
                         else if (_task.Status == SkillTaskStatus.Completed)
                         {
-                            <MudAlert Severity="Severity.Success" Class="mb-4">
-                                Task completed successfully! Payment has been processed.
-                            </MudAlert>
+                            <MudAlert Severity="Severity.Success" Class="mb-4 rounded-lg" Variant="Variant.Outlined">Task completed successfully! Payment has been processed.</MudAlert>
                         }
                     }
                     else if (_task.Status == SkillTaskStatus.Assigned && _task.AssignedToId != _currentUserId)
                     {
-                        <MudAlert Severity="Severity.Info">
-                            This task has been assigned to another user.
-                        </MudAlert>
+                        <MudAlert Severity="Severity.Info" Class="rounded-lg" Variant="Variant.Outlined">This task has been assigned to another user.</MudAlert>
                     }
                     else if (_task.Status == SkillTaskStatus.Open)
                     {
                         @if (UserState.CurrentUser?.Role == UserRole.Company || UserState.CurrentUser?.Role == UserRole.School)
                         {
-                            <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudAlert Severity="Severity.Info" Class="mb-4 rounded-lg" Variant="Variant.Outlined">
                                 @(UserState.CurrentUser.Role == UserRole.Company ? "Companies" : "Schools") can only post tasks and jobs, not accept them.
                             </MudAlert>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Chat"
-                                       Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")">
-                                Open Chat
-                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Chat" Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")" Style="border-radius: 12px;">Open Chat</MudButton>
                         }
                         else
                         {
-                            <div class="d-flex flex-wrap gap-2">
-                                <MudButton Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.Chat"
-                                           Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")">
-                                    Open Chat
-                                </MudButton>
-                                <MudButton Variant="Variant.Filled"
-                                           Color="Color.Success"
-                                           StartIcon="@Icons.Material.Filled.Check"
-                                           OnClick="AcceptTask">
+                            <div class="d-flex flex-wrap gap-3">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Chat" Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")" Style="border-radius: 12px; font-weight: 600;">Open Chat</MudButton>
+                                
+                                <MudButton Variant="Variant.Filled" OnClick="AcceptTask" StartIcon="@Icons.Material.Filled.Check" 
+                                           Style="background-color: #1B1B1B; color: white; border-radius: 12px; font-weight: 700; padding: 8px 24px;">
                                     Accept Task
                                 </MudButton>
-                                <MudButton Variant="Variant.Text"
-                                           Color="Color.Error"
-                                           StartIcon="@Icons.Material.Filled.Report"
-                                           OnClick="ReportTask">
-                                    Report
-                                </MudButton>
+                                
+                                <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Report" OnClick="ReportTask" Style="border-radius: 12px;">Report</MudButton>
                             </div>
                         }
                     }
+
                 </MudPaper>
             </MudItem>
 
-            <!-- Sidebar -->
             <MudItem xs="12" md="4">
-                <!-- Location Map -->
-                <MudPaper Elevation="2" Class="pa-4 mb-4">
-                    <MudText Typo="Typo.h6" GutterBottom="true">Location</MudText>
-                    <MudText Typo="Typo.body2" Class="mb-3">@_task.LocationAddress</MudText>
+                
+                <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                    <div class="d-flex align-center mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Error" Class="mr-2" />
+                        <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;">Location</MudText>
+                    </div>
+                    
+                    <MudText Typo="Typo.body2" Class="mb-4" Style="color: #4a4a4a;">@_task.LocationAddress</MudText>
 
-                    @if (_task.Latitude.HasValue && _task.Longitude.HasValue)
-                    {
-                        <MapComponent @ref="_miniMap"
-                                      MapId="taskMap"
-                                      Height="250px"
-                                      InitialLat="@_task.Latitude.Value"
-                                      InitialLng="@_task.Longitude.Value"
-                                      InitialZoom="15" />
-                    }
+                    <div class="rounded-xl overflow-hidden" style="border: 1px solid #e0e0e0;">
+                        @if (_task.Latitude.HasValue && _task.Longitude.HasValue)
+                        {
+                            <MapComponent @ref="_miniMap"
+                                          MapId="taskMap"
+                                          Height="250px"
+                                          InitialLat="@_task.Latitude.Value"
+                                          InitialLng="@_task.Longitude.Value"
+                                          InitialZoom="15" />
+                        }
+                         else
+                        {
+                             <div class="d-flex align-center justify-center" style="height: 200px; background-color: #f5f5f5; color: #999;">
+                                 No map data
+                             </div>
+                        }
+                    </div>
                 </MudPaper>
 
-                <!-- Task Stats -->
-                <MudPaper Elevation="2" Class="pa-4">
-                    <MudText Typo="Typo.h6" GutterBottom="true">Task Info</MudText>
-                    <MudList T="string" Dense="true">
-                        <MudListItem T="string" Icon="@Icons.Material.Filled.DateRange">
-                            Posted: @_task.CreatedAt.ToString("MMM dd")
-                        </MudListItem>
+                <MudPaper Elevation="0" Class="pa-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                    <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;" Class="mb-4">Task Info</MudText>
+                    
+                    <div class="d-flex flex-column gap-4">
+                        
+                        <div class="d-flex align-center">
+                            <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" Style="color: #9E9E9E;" Class="mr-3" />
+                            <div>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Posted</MudText>
+                                <MudText Typo="Typo.body2" Style="font-weight: 500; color: #1B1B1B;">@_task.CreatedAt.ToString("MMM dd")</MudText>
+                            </div>
+                        </div>
+                        
+                        <MudDivider />
+
                         @if (_task.AssignedTo != null)
                         {
-                            <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
-                                Assigned to: @_task.AssignedTo.Username
-                            </MudListItem>
+                            <div class="d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Style="color: #9E9E9E;" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Assigned to</MudText>
+                                    <MudText Typo="Typo.body2" Style="font-weight: 500; color: #1B1B1B;">@_task.AssignedTo.Username</MudText>
+                                </div>
+                            </div>
+                            <MudDivider />
                         }
+
                         @if (_task.IsDepositPaid)
                         {
-                            <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
-                                Deposit Paid: $@_task.DepositAmount
-                            </MudListItem>
+                            <div class="d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Security</MudText>
+                                    <MudText Typo="Typo.body2" Style="font-weight: 700; color: var(--mud-palette-success);">Deposit Paid ($@_task.DepositAmount)</MudText>
+                                </div>
+                            </div>
                         }
-                    </MudList>
+                        else
+                        {
+                             <div class="d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Color="Color.Default" Class="mr-3" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Deposit not yet paid</MudText>
+                            </div>
+                        }
+
+                    </div>
                 </MudPaper>
             </MudItem>
         </MudGrid>
