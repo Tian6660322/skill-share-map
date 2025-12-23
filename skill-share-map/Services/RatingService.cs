@@ -29,11 +29,14 @@ public class RatingService : IRatingService
         if (rating.Stars < 1 || rating.Stars > 5)
             throw new ArgumentException("Rating must be between 1 and 5 stars");
 
+        var task = await _context.SkillTasks.FindAsync(rating.TaskId);
+        if (task == null)
+            throw new ArgumentException("Task not found");
         if (string.IsNullOrWhiteSpace(rating.Comment))
             throw new ArgumentException("Comment is required for rating");
 
         // Calculate XP from rating
-        var xp = _xpService.CalculateXpFromRating(rating.Stars);
+        var xp = _xpService.CalculateXp(rating.Stars, task.Budget, task.IsUrgent);
         rating.XpAwarded = xp;
 
         // Add rating to database
@@ -48,9 +51,6 @@ public class RatingService : IRatingService
         // Award XP if the recipient is a helper (assigned to task) and has a category
         if (rating.Category.HasValue)
         {
-            var task = await _context.SkillTasks
-                .FirstOrDefaultAsync(t => t.Id == rating.TaskId);
-
             // Only award XP to the person who completed the task (helper)
             if (task != null && task.AssignedToId == rating.ToUserId)
             {

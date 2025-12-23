@@ -1,3 +1,6 @@
+﻿using SkillShareMap.Models;
+using SkillShareMap.Services;
+
 namespace SkillShareMap.Services;
 
 public interface IGeoService
@@ -18,4 +21,9 @@ public interface IGeoService
     /// <param name="address">The address to geocode</param>
     /// <returns>Tuple of (latitude, longitude) or null if not found</returns>
     Task<(double lat, double lon)?> GeocodeAddressAsync(string address);
+
+    /// <summary>
+    /// Search for addresses (Multiple results for Autocomplete)
+    /// </summary>
+    Task<List<LocationResult>> SearchAddressAsync(string address);
 }

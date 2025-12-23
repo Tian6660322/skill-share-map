@@ -23,7 +23,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Course> Courses { get; set; } = null!;
     public DbSet<AIConversation> AIConversations { get; set; } = null!;
     public DbSet<AIMessage> AIMessages { get; set; } = null!;
-
+    public DbSet<TaskApplication> TaskApplications { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Configure User relationships
@@ -46,6 +46,12 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(t => t.AssignedToId)
             .OnDelete(DeleteBehavior.Restrict)
             .IsRequired(false);
+
+        modelBuilder.Entity<TaskApplication>()
+            .HasOne(a => a.Task)
+            .WithMany(t => t.Applications)
+            .HasForeignKey(a => a.TaskId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Configure Job relationships
         modelBuilder.Entity<Job>()
@@ -120,6 +126,10 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<SkillTask>()
             .Property(t => t.DepositAmount)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<TaskApplication>()
+            .Property(a => a.ProposedPrice)
             .HasPrecision(18, 2);
 
         modelBuilder.Entity<Wallet>()

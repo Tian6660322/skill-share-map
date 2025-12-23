@@ -1,4 +1,6 @@
 using System.Text.Json;
+using SkillShareMap.Models;
+using SkillShareMap.Services;
 
 namespace SkillShareMap.Services;
 
@@ -20,6 +22,8 @@ public class GeoService : IGeoService
         // 3. Using a commercial geocoding service (Google Maps, Mapbox, etc.)
         // 4. Implementing retry logic with exponential backoff
     }
+
+
 
     /// <summary>
     /// Calculate the distance between two geographic coordinates using the Haversine formula
@@ -82,15 +86,53 @@ public class GeoService : IGeoService
         }
     }
 
+    public async Task<List<LocationResult>> SearchAddressAsync(string address)
+    {
+        if (string.IsNullOrWhiteSpace(address)) return new List<LocationResult>();
+
+        try
+        {
+            var encodedAddress = Uri.EscapeDataString(address);
+            var url = $"{NominatimBaseUrl}/search?q={encodedAddress}&format=json&limit=5&addressdetails=1";
+
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode) return new List<LocationResult>();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var results = JsonSerializer.Deserialize<List<NominatimResult>>(json);
+
+            if (results == null) return new List<LocationResult>();
+
+            var list = new List<LocationResult>();
+            foreach (var item in results)
+            {
+                if (double.TryParse(item.lat, out var lat) && double.TryParse(item.lon, out var lon))
+                {
+                    list.Add(new LocationResult
+                    {
+                        DisplayName = item.display_name,
+                        Lat = lat,
+                        Lon = lon
+                    });
+                }
+            }
+            return list;
+        }
+        catch
+        {
+            return new List<LocationResult>();
+        }
+    }
+
+    private class NominatimResult
+    {
+        public string lat { get; set; }
+        public string lon { get; set; }
+        public string display_name { get; set; }
+    }
+
     private double DegreesToRadians(double degrees)
     {
         return degrees * Math.PI / 180.0;
-    }
-
-    // DTO for Nominatim API response
-    private class NominatimResult
-    {
-        public string lat { get; set; } = string.Empty;
-        public string lon { get; set; } = string.Empty;
     }
 }

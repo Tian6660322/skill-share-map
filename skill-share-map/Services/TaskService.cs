@@ -34,6 +34,8 @@ public class TaskService : ITaskService
             .Include(t => t.Creator)
             .Include(t => t.AssignedTo)
             .Include(t => t.Rating)
+            .Include(t => t.Applications)
+                .ThenInclude(a => a.Applicant)
             .FirstOrDefaultAsync(t => t.Id == taskId);
     }
 
@@ -130,19 +132,87 @@ public class TaskService : ITaskService
         return true;
     }
 
-    /// <summary>
-    /// Accept negotiated price for a task
-    /// </summary>
-    public async Task<bool> AcceptNegotiatedPriceAsync(int taskId, decimal newPrice)
+    public async Task<bool> ApplyForTaskAsync(int taskId, int applicantId, decimal proposedPrice, string message)
     {
-        var task = await _context.SkillTasks.FindAsync(taskId);
-        if (task == null)
+        // 1. check task status
+        var task = await _context.SkillTasks
+            .Include(t => t.Applications)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
+
+        if (task == null || task.Status != SkillTaskStatus.Open)
             return false;
 
-        task.NegotiatedPrice = newPrice;
-        await _context.SaveChangesAsync();
+        // 2. applicant cannot be the creator
+        if (task.CreatorId == applicantId)
+            return false;
 
+        // 3. check if already applied
+        if (task.Applications.Any(a => a.ApplicantId == applicantId &&
+            (a.Status == ApplicationStatus.Pending || a.Status == ApplicationStatus.Accepted)))
+            return false;
+
+        // 4. create application
+        var application = new TaskApplication
+        {
+            TaskId = taskId,
+            ApplicantId = applicantId,
+            ProposedPrice = proposedPrice,
+            Message = message,
+            Status = ApplicationStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.TaskApplications.Add(application);
+        await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<bool> AcceptApplicationAsync(int applicationId, int creatorId)
+    {
+        // 1. get application with task
+        var application = await _context.TaskApplications
+            .Include(a => a.Task)
+            .FirstOrDefaultAsync(a => a.Id == applicationId);
+
+        if (application == null || application.Task == null)
+            return false;
+
+        // 2. authenticate creator
+        if (application.Task.CreatorId != creatorId)
+            return false;
+
+        // 3. validate task status
+        if (application.Task.Status != SkillTaskStatus.Open)
+            return false;
+
+        application.Status = ApplicationStatus.Accepted;
+
+        var otherApplications = await _context.TaskApplications
+            .Where(a => a.TaskId == application.TaskId && a.Id != applicationId && a.Status == ApplicationStatus.Pending)
+            .ToListAsync();
+
+        foreach (var otherApp in otherApplications)
+        {
+            otherApp.Status = ApplicationStatus.Rejected;
+        }
+
+        var task = application.Task;
+        task.AssignedToId = application.ApplicantId;
+        task.NegotiatedPrice = application.ProposedPrice;
+
+        task.Status = SkillTaskStatus.PendingDeposit;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<TaskApplication>> GetTaskApplicationsAsync(int taskId)
+    {
+        return await _context.TaskApplications
+            .Include(a => a.Applicant)
+            .Where(a => a.TaskId == taskId)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -246,6 +316,16 @@ public class TaskService : ITaskService
 
         await _context.SaveChangesAsync();
 
+        return true;
+    }
+
+    public async Task<bool> AcceptNegotiatedPriceAsync(int taskId, decimal newPrice)
+    {
+        var task = await _context.SkillTasks.FindAsync(taskId);
+        if (task == null) return false;
+
+        task.NegotiatedPrice = newPrice;
+        await _context.SaveChangesAsync();
         return true;
     }
 }

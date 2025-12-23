@@ -7,7 +7,7 @@ using SkillShareMap.Data;
 
 #nullable disable
 
-namespace skill_share_map.Migrations
+namespace SkillShareMap.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -282,8 +282,14 @@ namespace skill_share_map.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("AllowMultipleApplications")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("AssignedToId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Budget")
                         .HasPrecision(18, 2)
@@ -318,9 +324,6 @@ namespace skill_share_map.Migrations
                     b.Property<DateTime?>("HelperConfirmedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
 
@@ -333,11 +336,17 @@ namespace skill_share_map.Migrations
                     b.Property<bool>("IsHelperConfirmedComplete")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsUrgent")
+                        .HasColumnType("INTEGER");
+
                     b.Property<double?>("Latitude")
                         .HasColumnType("REAL");
 
                     b.Property<string>("LocationAddress")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("LocationType")
+                        .HasColumnType("INTEGER");
 
                     b.Property<double?>("Longitude")
                         .HasColumnType("REAL");
@@ -360,6 +369,41 @@ namespace skill_share_map.Migrations
                     b.HasIndex("CreatorId");
 
                     b.ToTable("SkillTasks");
+                });
+
+            modelBuilder.Entity("SkillShareMap.Models.TaskApplication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ApplicantId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ProposedPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicantId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("TaskApplications");
                 });
 
             modelBuilder.Entity("SkillShareMap.Models.User", b =>
@@ -678,6 +722,25 @@ namespace skill_share_map.Migrations
                     b.Navigation("Creator");
                 });
 
+            modelBuilder.Entity("SkillShareMap.Models.TaskApplication", b =>
+                {
+                    b.HasOne("SkillShareMap.Models.User", "Applicant")
+                        .WithMany()
+                        .HasForeignKey("ApplicantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkillShareMap.Models.SkillTask", "Task")
+                        .WithMany("Applications")
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Applicant");
+
+                    b.Navigation("Task");
+                });
+
             modelBuilder.Entity("SkillShareMap.Models.UserBadge", b =>
                 {
                     b.HasOne("SkillShareMap.Models.User", "User")
@@ -735,6 +798,8 @@ namespace skill_share_map.Migrations
 
             modelBuilder.Entity("SkillShareMap.Models.SkillTask", b =>
                 {
+                    b.Navigation("Applications");
+
                     b.Navigation("Rating");
                 });
 

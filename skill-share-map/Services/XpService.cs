@@ -14,13 +14,18 @@ public class XpService : IXpService
     }
 
     /// <summary>
-    /// Calculate XP based on star rating
+    /// Calculate XP based on star rating, budget and urgency level
     /// Formula: task_xp = round(base_points × rating_factor)
     /// Base points = 10
     /// </summary>
-    public int CalculateXpFromRating(int stars)
+    public int CalculateXp(int stars, decimal budget, bool isUrgent)
     {
-        const int basePoints = 10;
+        int potentialXp = budget > 0 ? (int)(budget * 2) : 10;
+
+        if (isUrgent)
+        {
+            potentialXp += (int)(potentialXp * 0.2); // +20%
+        }
 
         var ratingFactor = stars switch
         {
@@ -32,7 +37,7 @@ public class XpService : IXpService
             _ => 0
         };
 
-        return (int)Math.Round(basePoints * ratingFactor);
+        return (int)Math.Round(potentialXp * ratingFactor);
     }
 
     /// <summary>
@@ -51,7 +56,8 @@ public class XpService : IXpService
                 UserId = userId,
                 Category = category,
                 TotalXp = 0,
-                CurrentTier = BadgeTier.Newbie
+                CurrentTier = BadgeTier.Newbie,
+                LastUpdated = DateTime.UtcNow,
             };
             _context.UserSkillProgress.Add(progress);
         }

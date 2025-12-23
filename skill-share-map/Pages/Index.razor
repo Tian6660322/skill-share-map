@@ -1,12 +1,14 @@
 ﻿@page "/"
-@using SkillShareMap.Services
 @using SkillShareMap.Models
+@using SkillShareMap.Services
 @using SkillShareMap.Shared.Components
 @inject ITaskService TaskService
 @inject IJobService JobService
 @inject IGeoService GeoService
 @inject UserState UserState
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Skill Share Map</PageTitle>
 
@@ -56,26 +58,22 @@
                     <MudText Typo="Typo.h6" Class="mb-6" Style="font-weight: bold;">Filter</MudText>
 
                     <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Display Type</MudText>
-                    <MudRadioGroup T="string" 
-                                   Value="_displayType" 
-                                   ValueChanged="OnDisplayTypeChanged">
+                    <MudRadioGroup T="string" Value="_displayType" ValueChanged="OnDisplayTypeChanged">
                         <MudRadio T="string" Value="@("tasks")" Color="Color.Primary" Class="mr-3" Style="color: white;">Tasks</MudRadio>
                         <MudRadio T="string" Value="@("jobs")" Color="Color.Primary" Class="mr-3" Style="color: white;">Jobs</MudRadio>
                     </MudRadioGroup>
-
-                    <MudDivider Class="my-4" Style="background-color: #404040;" />
 
                     @if (_displayType == "tasks")
                     {
                         <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Category</MudText>
                         <MudSelect T="TaskCategory?"
-                                   MultiSelection="true" 
+                                   MultiSelection="true"
                                    @bind-SelectedValues="_selectedCategories"
                                    Placeholder="Select Categories"
                                    Clearable="true"
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
-                                   Class="mb-4 white-placeholder glow-focus" 
+                                   Class="mb-4 white-placeholder glow-focus"
                                    PopoverClass="fancy-menu"
                                    Style="background-color: #2c2d30; color: white;"
                                    AdornmentColor="Color.Default">
@@ -103,35 +101,68 @@
                             <MudSelectItem T="SkillTaskStatus?" Value="@((SkillTaskStatus?)SkillTaskStatus.Assigned)">Assigned</MudSelectItem>
                             <MudSelectItem T="SkillTaskStatus?" Value="@((SkillTaskStatus?)SkillTaskStatus.PendingCompletion)">In Progress</MudSelectItem>
                         </MudSelect>
+                        
+                    }
 
-                        <MudText Typo="Typo.subtitle2" Class="mt-6 mb-2" Style="color: #FFFFFF;">Distance: @_distanceKm km</MudText>
-                        <MudSlider T="int"
-                                   Value="_distanceKm"
-                                   ValueChanged="OnDistanceChanged"
-                                   Min="0"
-                                   Max="50"
-                                   Step="1"
-                                   Color="Color.Primary"
-                                   Immediate="false" />
-                        <MudText Typo="Typo.caption" Class="mt-1" Style="color: #e0e0e0;">
-                            Showing @_visibleTasks.Count task(s) within @_distanceKm km
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #a0a0a0;">Distance: @_distanceKm km</MudText>
-                        <MudSlider T="int"
-                                   Value="_distanceKm"
-                                   ValueChanged="OnDistanceChanged"
-                                   Min="0"
-                                   Max="50"
-                                   Step="1"
-                                   Color="Color.Primary"
-                                   Immediate="false" />
-                        <MudText Typo="Typo.caption" Class="mt-1" Style="color: #e0e0e0;">
-                            Showing @_visibleJobs.Count job(s) within @_distanceKm km
-                        </MudText>
-                    }
+                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Current Location</MudText>
+                    <MudGrid Class="mb-4" Spacing="1">
+                        <MudItem xs="9">
+                            <MudAutocomplete T="LocationResult"
+                                             Label="Current Location"
+                                             Value="_selectedLocation"
+                                             SearchFunc="@SearchLocation"
+                                             ToStringFunc="@(e => e == null ? null : e.DisplayName)"
+                                             Placeholder="Search area"
+                                             AdornmentIcon="@Icons.Material.Filled.Search"
+                                             AdornmentColor="Color.Primary"
+                                             ResetValueOnEmptyText="true"
+                                             CoerceText="false"
+                                             DebounceInterval="800"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             Class="white-placeholder glow-focus"
+                                             Style="background-color: #2c2d30; color: white;"
+                                             ValueChanged="OnLocationSelected" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Secondary"
+                                       Class="pa-0"
+                                       Style="height: 40px; min-width: 0; width: 100%;"
+                                       OnClick="GetCurrentGpsLocation"
+                                       Disabled="_isGeocoding">
+                                @if (_isGeocoding)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.NearMe" />
+                                }
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudText Typo="Typo.subtitle2" Class="mt-2 mb-2" Style="color: #FFFFFF;">Distance: @_distanceKm km</MudText>
+                    <MudSlider T="int"
+                               Value="_distanceKm"
+                               ValueChanged="OnDistanceChanged"
+                               Min="0"
+                               Max="50"
+                               Step="1"
+                               Color="Color.Primary"
+                               Immediate="false" />
+
+                    <MudText Typo="Typo.caption" Class="mt-1" Style="color: #e0e0e0;">
+                        @if (_displayType == "tasks")
+                        {
+                            <span>Showing @_visibleTasks.Count task(s) within @_distanceKm km</span>
+                        }
+                        else
+                        {
+                            <span>Showing @_visibleJobs.Count job(s) within @_distanceKm km</span>
+                        }
+                    </MudText>
 
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
@@ -168,29 +199,6 @@
                               InitialLng="@_userLng"
                               InitialZoom="13" />
 
-                @if (_selectedTask != null)
-                {
-                    <MudPaper Elevation="8" Class="pa-4 mx-4 mb-4 rounded-lg"
-                              Style="position: absolute; bottom: 0; left: 0; right: 0; max-height: 40%; overflow-y: auto; z-index: 1000;">
-                        <div class="d-flex justify-space-between align-center mb-3">
-                            <MudText Typo="Typo.h6">@_selectedTask.Title</MudText>
-                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => _selectedTask = null" />
-                        </div>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" Href="@($"/task/{_selectedTask.Id}")">View Details</MudButton>
-                    </MudPaper>
-                }
-
-                @if (_selectedJob != null)
-                {
-                    <MudPaper Elevation="8" Class="pa-4 mx-4 mb-4 rounded-lg"
-                              Style="position: absolute; bottom: 0; left: 0; right: 0; max-height: 40%; overflow-y: auto; z-index: 1000;">
-                        <div class="d-flex justify-space-between align-center mb-3">
-                            <MudText Typo="Typo.h6">@_selectedJob.Title</MudText>
-                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => _selectedJob = null" />
-                        </div>
-                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4" Href="@($"/job/{_selectedJob.Id}")">View Details</MudButton>
-                    </MudPaper>
-                }
             </MudItem>
         </MudGrid>
     </MudPaper>
@@ -217,6 +225,11 @@
 
     private double _userLat = -33.8688;
     private double _userLng = 151.2093;
+
+    // Geocoding related
+    private string _searchAddress = "";
+    private bool _isGeocoding = false;
+    private LocationResult? _selectedLocation;
 
     protected override async Task OnInitializedAsync()
     {
@@ -377,7 +390,6 @@
 
     private async Task ResetFilters()
     {
-        // 清空集合
         _selectedCategories = new HashSet<TaskCategory?>();
         _selectedStatuses = new HashSet<SkillTaskStatus?>();
     
@@ -386,6 +398,104 @@
         _selectedJob = null;
         _noResultsMessage = null;
         await ApplyFilters();
+    }
+
+    // Geocode the address and update user location
+    private async Task UpdateLocationFromAddress()
+    {
+        if (string.IsNullOrWhiteSpace(_searchAddress)) return;
+
+        _isGeocoding = true;
+        StateHasChanged();
+        var coords = await GeoService.GeocodeAddressAsync(_searchAddress);
+
+        if (coords.HasValue)
+        {
+            _userLat = coords.Value.lat;
+            _userLng = coords.Value.lon;
+            
+            if (_mapComponent != null)
+            {
+                await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
+            }
+
+            await ApplyFilters(); 
+        }
+        else
+        {
+            Snackbar.Add("Address not found", Severity.Warning);
+        }
+
+        _isGeocoding = false;
+        StateHasChanged();
+    }
+
+    private async Task<IEnumerable<LocationResult>> SearchLocation(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return new LocationResult[0];
+        return await GeoService.SearchAddressAsync(value);
+    }
+
+    private async Task OnLocationSelected(LocationResult result)
+    {
+        if (result == null) return;
+
+        _selectedLocation = result;
+        _userLat = result.Lat;
+        _userLng = result.Lon;
+
+        if (_mapComponent != null)
+        {
+            await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
+        }
+
+        await ApplyFilters();
+    }
+
+    private async Task GetCurrentGpsLocation()
+    {
+        _isGeocoding = true;
+        StateHasChanged();
+
+        try
+        {
+            var location = await JSRuntime.InvokeAsync<GeolocationResult>("geolocationHelper.getCurrentLocationWithAddress");
+
+            if (location != null)
+            {
+                _userLat = location.Latitude;
+                _userLng = location.Longitude;
+            
+                if (!string.IsNullOrEmpty(location.Address))
+                {
+                }
+
+                if (_mapComponent != null)
+                {
+                    await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
+                }
+            
+                await ApplyFilters();
+                Snackbar.Add("Location updated", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"GPS Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isGeocoding = false;
+            StateHasChanged();
+        }
+    }
+
+    public class GeolocationResult
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public string Address { get; set; } = "";
     }
 
     private string GetCategoryName(TaskCategory category)

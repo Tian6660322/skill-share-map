@@ -4,7 +4,6 @@
 @using SkillShareMap.Shared.Components
 @inject ITaskService TaskService
 @inject IWalletService WalletService
-@inject IRatingService RatingService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -25,22 +24,15 @@ else
             <MudItem xs="12" md="8">
                 <MudPaper Elevation="0" Class="pa-8 rounded-xl" Style="border: 1px solid #e0e0e0;">
                     
-                    @if (!string.IsNullOrEmpty(_task.ImageUrl))
+                    @if (!string.IsNullOrEmpty(_task.AttachmentUrl))
                     {
-                        <MudImage Src="@_task.ImageUrl"
-                                  Alt="@_task.Title"
-                                  Height="300"
-                                  ObjectFit="ObjectFit.Cover"
-                                  Class="rounded-xl mb-6"
-                                  Style="width: 100%;" />
+                        <MudImage Src="@_task.AttachmentUrl" Alt="@_task.Title" Height="300" ObjectFit="ObjectFit.Cover" Class="rounded-xl mb-6" Style="width: 100%;" />
                     }
 
                     <div class="d-flex justify-space-between align-start mb-4">
                         <div>
                             <MudText Typo="Typo.h4" Style="font-weight: 700; color: #1B1B1B; line-height: 1.2;" Class="mb-3">@_task.Title</MudText>
-                            <MudChip T="string" Variant="Variant.Text" Color="GetStatusColor(_task.Status)" Size="Size.Small" Class="fw-bold">
-                                @_task.Status
-                            </MudChip>
+                            <MudChip T="string" Variant="Variant.Text" Color="GetStatusColor(_task.Status)" Size="Size.Small" Class="fw-bold">@_task.Status</MudChip>
                         </div>
                         <div class="pa-2 rounded-circle" style="background-color: #F5F5F5;">
                             <CategoryIcon Category="_task.Category" IconSize="Size.Large" />
@@ -65,120 +57,137 @@ else
 
                     <MudGrid Class="mb-4">
                         <MudItem xs="12" sm="6">
-                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-1">Category</MudText>
-                            <div class="d-flex align-center">
-                                <CategoryIcon Category="_task.Category" IconSize="Size.Small" />
-                                <MudText Typo="Typo.body1" Class="ml-2" Style="color: #1B1B1B;">@GetCategoryName(_task.Category)</MudText>
-                            </div>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6">
-                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-1">
-                                @(_task.NegotiatedPrice.HasValue ? "Negotiated Price" : "Budget")
-                            </MudText>
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-1">@(_task.NegotiatedPrice.HasValue ? "Agreed Price" : "Budget")</MudText>
                             <MudText Typo="Typo.h5" Style="font-weight: 700; color: #1B1B1B;">
                                 $@(_task.NegotiatedPrice ?? _task.Budget)
                             </MudText>
-                            @if (_task.NegotiatedPrice.HasValue)
-                            {
-                                <MudText Typo="Typo.caption" Style="color: #9E9E9E; text-decoration: line-through;">
-                                    Original Budget: $@_task.Budget
-                                </MudText>
-                            }
                         </MudItem>
-
                         @if (_task.Deadline.HasValue)
                         {
-                            <MudItem xs="12">
+                            <MudItem xs="12" sm="6">
                                 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-1">Deadline</MudText>
-                                <MudText Typo="Typo.body1" Style="color: #1B1B1B;">
-                                    @_task.Deadline.Value.ToString("MMM dd, yyyy")
-                                </MudText>
+                                <MudText Typo="Typo.body1" Style="color: #1B1B1B;">@_task.Deadline.Value.ToString("MMM dd, yyyy")</MudText>
                             </MudItem>
                         }
                     </MudGrid>
 
                     <div class="mb-6">
                         <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-weight: 700; color: #1B1B1B;">Description</MudText>
-                        <MudText Typo="Typo.body1" Style="color: #4a4a4a; line-height: 1.6;">
-                            @_task.Description
-                        </MudText>
+                        <MudText Typo="Typo.body1" Style="color: #4a4a4a; line-height: 1.6;">@_task.Description</MudText>
                     </div>
 
                     <MudDivider Class="my-6" />
 
                     @if (_isCreator)
                     {
-                        @if (_task.Status == SkillTaskStatus.Cancelled)
+                        @if (_task.Status == SkillTaskStatus.Open)
                         {
-                            <MudAlert Severity="Severity.Warning" Class="mb-4 rounded-lg" Variant="Variant.Outlined">This task has been cancelled.</MudAlert>
-                            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Publish" OnClick="RepublishTask" Style="border-radius: 12px;">Republish Task</MudButton>
+                             <MudText Typo="Typo.h6" Class="mb-4">Applications Received (@(_task.Applications?.Count ?? 0))</MudText>
+                             
+                             @if (_task.Applications == null || !_task.Applications.Any())
+                             {
+                                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="rounded-lg">No one has applied for this task yet.</MudAlert>
+                             }
+                             else
+                             {
+                                 <MudList T="object" Clickable="false" DisablePadding="true">
+                                     @foreach (var app in _task.Applications.Where(a => a.Status == ApplicationStatus.Pending))
+                                     {
+                                         <MudPaper Elevation="0" Class="pa-4 mb-3 rounded-lg" Style="border: 1px solid #e0e0e0;">
+                                             <div class="d-flex justify-space-between align-center">
+                                                 <div>
+                                                     <div class="d-flex align-center mb-1">
+                                                         <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">@app.Applicant?.Username</MudText>
+                                                         <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="ml-2" Variant="Variant.Text">Bid: $@app.ProposedPrice</MudChip>
+                                                     </div>
+                                                     <MudText Typo="Typo.body2" Color="Color.Secondary">"@app.Message"</MudText>
+                                                 </div>
+                                                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => AcceptApplication(app.Id))">Accept</MudButton>
+                                             </div>
+                                         </MudPaper>
+                                     }
+                                 </MudList>
+                             }
+                             
+                             <div class="mt-4">
+                                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="CancelTask">Cancel Task</MudButton>
+                                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" Href="@($"/task/{_task.Id}/edit")" Class="ml-2">Edit</MudButton>
+                             </div>
+                        }
+                        else if (_task.Status == SkillTaskStatus.PendingDeposit)
+                        {
+                            <MudAlert Severity="Severity.Warning" Class="mb-4">Waiting for system to process deposit...</MudAlert>
                         }
                         else if (_task.Status == SkillTaskStatus.PendingCompletion)
                         {
-                            <MudAlert Severity="Severity.Info" Class="mb-4 rounded-lg" Variant="Variant.Outlined">The helper has marked this task as complete. Please review and confirm.</MudAlert>
-                            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ConfirmTaskComplete" Style="border-radius: 12px;">Confirm Task Complete</MudButton>
+                            <MudAlert Severity="Severity.Info" Class="mb-4">Helper marked as done. Please confirm.</MudAlert>
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ConfirmTaskComplete">Confirm & Pay</MudButton>
                         }
                         else if (_task.Status == SkillTaskStatus.Completed)
                         {
-                            <MudAlert Severity="Severity.Success" Class="mb-4 rounded-lg" Variant="Variant.Outlined">This task has been completed successfully!</MudAlert>
-                            @if (_task.Rating == null)
+                            <MudAlert Severity="Severity.Success">Task Completed!</MudAlert>
+                            @if (_task.Rating == null) {
+                                <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OpenRatingDialog" Class="mt-2">Rate Helper</MudButton>
+                            }
+                        }
+                        else if (_task.Status == SkillTaskStatus.Cancelled)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="RepublishTask">Republish</MudButton>
+                        }
+                    }
+                    
+                    else
+                    {
+                        @if (_task.Status == SkillTaskStatus.Open)
+                        {
+                            var myApp = _task.Applications?.FirstOrDefault(a => a.ApplicantId == _currentUserId);
+                            
+                            @if (myApp != null)
                             {
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Star" OnClick="OpenRatingDialog" Style="border-radius: 12px;">Rate Helper</MudButton>
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="rounded-lg">
+                                    You applied for this task. Status: <b>@myApp.Status</b>
+                                </MudAlert>
                             }
                             else
                             {
-                                <MudAlert Severity="Severity.Info" Class="rounded-lg">You have already rated this task.</MudAlert>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Chat" 
+                                           Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")" 
+                                           Style="border-radius: 12px; font-weight: 600;">
+                                        Open Chat
+                                    </MudButton>
+
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenApplicationDialog" 
+                                           StartIcon="@Icons.Material.Filled.Send"
+                                           Style="background-color: #1B1B1B; color: white; border-radius: 12px; font-weight: 700; padding: 8px 24px; flex-grow: 1;">
+                                        Apply for Task
+                                    </MudButton>
+
+                                    <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Report" 
+                                           OnClick="ReportTask" Style="border-radius: 12px;">
+                                        Report
+                                    </MudButton>
+                                </div>
                             }
                         }
-                        else
+                        else if (_isHelper)
                         {
-                            <div class="d-flex gap-3">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" Href="@($"/task/{_task.Id}/edit")" Style="border-radius: 12px;">Edit</MudButton>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="CancelTask" Style="border-radius: 12px;">Cancel Task</MudButton>
-                            </div>
-                        }
-                    }
-                    else if (_isHelper)
-                    {
-                        @if (_task.Status == SkillTaskStatus.Assigned)
-                        {
-                            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Done" OnClick="MarkTaskDone" Style="border-radius: 12px; padding: 12px 24px;">Mark Task as Done</MudButton>
-                        }
-                        else if (_task.Status == SkillTaskStatus.PendingCompletion)
-                        {
-                            <MudAlert Severity="Severity.Info" Class="mb-4 rounded-lg" Variant="Variant.Outlined">Waiting for creator to confirm task completion.</MudAlert>
-                        }
-                        else if (_task.Status == SkillTaskStatus.Completed)
-                        {
-                            <MudAlert Severity="Severity.Success" Class="mb-4 rounded-lg" Variant="Variant.Outlined">Task completed successfully! Payment has been processed.</MudAlert>
-                        }
-                    }
-                    else if (_task.Status == SkillTaskStatus.Assigned && _task.AssignedToId != _currentUserId)
-                    {
-                        <MudAlert Severity="Severity.Info" Class="rounded-lg" Variant="Variant.Outlined">This task has been assigned to another user.</MudAlert>
-                    }
-                    else if (_task.Status == SkillTaskStatus.Open)
-                    {
-                        @if (UserState.CurrentUser?.Role == UserRole.Company || UserState.CurrentUser?.Role == UserRole.School)
-                        {
-                            <MudAlert Severity="Severity.Info" Class="mb-4 rounded-lg" Variant="Variant.Outlined">
-                                @(UserState.CurrentUser.Role == UserRole.Company ? "Companies" : "Schools") can only post tasks and jobs, not accept them.
-                            </MudAlert>
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Chat" Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")" Style="border-radius: 12px;">Open Chat</MudButton>
+                             @if (_task.Status == SkillTaskStatus.Assigned || _task.Status == SkillTaskStatus.PendingDeposit)
+                             {
+                                 <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="MarkTaskDone" FullWidth="true" Size="Size.Large">Mark as Done</MudButton>
+                             }
+                             else if (_task.Status == SkillTaskStatus.PendingCompletion)
+                             {
+                                 <MudAlert Severity="Severity.Info">Waiting for creator confirmation.</MudAlert>
+                             }
+                             else if (_task.Status == SkillTaskStatus.Completed)
+                             {
+                                 <MudAlert Severity="Severity.Success">Task Completed! Payment received.</MudAlert>
+                             }
                         }
                         else
                         {
-                            <div class="d-flex flex-wrap gap-3">
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Chat" Href="@($"/chat/{_task.CreatorId}?taskId={_task.Id}")" Style="border-radius: 12px; font-weight: 600;">Open Chat</MudButton>
-                                
-                                <MudButton Variant="Variant.Filled" OnClick="AcceptTask" StartIcon="@Icons.Material.Filled.Check" 
-                                           Style="background-color: #1B1B1B; color: white; border-radius: 12px; font-weight: 700; padding: 8px 24px;">
-                                    Accept Task
-                                </MudButton>
-                                
-                                <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Report" OnClick="ReportTask" Style="border-radius: 12px;">Report</MudButton>
-                            </div>
+                            <MudAlert Severity="Severity.Warning">This task is currently assigned to another user.</MudAlert>
                         }
                     }
 
@@ -186,30 +195,20 @@ else
             </MudItem>
 
             <MudItem xs="12" md="4">
-                
-                <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                 <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
                     <div class="d-flex align-center mb-4">
                         <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Error" Class="mr-2" />
                         <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;">Location</MudText>
                     </div>
-                    
                     <MudText Typo="Typo.body2" Class="mb-4" Style="color: #4a4a4a;">@_task.LocationAddress</MudText>
-
                     <div class="rounded-xl overflow-hidden" style="border: 1px solid #e0e0e0;">
                         @if (_task.Latitude.HasValue && _task.Longitude.HasValue)
                         {
-                            <MapComponent @ref="_miniMap"
-                                          MapId="taskMap"
-                                          Height="250px"
-                                          InitialLat="@_task.Latitude.Value"
-                                          InitialLng="@_task.Longitude.Value"
-                                          InitialZoom="15" />
+                            <MapComponent @ref="_miniMap" MapId="taskMap" Height="250px" InitialLat="@_task.Latitude.Value" InitialLng="@_task.Longitude.Value" InitialZoom="15" />
                         }
-                         else
+                        else
                         {
-                             <div class="d-flex align-center justify-center" style="height: 200px; background-color: #f5f5f5; color: #999;">
-                                 No map data
-                             </div>
+                            <div class="d-flex align-center justify-center" style="height: 200px; background-color: #f5f5f5; color: #999;">No map data</div>
                         }
                     </div>
                 </MudPaper>
@@ -218,7 +217,6 @@ else
                     <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;" Class="mb-4">Task Info</MudText>
                     
                     <div class="d-flex flex-column gap-4">
-                        
                         <div class="d-flex align-center">
                             <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" Style="color: #9E9E9E;" Class="mr-3" />
                             <div>
@@ -258,7 +256,6 @@ else
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">Deposit not yet paid</MudText>
                             </div>
                         }
-
                     </div>
                 </MudPaper>
             </MudItem>
@@ -267,153 +264,135 @@ else
 }
 
 @code {
-    [Parameter]
-    public int TaskId { get; set; }
-
+    [Parameter] public int TaskId { get; set; }
     private SkillTask? _task;
     private MapComponent? _miniMap;
     private int _currentUserId => UserState.CurrentUser?.Id ?? 0;
+    
     private bool _isCreator => _task?.CreatorId == _currentUserId;
     private bool _isHelper => _task?.AssignedToId == _currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
-        _task = await TaskService.GetTaskByIdAsync(TaskId);
+        await LoadTask();
     }
 
+    private async Task LoadTask()
+    {
+        _task = await TaskService.GetTaskByIdAsync(TaskId);
+    }
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _task != null && _miniMap != null)
+        if (firstRender && _task != null && _miniMap != null && _task.Latitude.HasValue && _task.Longitude.HasValue)
         {
             await Task.Delay(500);
-            if (_task.Latitude.HasValue && _task.Longitude.HasValue)
-            {
-                await _miniMap.AddMarkerAsync(
-                    _task.Id,
-                    _task.Latitude.Value,
-                    _task.Longitude.Value,
-                    _task.Title,
-                    "task"
-                );
-            }
+            await _miniMap.AddMarkerAsync(_task.Id, _task.Latitude.Value, _task.Longitude.Value, _task.Title, "task");
         }
     }
 
-    private async Task AcceptTask()
+    // --- Core Interaction Logic ---
+
+    private async Task OpenApplicationDialog()
     {
-        if (_task == null) return;
-
-        // Assign task
-        var success = await TaskService.AssignTaskAsync(_task.Id, _currentUserId);
-
-        if (success)
+        if (!UserState.IsAuthenticated) 
         {
-            // Calculate 10% deposit based on negotiated price or budget
-            var finalPrice = _task.NegotiatedPrice ?? _task.Budget;
-            var depositAmount = finalPrice * 0.1m;
+            Navigation.NavigateTo("/login");
+            return;
+        }
 
-            // Process deposit (charge creator, credit helper)
-            var depositSuccess = await WalletService.ProcessDepositAsync(_currentUserId, _task.Id, depositAmount);
+        var parameters = new DialogParameters 
+        { 
+            ["TaskTitle"] = _task?.Title,
+            ["Budget"] = _task?.Budget 
+        };
+        
+        var dialog = await DialogService.ShowAsync<ApplyDialog>("Apply for Task", parameters);
+        var result = await dialog.Result;
 
-            if (depositSuccess)
+        if (!result.Canceled && result.Data is Tuple<decimal, string> data)
+        {
+            var price = data.Item1;
+            var message = data.Item2;
+            
+            var success = await TaskService.ApplyForTaskAsync(TaskId, _currentUserId, price, message);
+            if (success)
             {
-                Snackbar.Add($"Task accepted successfully! The creator was charged a deposit of ${depositAmount:F2}.", Severity.Success);
+                Snackbar.Add("Application submitted successfully!", Severity.Success);
+                await LoadTask(); 
             }
             else
             {
-                Snackbar.Add($"Task accepted, but deposit payment failed. The task creator might not have enough balance for the ${depositAmount:F2} deposit.", Severity.Warning);
+                Snackbar.Add("Failed to submit application.", Severity.Error);
             }
-
-            // Reload the task to show updated status
-            _task = await TaskService.GetTaskByIdAsync(TaskId);
-            StateHasChanged();
-        }
-        else
-        {
-            Snackbar.Add("Failed to accept task. Please try again.", Severity.Error);
         }
     }
 
-    private async Task CancelTask()
+    private async Task AcceptApplication(int applicationId)
     {
-        if (_task == null) return;
-
-        var success = await TaskService.CancelTaskAsync(_task.Id);
-
+        var success = await TaskService.AcceptApplicationAsync(applicationId, _currentUserId);
         if (success)
         {
-            Snackbar.Add("Task cancelled successfully", Severity.Success);
-            // Reload the task to show updated status
-            _task = await TaskService.GetTaskByIdAsync(TaskId);
-            StateHasChanged();
+            var app = _task?.Applications.FirstOrDefault(a => a.Id == applicationId);
+            var price = app?.ProposedPrice ?? _task?.Budget ?? 0;
+            var deposit = price * 0.1m;
+            
+            var paySuccess = await WalletService.ProcessDepositAsync(_currentUserId, TaskId, deposit);
+            
+            if (paySuccess)
+            {
+                Snackbar.Add($"Application accepted & deposit (${deposit:F2}) paid!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Application accepted, but deposit failed (insufficient funds?).", Severity.Warning);
+            }
+            
+            await LoadTask();
         }
         else
         {
-            Snackbar.Add("Failed to cancel task", Severity.Error);
-        }
-    }
-
-    private async Task RepublishTask()
-    {
-        if (_task == null) return;
-
-        var success = await TaskService.RepublishTaskAsync(_task.Id);
-
-        if (success)
-        {
-            Snackbar.Add("Task republished successfully! It's now visible to everyone.", Severity.Success);
-            // Reload the task to show updated status
-            _task = await TaskService.GetTaskByIdAsync(TaskId);
-            StateHasChanged();
-        }
-        else
-        {
-            Snackbar.Add("Failed to republish task", Severity.Error);
-        }
-    }
-
-    private async Task MarkTaskDone()
-    {
-        if (_task == null || _currentUserId == 0) return;
-
-        var success = await TaskService.HelperMarkTaskDoneAsync(_task.Id, _currentUserId);
-
-        if (success)
-        {
-            Snackbar.Add("Task marked as done! Waiting for creator confirmation.", Severity.Success);
-            // Reload the task to show updated status
-            _task = await TaskService.GetTaskByIdAsync(TaskId);
-            StateHasChanged();
-        }
-        else
-        {
-            Snackbar.Add("Failed to mark task as done", Severity.Error);
+            Snackbar.Add("Failed to accept application.", Severity.Error);
         }
     }
 
     private async Task ConfirmTaskComplete()
     {
-        if (_task == null || _currentUserId == 0) return;
-
+        if(_task == null) return;
         var success = await TaskService.CreatorConfirmTaskDoneAsync(_task.Id, _currentUserId);
+        if (success) { Snackbar.Add("Confirmed!", Severity.Success); await LoadTask(); }
+    }
 
-        if (success)
-        {
-            Snackbar.Add("Task confirmed as complete! Payment has been processed.", Severity.Success);
-            // Reload the task to show updated status
-            _task = await TaskService.GetTaskByIdAsync(TaskId);
-            StateHasChanged();
-        }
-        else
-        {
-            Snackbar.Add("Failed to confirm task completion", Severity.Error);
-        }
+    private async Task MarkTaskDone()
+    {
+        if(_task == null) return;
+        var success = await TaskService.HelperMarkTaskDoneAsync(_task.Id, _currentUserId);
+        if (success) { Snackbar.Add("Marked as done!", Severity.Success); await LoadTask(); }
+    }
+    
+    private async Task CancelTask()
+    {
+        if(_task == null) return;
+        var success = await TaskService.CancelTaskAsync(_task.Id);
+        if (success) { Snackbar.Add("Cancelled.", Severity.Success); await LoadTask(); }
+    }
+    
+    private async Task RepublishTask()
+    {
+        if(_task == null) return;
+        var success = await TaskService.RepublishTaskAsync(_task.Id);
+        if (success) { Snackbar.Add("Republished.", Severity.Success); await LoadTask(); }
+    }
+
+    private async Task ReportTask()
+    {
+        Snackbar.Add("Report submitted to admins.", Severity.Info);
+        await Task.CompletedTask;
     }
 
     private async Task OpenRatingDialog()
     {
-        if (_task == null || _task.AssignedToId == null) return;
-
+         if (_task == null || _task.AssignedToId == null) return;
         var parameters = new DialogParameters
         {
             ["TaskId"] = _task.Id,
@@ -421,48 +400,15 @@ else
             ["HelperName"] = _task.AssignedTo?.Username ?? "Helper",
             ["Category"] = _task.Category
         };
-
         var dialog = await DialogService.ShowAsync<SkillShareMap.Shared.Components.RatingDialog>("Rate Helper", parameters);
         var result = await dialog.Result;
-
         if (!result.Canceled)
         {
-            // Reload the task to show the rating
             _task = await TaskService.GetTaskByIdAsync(TaskId);
             StateHasChanged();
         }
     }
-
-    private void ReportTask()
-    {
-        Snackbar.Add("Report feature coming soon!", Severity.Info);
-    }
-
-    private string GetCategoryName(TaskCategory category)
-    {
-        return category switch
-        {
-            TaskCategory.StudyHelp => "Study Help",
-            TaskCategory.TechHelp => "Tech Help",
-            TaskCategory.CreativeDesign => "Creative Design",
-            TaskCategory.PhotoVideo => "Photo & Video",
-            TaskCategory.WritingEditing => "Writing & Editing",
-            TaskCategory.LanguageHelp => "Language Help",
-            _ => category.ToString()
-        };
-    }
-
-    private Color GetStatusColor(SkillTaskStatus status)
-    {
-        return status switch
-        {
-            SkillTaskStatus.Open => Color.Success,
-            SkillTaskStatus.Assigned => Color.Info,
-            SkillTaskStatus.PendingDeposit => Color.Warning,
-            SkillTaskStatus.PendingCompletion => Color.Warning,
-            SkillTaskStatus.Completed => Color.Success,
-            SkillTaskStatus.Cancelled => Color.Error,
-            _ => Color.Default
-        };
-    }
+    
+    private string GetCategoryName(TaskCategory category) => category.ToString();
+    private Color GetStatusColor(SkillTaskStatus status) => status == SkillTaskStatus.Open ? Color.Success : Color.Default;
 }

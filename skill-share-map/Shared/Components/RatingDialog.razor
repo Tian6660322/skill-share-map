@@ -39,7 +39,7 @@
 
 @code {
     [CascadingParameter]
-    private IMudDialogInstance? MudDialog { get; set; }
+    public IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
     public int TaskId { get; set; }
@@ -90,7 +90,8 @@
             if (result != null)
             {
                 Snackbar.Add($"Rating submitted successfully! {result.XpAwarded} XP awarded to helper.", Severity.Success);
-                MudDialog?.Close(DialogResult.Ok(true));
+                
+                MudDialog.Close(DialogResult.Ok(true));
             }
             else
             {
@@ -100,7 +101,7 @@
         catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (ex.InnerException?.Message.Contains("UNIQUE") == true)
         {
             Snackbar.Add("This task has already been rated", Severity.Warning);
-            MudDialog?.Close(DialogResult.Ok(true));
+            MudDialog.Close(DialogResult.Ok(true));
         }
         catch (ArgumentException ex)
         {
@@ -118,6 +119,6 @@
 
     private void Cancel()
     {
-        MudDialog?.Cancel();
+        MudDialog.Cancel();
     }
 }
