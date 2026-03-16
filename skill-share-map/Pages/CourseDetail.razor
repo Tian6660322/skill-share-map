@@ -15,9 +15,9 @@
 else if (_course is null)
 {
     <MudContainer MaxWidth="MaxWidth.Small" Class="my-8">
-        <MudPaper Elevation="2" Class="pa-6 text-center">
-            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Color="Color.Error" Class="mb-3" />
-            <MudText Typo="Typo.h5" GutterBottom="true">Course not found</MudText>
+        <MudPaper Elevation="0" Class="cr-empty">
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Color="Color.Error" />
+            <MudText Typo="Typo.h5" Class="mt-3" GutterBottom="true">Course not found</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
                 The course you are looking for is no longer available.
             </MudText>
@@ -32,91 +32,106 @@ else if (_course is null)
 }
 else
 {
-    <MudContainer MaxWidth="MaxWidth.Large" Class="my-8">
+    <div class="cd-page">
+
+        <!-- Back -->
         <MudButton Variant="Variant.Text"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Primary"
                    OnClick="GoBack"
-                   Class="mb-4">
+                   Class="mb-4"
+                   Size="Size.Small">
             Back to Classroom
         </MudButton>
 
-        <MudPaper Elevation="3" Class="pa-6">
-            <MudGrid>
-                <MudItem xs="12" md="5">
-                    @if (!string.IsNullOrWhiteSpace(_course.ImageUrl))
-                    {
-                        <img src="@_course.ImageUrl"
-                             alt="@_course.Title"
-                             style="width: 100%; border-radius: 12px; object-fit: cover; max-height: 280px;" />
-                    }
-                    else
-                    {
-                        <MudPaper Elevation="0"
-                                  Class="d-flex align-center justify-center"
-                                  Style="height: 280px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <MudIcon Icon="@GetCategoryIcon(_course.Category)" Size="Size.Large" Color="Color.Surface" />
-                        </MudPaper>
-                    }
-                </MudItem>
+        <!-- Hero Banner -->
+        <div class="cd-hero" style="background: linear-gradient(135deg, @GetCategoryGradientStart(_course.Category), @GetCategoryGradientEnd(_course.Category));">
+            <div class="cd-hero__icon-wrap">
+                <MudIcon Icon="@GetCategoryIcon(_course.Category)" Style="font-size:2.8rem; color:rgba(255,255,255,0.9);" />
+            </div>
+            <div class="cd-hero__text">
+                <div class="cd-hero__chips">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
+                             Style="background:rgba(255,255,255,0.2); color:#fff; backdrop-filter:blur(4px);">
+                        @GetCategoryName(_course.Category)
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small"
+                             Color="@GetDifficultyColor(_course.Difficulty)"
+                             Variant="Variant.Filled">
+                        @_course.Difficulty
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                             Style="border-color:rgba(255,255,255,0.3); color:#fff;">
+                        <MudIcon Icon="@GetTypeIcon(_course.Type)" Size="Size.Small" Class="mr-1" />
+                        @GetTypeName(_course.Type)
+                    </MudChip>
+                </div>
+                <h1 class="cd-hero__title">@_course.Title</h1>
+            </div>
+        </div>
 
-                <MudItem xs="12" md="7">
-                    <MudText Typo="Typo.h4" GutterBottom="true">@_course.Title</MudText>
+        <!-- Content Layout -->
+        <div class="cd-layout">
 
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">
-                            @GetCategoryName(_course.Category)
-                        </MudChip>
-                        <MudChip T="string" Color="@GetDifficultyColor(_course.Difficulty)" Size="Size.Small">
-                            @_course.Difficulty
-                        </MudChip>
-                        <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">
-                            <MudIcon Icon="@GetTypeIcon(_course.Type)" Size="Size.Small" Class="mr-1" />
-                            @GetTypeName(_course.Type)
-                        </MudChip>
-                    </div>
-
-                    <MudDivider Class="my-3" />
-
-                    <MudText Typo="Typo.subtitle1" Class="mb-2"><strong>Overview</strong></MudText>
-                    <MudText Typo="Typo.body1" Class="mb-4">
+            <!-- Main -->
+            <div class="cd-main">
+                <MudPaper Elevation="0" Class="cd-section-card">
+                    <MudText Typo="Typo.subtitle1" Style="font-weight:700;" Class="mb-2">Overview</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Style="line-height:1.75;">
                         @_course.Description
                     </MudText>
+                </MudPaper>
 
-                    <MudGrid Spacing="2" Class="mb-4">
-                        <MudItem xs="12" sm="6">
-                            <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
-                                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
-                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Class="mr-1" />
-                                    Instructor
-                                </MudText>
-                                <MudText Typo="Typo.body1">@(_course.InstructorName ?? "TBA")</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
-                                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
-                                    <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="mr-1" />
-                                    Duration
-                                </MudText>
-                                <MudText Typo="Typo.body1">@(_course.Duration ?? "TBA")</MudText>
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
+                @if (!string.IsNullOrWhiteSpace(_course.ExternalUrl))
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Launch"
+                               Href="@_course.ExternalUrl"
+                               Target="_blank"
+                               Class="mt-4"
+                               Style="border-radius:12px; text-transform:none; font-weight:600; padding:10px 24px;">
+                        Open Learning Resource
+                    </MudButton>
+                }
+            </div>
 
-                    @if (!string.IsNullOrWhiteSpace(_course.ExternalUrl))
-                    {
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Launch"
-                                   Href="@_course.ExternalUrl"
-                                   Target="_blank">
-                            Open Learning Resource
-                        </MudButton>
-                    }
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
-    </MudContainer>
+            <!-- Sidebar -->
+            <div class="cd-sidebar">
+                <MudPaper Elevation="0" Class="cd-info-card">
+                    <div class="cd-info-row">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Secondary" />
+                        <div>
+                            <div class="cd-info-label">Instructor</div>
+                            <div class="cd-info-value">@(_course.InstructorName ?? "TBA")</div>
+                        </div>
+                    </div>
+                    <div class="cd-info-row">
+                        <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Color="Color.Secondary" />
+                        <div>
+                            <div class="cd-info-label">Duration</div>
+                            <div class="cd-info-value">@(_course.Duration ?? "TBA")</div>
+                        </div>
+                    </div>
+                    <div class="cd-info-row">
+                        <MudIcon Icon="@GetTypeIcon(_course.Type)" Size="Size.Small" Color="Color.Secondary" />
+                        <div>
+                            <div class="cd-info-label">Format</div>
+                            <div class="cd-info-value">@GetTypeName(_course.Type)</div>
+                        </div>
+                    </div>
+                    <div class="cd-info-row">
+                        <MudIcon Icon="@Icons.Material.Filled.BarChart" Size="Size.Small" Color="Color.Secondary" />
+                        <div>
+                            <div class="cd-info-label">Difficulty</div>
+                            <div class="cd-info-value">@_course.Difficulty</div>
+                        </div>
+                    </div>
+                </MudPaper>
+            </div>
+        </div>
+
+    </div>
 }
 
 @code {
@@ -154,6 +169,28 @@ else
         TaskCategory.WritingEditing => Icons.Material.Filled.Edit,
         TaskCategory.LanguageHelp => Icons.Material.Filled.Translate,
         _ => Icons.Material.Filled.Category
+    };
+
+    private string GetCategoryGradientStart(TaskCategory category) => category switch
+    {
+        TaskCategory.StudyHelp => "#667eea",
+        TaskCategory.TechHelp => "#0ea5e9",
+        TaskCategory.CreativeDesign => "#e879a8",
+        TaskCategory.PhotoVideo => "#f59e0b",
+        TaskCategory.WritingEditing => "#8b5cf6",
+        TaskCategory.LanguageHelp => "#34d399",
+        _ => "#667eea"
+    };
+
+    private string GetCategoryGradientEnd(TaskCategory category) => category switch
+    {
+        TaskCategory.StudyHelp => "#764ba2",
+        TaskCategory.TechHelp => "#2563eb",
+        TaskCategory.CreativeDesign => "#c084fc",
+        TaskCategory.PhotoVideo => "#ef4444",
+        TaskCategory.WritingEditing => "#6366f1",
+        TaskCategory.LanguageHelp => "#06b6d4",
+        _ => "#764ba2"
     };
 
     private string GetTypeName(CourseType type) => type switch

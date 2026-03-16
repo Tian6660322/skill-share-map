@@ -45,6 +45,12 @@
                             <MudImage Src="images/badge_icon.svg" Class="mr-4" Width="24" Height="24" ObjectFit="ObjectFit.Contain" />
                             <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Badges")">Badges</MudText>
                         </div>
+
+                        <div @onclick="@(() => _activeTab = "Progress")"
+                             class="@GetSidebarClass("Progress")">
+                            <MudIcon Icon="@Icons.Material.Filled.SportsEsports" Class="mr-4" Size="Size.Medium" Style="color: #000000;" />
+                            <MudText Typo="Typo.body1" Style="@GetSidebarTextStyle("Progress")">Progress</MudText>
+                        </div>
                     }
 
                     @if (_isCurrentUser)
@@ -373,6 +379,204 @@
                     }
                 }
 
+                else if (_activeTab == "Progress")
+                {
+                    <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">My Progress</MudText>
+
+                    @* ── Stats Overview Cards ── *@
+                    <MudGrid Class="mb-6">
+                        <MudItem xs="6" md="3">
+                            <MudPaper Elevation="0" Class="pa-4 rounded-xl d-flex flex-column align-center" Style="background-color: #F8F9FA; border: 1px solid #e0e0e0;">
+                                <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment" Style="color: #e45f2b; font-size: 28px;" />
+                                <MudText Typo="Typo.h5" Class="mt-2" Style="font-weight: 700; color: #1B1B1B;">@_userStreak</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Day Streak</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudPaper Elevation="0" Class="pa-4 rounded-xl d-flex flex-column align-center" Style="background-color: #F8F9FA; border: 1px solid #e0e0e0;">
+                                <MudIcon Icon="@Icons.Material.Filled.Bolt" Style="color: #f6c445; font-size: 28px;" />
+                                <MudText Typo="Typo.h5" Class="mt-2" Style="font-weight: 700; color: #1B1B1B;">@_totalXp</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Total XP</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudPaper Elevation="0" Class="pa-4 rounded-xl d-flex flex-column align-center" Style="background-color: #F8F9FA; border: 1px solid #e0e0e0;">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color: #a0e548; font-size: 28px;" />
+                                <MudText Typo="Typo.h5" Class="mt-2" Style="font-weight: 700; color: #1B1B1B;">@_completedTaskCount</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Tasks Done</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudPaper Elevation="0" Class="pa-4 rounded-xl d-flex flex-column align-center" Style="background-color: #F8F9FA; border: 1px solid #e0e0e0;">
+                                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Style="color: #4a75b0; font-size: 28px;" />
+                                <MudText Typo="Typo.h5" Class="mt-2" Style="font-weight: 700; color: #1B1B1B;">@_badges.Count</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Badges</MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+
+                    @* ── Overall Level & XP Bar ── *@
+                    <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                        <div class="d-flex align-center mb-4">
+                            <div class="d-flex align-center justify-center rounded-circle mr-4"
+                                 style="width: 56px; height: 56px; background-color: #2b2b3d; border: 3px solid #4a75b0;">
+                                <MudText Typo="Typo.h6" Style="color: white; font-weight: 700;">@_userLevel</MudText>
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="d-flex justify-space-between mb-1">
+                                    <MudText Typo="Typo.subtitle1" Style="font-weight: 700; color: #1B1B1B;">Level @_userLevel</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @_totalXp / @_nextLevelXp XP
+                                    </MudText>
+                                </div>
+                                <MudProgressLinear Value="@_levelProgress" Color="Color.Primary" Rounded="true" Size="Size.Medium" 
+                                                   Style="height: 10px;" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                    @(_nextLevelXp - _totalXp) XP to Level @(_userLevel + 1)
+                                </MudText>
+                            </div>
+                        </div>
+                    </MudPaper>
+
+                    @* ── Skill Progress Bars ── *@
+                    <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                        <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700; color: #1B1B1B;">Skill Progress</MudText>
+                        
+                        @if (_skillProgressList.Any())
+                        {
+                            @foreach (var sp in _skillProgressList)
+                            {
+                                var tierInfo = GetTierInfo(sp.TotalXp);
+                                var nextTierInfo = GetNextTierInfo(sp.TotalXp);
+                                double progress = nextTierInfo != null 
+                                    ? ((double)(sp.TotalXp - tierInfo.minXp) / (nextTierInfo.Value.minXp - tierInfo.minXp)) * 100 
+                                    : 100;
+
+                                <div class="d-flex align-center mb-4">
+                                    <MudText Typo="Typo.body1" Style="font-size: 22px; width: 36px; text-align: center; margin-right: 12px;">
+                                        @GetCategoryIcon(sp.Category)
+                                    </MudText>
+                                    <div style="flex: 1;">
+                                        <div class="d-flex justify-space-between mb-1">
+                                            <MudText Typo="Typo.subtitle2" Style="font-weight: 600; color: #1B1B1B;">@GetCategoryName(sp.Category)</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@sp.TotalXp XP</MudText>
+                                        </div>
+                                        <MudProgressLinear Value="@progress" Style="@($"height: 8px; --mud-palette-primary: {GetCategoryColor(sp.Category)}")" Rounded="true" />
+                                    </div>
+                                    <MudText Typo="Typo.caption" Class="ml-3" Style="@($"font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; min-width: 60px; text-align: right; color: {tierInfo.color}")">
+                                        @tierInfo.name
+                                    </MudText>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Complete tasks to start earning XP in different skill categories.</MudText>
+                        }
+                    </MudPaper>
+
+                    @* ── Tier Roadmap ── *@
+                    <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                        <MudText Typo="Typo.h6" Class="mb-6" Style="font-weight: 700; color: #1B1B1B;">Tier Roadmap</MudText>
+                        <div class="d-flex align-center justify-space-between" style="position: relative; padding: 0 12px;">
+                            @* Background track *@
+                            <div style="position: absolute; top: 50%; left: 48px; right: 48px; height: 3px; background-color: #F3F4F6; transform: translateY(-50%);"></div>
+                            @* Filled track *@
+                            <div style="position: absolute; top: 50%; left: 48px; height: 3px; background-color: #4a75b0; transform: translateY(-50%); width: @(Math.Min(((double)_totalXp / 1500) * 100, 100))%; max-width: calc(100% - 96px); transition: width 1s;"></div>
+
+                            @foreach (var (tier, idx) in _tierRoadmap.Select((t, i) => (t, i)))
+                            {
+                                bool reached = _totalXp >= tier.minXp;
+                                <div class="d-flex flex-column align-center" style="z-index: 1;">
+                                    <div class="d-flex align-center justify-center rounded-circle"
+                                         style="@($"width: 40px; height: 40px; background-color: {(reached ? tier.color : "#F8F9FA")}; border: 2px solid {(reached ? tier.color : "#e0e0e0")}; color: {(reached ? "white" : "#9E9E9E")}; font-weight: 700; font-size: 14px; transition: all 0.3s;")">
+                                        @(reached ? "✓" : $"{idx + 1}")
+                                    </div>
+                                    <MudText Typo="Typo.caption" Class="mt-1" Style="@($"font-weight: 600; color: {(reached ? "#1B1B1B" : "#9E9E9E")}")">@tier.name</MudText>
+                                    <MudText Typo="Typo.caption" Style="color: #9E9E9E; font-size: 10px;">@tier.minXp XP</MudText>
+                                </div>
+                            }
+                        </div>
+                    </MudPaper>
+
+                    @* ── Achievements ── *@
+                    <MudPaper Elevation="0" Class="pa-6 mb-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                        <div class="d-flex justify-space-between align-center mb-4">
+                            <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1B1B1B;">Achievements</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @_achievements.Count(a => a.earned) / @_achievements.Count unlocked
+                            </MudText>
+                        </div>
+                        
+                        @foreach (var ach in _achievements)
+                        {
+                            double achProgress = ach.earned ? 100 : ((double)ach.progress / ach.goal) * 100;
+
+                            <MudPaper Elevation="0" Class="pa-4 mb-3 rounded-xl d-flex align-center hover-card"
+                                      Style="@($"background-color: {(ach.earned ? "#f0f9e8" : "white")}; border: 1px solid {(ach.earned ? "#a0e54844" : "#e0e0e0")};")">
+                                <div class="d-flex align-center justify-center rounded-lg mr-4"
+                                     style="@($"width: 44px; height: 44px; min-width: 44px; background-color: {(ach.earned ? "#a0e54833" : "#F8F9FA")}; font-size: 22px; {(ach.earned ? "" : "filter: grayscale(0.8) opacity(0.5);")}")">
+                                    @ach.icon
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div class="d-flex align-center gap-2">
+                                        <MudText Typo="Typo.subtitle2" Style="@($"font-weight: 600; color: {(ach.earned ? "#1B1B1B" : "#9E9E9E")}")">@ach.name</MudText>
+                                        @if (ach.earned)
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Style="color: #a0e548;" />
+                                        }
+                                    </div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@ach.desc</MudText>
+                                    @if (!ach.earned)
+                                    {
+                                        <MudProgressLinear Value="@achProgress" Color="Color.Primary" Rounded="true" Size="Size.Small" Class="mt-2" Style="height: 5px;" />
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 11px;">@ach.progress / @ach.goal</MudText>
+                                    }
+                                </div>
+                            </MudPaper>
+                        }
+                    </MudPaper>
+
+                    @* ── Recent XP Activity ── *@
+                    <MudPaper Elevation="0" Class="pa-6 rounded-xl" Style="border: 1px solid #e0e0e0;">
+                        <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700; color: #1B1B1B;">Recent XP Activity</MudText>
+                        
+                        @if (_xpActivity.Any())
+                        {
+                            @foreach (var act in _xpActivity)
+                            {
+                                <div class="d-flex align-center pa-3 mb-2 rounded-lg hover-card" style="border: 1px solid #e0e0e0;">
+                                    <div class="d-flex align-center justify-center rounded-lg mr-3"
+                                         style="width: 40px; height: 40px; min-width: 40px; background-color: @(act.type == "badge" ? "#e45f2b15" : act.type == "streak" ? "#f6c44520" : "#4a75b012"); font-size: 18px;">
+                                        @(act.type == "task" ? "✅" : act.type == "badge" ? "🏅" : "🔥")
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <MudText Typo="Typo.body2" Style="font-weight: 500; color: #1B1B1B;">@act.desc</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            @act.time
+                                            @if (!string.IsNullOrEmpty(act.category))
+                                            {
+                                                <span style="margin-left: 8px; color: @GetCategoryColor(Enum.Parse<TaskCategory>(act.category)); font-weight: 600;">@act.category</span>
+                                            }
+                                        </MudText>
+                                    </div>
+                                    @if (act.xp > 0)
+                                    {
+                                        <MudText Typo="Typo.body2" Style="font-weight: 700; color: #a0e548;">+@act.xp XP</MudText>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-column align-center justify-center pt-4 pb-4">
+                                <MudIcon Icon="@Icons.Material.Outlined.Timeline" Size="Size.Large" Style="color: #BDBDBD;" />
+                                <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">Complete tasks to see your XP activity here.</MudText>
+                            </div>
+                        }
+                    </MudPaper>
+                }
+
                 else if (_activeTab == "Wallet")
                 {
                     <MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700; color: #1B1B1B;">My Wallet</MudText>
@@ -656,6 +860,7 @@
     .hide-idle-line .mud-input-underline:after {
         border-bottom-color: #4a75b0 !important;
         border-bottom-width: 1px !important;
+    }
 </style>
 
     @code {
@@ -707,6 +912,31 @@
     private decimal _totalSpent = 0;
     private decimal _pendingAmount = 0;
 
+    // Progress / Game tab
+    private List<UserSkillProgress> _skillProgressList = new();
+    private int _totalXp = 0;
+    private int _userLevel = 1;
+    private int _nextLevelXp = 100;
+    private double _levelProgress = 0;
+    private int _completedTaskCount = 0;
+    private int _userStreak = 0; // Simulated streak
+
+    // Tier Roadmap data
+    private List<(string name, int minXp, string color)> _tierRoadmap = new()
+    {
+        ("Newbie", 0, "#9E9E9E"),
+        ("Skilled", 50, "#a0e548"),
+        ("Advanced", 200, "#4a75b0"),
+        ("Expert", 600, "#e45f2b"),
+        ("Master", 1500, "#f6c445")
+    };
+
+    // Achievements (computed from real data)
+    private List<(int id, string name, string desc, string icon, bool earned, int progress, int goal)> _achievements = new();
+
+    // Recent XP Activity (computed from ratings)
+    private List<(string type, string desc, int xp, string time, string category)> _xpActivity = new();
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -741,6 +971,7 @@
                 if (_user.Role == UserRole.Student)
                 {
                     _badges = await RatingService.GetUserBadgesAsync(_user.Id);
+                    LoadProgressData();
                 }
 
                 // 3. Load Private Data (Wallet & Chat) only if viewing own profile
@@ -1044,6 +1275,169 @@
             TransactionType.TaskRefund => Color.Info,
             _ => Color.Default
         };
+    }
+
+    // ═══ Progress / Game Tab Helpers ═══
+
+    private void LoadProgressData()
+    {
+        // Completed task count
+        _completedTaskCount = _userTasks.Count(t => t.Status == SkillTaskStatus.Completed);
+
+        // Calculate total XP from ratings received
+        _totalXp = _ratings.Sum(r => r.XpAwarded);
+
+        // Build skill progress from ratings grouped by category
+        _skillProgressList = _ratings
+            .Where(r => r.Category.HasValue)
+            .GroupBy(r => r.Category!.Value)
+            .Select(g => new UserSkillProgress
+            {
+                Category = g.Key,
+                TotalXp = g.Sum(r => r.XpAwarded),
+                CurrentTier = GetTierEnum(g.Sum(r => r.XpAwarded))
+            })
+            .OrderByDescending(sp => sp.TotalXp)
+            .ToList();
+
+        // If no XP from ratings, fallback: estimate from badges
+        if (_totalXp == 0 && _badges.Any())
+        {
+            foreach (var badge in _badges)
+            {
+                var existing = _skillProgressList.FirstOrDefault(s => s.Category == badge.Category);
+                if (existing == null)
+                {
+                    int estimatedXp = badge.Tier switch
+                    {
+                        BadgeTier.Newbie => 25,
+                        BadgeTier.Skilled => 75,
+                        BadgeTier.Advanced => 300,
+                        BadgeTier.Expert => 800,
+                        BadgeTier.Master => 1800,
+                        _ => 0
+                    };
+                    _skillProgressList.Add(new UserSkillProgress { Category = badge.Category, TotalXp = estimatedXp, CurrentTier = badge.Tier });
+                    _totalXp += estimatedXp;
+                }
+            }
+        }
+
+        // Calculate level (every 100 XP = 1 level)
+        _userLevel = Math.Max(1, _totalXp / 100 + 1);
+        _nextLevelXp = _userLevel * 100;
+        int prevLevelXp = (_userLevel - 1) * 100;
+        _levelProgress = _nextLevelXp > prevLevelXp 
+            ? ((double)(_totalXp - prevLevelXp) / (_nextLevelXp - prevLevelXp)) * 100 
+            : 100;
+
+        // Simulated streak based on recent completed tasks
+        var recentCompleted = _userTasks
+            .Where(t => t.CompletedAt.HasValue)
+            .OrderByDescending(t => t.CompletedAt)
+            .ToList();
+        _userStreak = 0;
+        var checkDate = DateTime.UtcNow.Date;
+        foreach (var task in recentCompleted)
+        {
+            if (task.CompletedAt!.Value.Date == checkDate || task.CompletedAt.Value.Date == checkDate.AddDays(-1))
+            {
+                _userStreak++;
+                checkDate = task.CompletedAt.Value.Date.AddDays(-1);
+            }
+            else break;
+        }
+        if (_userStreak == 0 && recentCompleted.Any()) _userStreak = 1; // At least 1 if they have completed tasks
+
+        // Build achievements from real data
+        _achievements = new()
+        {
+            (1, "First Task", "Complete your first task", "🎯", _completedTaskCount >= 1, Math.Min(_completedTaskCount, 1), 1),
+            (2, "Helping Hand", "Complete 10 tasks", "🤝", _completedTaskCount >= 10, Math.Min(_completedTaskCount, 10), 10),
+            (3, "Streak Starter", "Achieve a 7-day streak", "🔥", _userStreak >= 7, Math.Min(_userStreak, 7), 7),
+            (4, "XP Hunter", "Earn 500 XP total", "⚡", _totalXp >= 500, Math.Min(_totalXp, 500), 500),
+            (5, "Multi-skilled", "Earn badges in 3 categories", "🌟", _badges.Count >= 3, Math.Min(_badges.Count, 3), 3),
+            (6, "Task Master", "Complete 50 tasks", "👑", _completedTaskCount >= 50, Math.Min(_completedTaskCount, 50), 50),
+            (7, "Legend", "Reach Master tier (1500 XP)", "🏆", _totalXp >= 1500, Math.Min(_totalXp, 1500), 1500),
+            (8, "Marathon", "Maintain a 30-day streak", "🏃", _userStreak >= 30, Math.Min(_userStreak, 30), 30),
+        };
+
+        // Build recent XP activity from ratings
+        _xpActivity = _ratings
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(8)
+            .Select(r => (
+                type: "task",
+                desc: $"Rated {r.Stars}★ for task #{r.TaskId}",
+                xp: r.XpAwarded,
+                time: GetRelativeTime(r.CreatedAt),
+                category: r.Category?.ToString() ?? ""
+            ))
+            .ToList();
+    }
+
+    private BadgeTier GetTierEnum(int xp)
+    {
+        if (xp >= 1500) return BadgeTier.Master;
+        if (xp >= 600) return BadgeTier.Expert;
+        if (xp >= 200) return BadgeTier.Advanced;
+        if (xp >= 50) return BadgeTier.Skilled;
+        return BadgeTier.Newbie;
+    }
+
+    private (string name, int minXp, string color) GetTierInfo(int xp)
+    {
+        if (xp >= 1500) return ("Master", 1500, "#f6c445");
+        if (xp >= 600) return ("Expert", 600, "#e45f2b");
+        if (xp >= 200) return ("Advanced", 200, "#4a75b0");
+        if (xp >= 50) return ("Skilled", 50, "#a0e548");
+        return ("Newbie", 0, "#9E9E9E");
+    }
+
+    private (string name, int minXp, string color)? GetNextTierInfo(int xp)
+    {
+        if (xp < 50) return ("Skilled", 50, "#a0e548");
+        if (xp < 200) return ("Advanced", 200, "#4a75b0");
+        if (xp < 600) return ("Expert", 600, "#e45f2b");
+        if (xp < 1500) return ("Master", 1500, "#f6c445");
+        return null;
+    }
+
+    private string GetCategoryIcon(TaskCategory cat)
+    {
+        return cat switch
+        {
+            TaskCategory.TechHelp => "💻",
+            TaskCategory.StudyHelp => "📚",
+            TaskCategory.CreativeDesign => "🎨",
+            TaskCategory.PhotoVideo => "📷",
+            TaskCategory.WritingEditing => "✍️",
+            TaskCategory.LanguageHelp => "🗣️",
+            _ => "⭐"
+        };
+    }
+
+    private string GetCategoryColor(TaskCategory cat)
+    {
+        return cat switch
+        {
+            TaskCategory.TechHelp => "#4a75b0",
+            TaskCategory.StudyHelp => "#5b9bd5",
+            TaskCategory.CreativeDesign => "#e45f2b",
+            TaskCategory.PhotoVideo => "#ff9800",
+            TaskCategory.WritingEditing => "#7b61c1",
+            TaskCategory.LanguageHelp => "#f6c445",
+            _ => "#a0e548"
+        };
+    }
+
+    private string GetRelativeTime(DateTime dt)
+    {
+        var diff = DateTime.UtcNow - dt;
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+        return dt.ToString("MMM dd");
     }
 
 }
