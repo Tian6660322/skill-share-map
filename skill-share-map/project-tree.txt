@@ -1,0 +1,828 @@
+卷 Data 的文件夹 PATH 列表
+卷序列号为 4C99-A543
+D:.
+|   App.razor
+|   appsettings.json
+|   Program.cs
+|   skill-share-map.csproj
+|   skill-share-map.sln
+|   _Imports.razor
+|   
++---bin
+|   \---Debug
+|       \---net9.0
+|           |   appsettings.json
+|           |   Blazored.LocalStorage.dll
+|           |   Humanizer.dll
+|           |   Microsoft.AspNetCore.Authorization.dll
+|           |   Microsoft.AspNetCore.Components.dll
+|           |   Microsoft.AspNetCore.Components.Forms.dll
+|           |   Microsoft.AspNetCore.Components.Web.dll
+|           |   Microsoft.AspNetCore.Metadata.dll
+|           |   Microsoft.Bcl.AsyncInterfaces.dll
+|           |   Microsoft.Build.Locator.dll
+|           |   Microsoft.CodeAnalysis.CSharp.dll
+|           |   Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+|           |   Microsoft.CodeAnalysis.dll
+|           |   Microsoft.CodeAnalysis.Workspaces.dll
+|           |   Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll
+|           |   Microsoft.CodeAnalysis.Workspaces.MSBuild.dll
+|           |   Microsoft.Data.Sqlite.dll
+|           |   Microsoft.EntityFrameworkCore.Abstractions.dll
+|           |   Microsoft.EntityFrameworkCore.Design.dll
+|           |   Microsoft.EntityFrameworkCore.dll
+|           |   Microsoft.EntityFrameworkCore.Relational.dll
+|           |   Microsoft.EntityFrameworkCore.Sqlite.dll
+|           |   Microsoft.Extensions.DependencyInjection.Abstractions.dll
+|           |   Microsoft.Extensions.DependencyInjection.dll
+|           |   Microsoft.Extensions.DependencyModel.dll
+|           |   Microsoft.Extensions.Localization.Abstractions.dll
+|           |   Microsoft.Extensions.Localization.dll
+|           |   Microsoft.Extensions.Logging.Abstractions.dll
+|           |   Microsoft.Extensions.Options.dll
+|           |   Microsoft.Extensions.Primitives.dll
+|           |   Microsoft.JSInterop.dll
+|           |   Mono.TextTemplating.dll
+|           |   MudBlazor.dll
+|           |   skill-share-map.deps.json
+|           |   skill-share-map.dll
+|           |   skill-share-map.exe
+|           |   skill-share-map.pdb
+|           |   skill-share-map.runtimeconfig.json
+|           |   skill-share-map.staticwebassets.endpoints.json
+|           |   skill-share-map.staticwebassets.runtime.json
+|           |   SQLitePCLRaw.batteries_v2.dll
+|           |   SQLitePCLRaw.core.dll
+|           |   SQLitePCLRaw.provider.e_sqlite3.dll
+|           |   System.CodeDom.dll
+|           |   System.Composition.AttributedModel.dll
+|           |   System.Composition.Convention.dll
+|           |   System.Composition.Hosting.dll
+|           |   System.Composition.Runtime.dll
+|           |   System.Composition.TypedParts.dll
+|           |   
+|           +---cs
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---de
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---es
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---fr
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---it
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---ja
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---ko
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---pl
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---pt-BR
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---ru
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---runtimes
+|           |   +---browser-wasm
+|           |   |   \---nativeassets
+|           |   |       \---net9.0
+|           |   |               e_sqlite3.a
+|           |   |               
+|           |   +---linux-arm
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-arm64
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-armel
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-mips64
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-musl-arm
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-musl-arm64
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-musl-s390x
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-musl-x64
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-ppc64le
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-s390x
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-x64
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---linux-x86
+|           |   |   \---native
+|           |   |           libe_sqlite3.so
+|           |   |           
+|           |   +---maccatalyst-arm64
+|           |   |   \---native
+|           |   |           libe_sqlite3.dylib
+|           |   |           
+|           |   +---maccatalyst-x64
+|           |   |   \---native
+|           |   |           libe_sqlite3.dylib
+|           |   |           
+|           |   +---osx-arm64
+|           |   |   \---native
+|           |   |           libe_sqlite3.dylib
+|           |   |           
+|           |   +---osx-x64
+|           |   |   \---native
+|           |   |           libe_sqlite3.dylib
+|           |   |           
+|           |   +---win-arm
+|           |   |   \---native
+|           |   |           e_sqlite3.dll
+|           |   |           
+|           |   +---win-arm64
+|           |   |   \---native
+|           |   |           e_sqlite3.dll
+|           |   |           
+|           |   +---win-x64
+|           |   |   \---native
+|           |   |           e_sqlite3.dll
+|           |   |           
+|           |   \---win-x86
+|           |       \---native
+|           |               e_sqlite3.dll
+|           |               
+|           +---SkillShareMap.Test
+|           |   +---bin
+|           |   |   \---Debug
+|           |   |       \---net9.0
+|           |   |           |   appsettings.json
+|           |   |           |   skill-share-map.deps.json
+|           |   |           |   skill-share-map.runtimeconfig.json
+|           |   |           |   skill-share-map.staticwebassets.endpoints.json
+|           |   |           |   skill-share-map.staticwebassets.runtime.json
+|           |   |           |   SkillShareMap.Test.deps.json
+|           |   |           |   SkillShareMap.Test.runtimeconfig.json
+|           |   |           |   
+|           |   |           \---SkillShareMap.Test
+|           |   |               +---bin
+|           |   |               |   \---Debug
+|           |   |               |       \---net9.0
+|           |   |               |           |   appsettings.json
+|           |   |               |           |   skill-share-map.deps.json
+|           |   |               |           |   skill-share-map.runtimeconfig.json
+|           |   |               |           |   skill-share-map.staticwebassets.endpoints.json
+|           |   |               |           |   skill-share-map.staticwebassets.runtime.json
+|           |   |               |           |   SkillShareMap.Test.deps.json
+|           |   |               |           |   SkillShareMap.Test.runtimeconfig.json
+|           |   |               |           |   
+|           |   |               |           \---SkillShareMap.Test
+|           |   |               |               \---obj
+|           |   |               |                       project.assets.json
+|           |   |               |                       SkillShareMap.Test.csproj.nuget.dgspec.json
+|           |   |               |                       
+|           |   |               \---obj
+|           |   |                   |   project.assets.json
+|           |   |                   |   SkillShareMap.Test.csproj.nuget.dgspec.json
+|           |   |                   |   
+|           |   |                   \---Debug
+|           |   |                       \---net9.0
+|           |   |                               SkillShareMap.Test.sourcelink.json
+|           |   |                               
+|           |   \---obj
+|           |       |   project.assets.json
+|           |       |   SkillShareMap.Test.csproj.nuget.dgspec.json
+|           |       |   
+|           |       \---Debug
+|           |           \---net9.0
+|           |                   SkillShareMap.Test.sourcelink.json
+|           |                   
+|           +---tr
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---zh-Hans
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           \---zh-Hant
+|                   Microsoft.CodeAnalysis.CSharp.resources.dll
+|                   Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|                   Microsoft.CodeAnalysis.resources.dll
+|                   Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|                   Microsoft.CodeAnalysis.Workspaces.resources.dll
+|                   
++---Data
+|       app.db
+|       ApplicationDbContext.cs
+|       SeedData.cs
+|       
++---Migrations
+|       20251222040419_InitialCreate.cs
+|       20251222040419_InitialCreate.Designer.cs
+|       ApplicationDbContextModelSnapshot.cs
+|       
++---Models
+|   |   AIConversation.cs
+|   |   Badge.cs
+|   |   Course.cs
+|   |   Job.cs
+|   |   LocationResult.cs
+|   |   message.cs
+|   |   Rating.cs
+|   |   skill.cs
+|   |   SkillTask.cs
+|   |   TaskApplication.cs
+|   |   TaskCategories.cs
+|   |   user.cs
+|   |   UserCertificate_futureAdminVerify.cs
+|   |   UserSkillProgress.cs
+|   |   Wallet.cs
+|   |   
+|   \---DTOs
+|           login.cs
+|           register.cs
+|           UserSession.cs
+|           
++---obj
+|   |   project.assets.json
+|   |   project.nuget.cache
+|   |   skill-share-map.csproj.EntityFrameworkCore.targets
+|   |   skill-share-map.csproj.nuget.dgspec.json
+|   |   skill-share-map.csproj.nuget.g.props
+|   |   skill-share-map.csproj.nuget.g.targets
+|   |   
+|   \---Debug
+|       \---net9.0
+|           |   .NETCoreApp,Version=v9.0.AssemblyAttributes.cs
+|           |   apphost.exe
+|           |   rbcswa.dswa.cache.json
+|           |   rjimswa.dswa.cache.json
+|           |   rjsmcshtml.dswa.cache.json
+|           |   rjsmrazor.dswa.cache.json
+|           |   rpswa.dswa.cache.json
+|           |   skill-sh.9002D4FC.Up2Date
+|           |   skill-share-map.AssemblyInfo.cs
+|           |   skill-share-map.AssemblyInfoInputs.cache
+|           |   skill-share-map.assets.cache
+|           |   skill-share-map.csproj.AssemblyReference.cache
+|           |   skill-share-map.csproj.CoreCompileInputs.cache
+|           |   skill-share-map.csproj.FileListAbsolute.txt
+|           |   skill-share-map.dll
+|           |   skill-share-map.GeneratedMSBuildEditorConfig.editorconfig
+|           |   skill-share-map.genruntimeconfig.cache
+|           |   skill-share-map.GlobalUsings.g.cs
+|           |   skill-share-map.MvcApplicationPartsAssemblyInfo.cache
+|           |   skill-share-map.pdb
+|           |   skill-share-map.RazorAssemblyInfo.cache
+|           |   skill-share-map.RazorAssemblyInfo.cs
+|           |   skill-share-map.sourcelink.json
+|           |   staticwebassets.build.endpoints.json
+|           |   staticwebassets.build.json
+|           |   staticwebassets.build.json.cache
+|           |   staticwebassets.development.json
+|           |   staticwebassets.references.upToDateCheck.txt
+|           |   staticwebassets.removed.txt
+|           |   
+|           +---compressed
+|           |       0wz98yz2xy-u9015k2po7.gz
+|           |       1tq6qdbzvo-xqg7obmouz.gz
+|           |       2dubsnaz58-8inm30yfxf.gz
+|           |       47a61b1ji4-sjnzgf7e1h.gz
+|           |       6c1g3n3e0r-0t3djsut7m.gz
+|           |       6e5pmyw1un-aerdwa08nk.gz
+|           |       ajqm9rxh2q-2ngsxasos8.gz
+|           |       b6m1b5tvho-xrbaqjbc4s.gz
+|           |       bff88zkyh6-gswcmcw71m.gz
+|           |       cykfchj6br-wk8x8xm0ah.gz
+|           |       dws5hr32n1-k0gtzdm3qs.gz
+|           |       f9v8hxyk8s-6vqyjpanix.gz
+|           |       h7r4k1fqvh-ghh5hvi5xg.gz
+|           |       kt8qnr8yhq-9kvw3fensa.gz
+|           |       l5caqidy3t-c7w85r34k2.gz
+|           |       ne05vvr3a2-61n19gt1b8.gz
+|           |       oce0mqnysn-ks3gk9m2xr.gz
+|           |       opkd995e79-cmapd0fi15.gz
+|           |       tnaqvb4d3y-2ngsxasos8.gz
+|           |       tzxjg6is5z-du7z45fy1o.gz
+|           |       u1kbqf9v7h-5y43chrjl0.gz
+|           |       uacgno18qo-prgg6f6j8q.gz
+|           |       uui7vuyqew-pecyemua4u.gz
+|           |       v7j6c4bpj8-ct9qzh8ud6.gz
+|           |       y6tlqi7x6f-bpk8xqwxhs.gz
+|           |       yaeri6uq6s-6iumd5z7qw.gz
+|           |       
+|           +---ref
+|           |       skill-share-map.dll
+|           |       
+|           +---refint
+|           |       skill-share-map.dll
+|           |       
+|           +---scopedcss
+|           |   +---bundle
+|           |   |       skill-share-map.styles.css
+|           |   |       
+|           |   +---projectbundle
+|           |   |       skill-share-map.bundle.scp.css
+|           |   |       
+|           |   \---Shared
+|           |           MainLayout.razor.rz.scp.css
+|           |           NavMenu.razor.rz.scp.css
+|           |           
+|           \---staticwebassets
++---Pages
+|   |   AIAssistant.razor
+|   |   Chat.razor
+|   |   ChatList.razor
+|   |   Classroom.razor
+|   |   CourseDetail.razor
+|   |   EditTask.razor
+|   |   Error.cshtml
+|   |   Error.cshtml.cs
+|   |   Index.razor
+|   |   JobDetail.razor
+|   |   Login.razor
+|   |   PostTask.razor
+|   |   Profile.razor
+|   |   Register.razor
+|   |   RegisterCompany.razor
+|   |   RegisterSchool.razor
+|   |   RegisterStudent.razor
+|   |   TaskDetail.razor
+|   |   _Host.cshtml
+|   |   _Layout.cshtml
+|   |   
+|   \---admin
+|           Verifications.cs
+|           
++---Properties
+|       launchSettings.json
+|       
++---Services
+|   |   AIAssistantService.cs
+|   |   AuthService.cs
+|   |   ChatService.cs
+|   |   CourseService.cs
+|   |   GeoService.cs
+|   |   JobService.cs
+|   |   RatingService.cs
+|   |   ReputationService.cs
+|   |   TaskService.cs
+|   |   UserState.cs
+|   |   WalletService.cs
+|   |   XpService.cs
+|   |   
+|   \---Interfaces
+|           IAIAssistantService.cs
+|           IAuthService.cs
+|           IChatService.cs
+|           ICourseService.cs
+|           IGeoService.cs
+|           IJobService.cs
+|           IRatingService.cs
+|           IReputationService.cs
+|           ITaskService.cs
+|           IWallet.cs
+|           IXpService.cs
+|           
++---Shared
+|   |   MainLayout.razor
+|   |   MainLayout.razor.css
+|   |   NavMenu.razor
+|   |   NavMenu.razor.css
+|   |   NoLayout.razor
+|   |   Theme.cs
+|   |   
+|   \---Components
+|           ApplyDialog.razor
+|           BadgeTierDisplay.razor
+|           CategoryIcon.razor
+|           MapComponent.razor
+|           RatingDialog.razor
+|           StarRating.razor
+|           
++---SkillShareMap.Test
+|   |   AuthServiceTest.cs
+|   |   SkillShareMap.Test.csproj
+|   |   
+|   +---bin
+|   |   \---Debug
+|   |       \---net9.0
+|   |           |   .msCoverageSourceRootsMapping_SkillShareMap.Test
+|   |           |   appsettings.json
+|   |           |   Blazored.LocalStorage.dll
+|   |           |   CoverletSourceRootsMapping_SkillShareMap.Test
+|   |           |   Microsoft.AspNetCore.Authorization.dll
+|   |           |   Microsoft.AspNetCore.Components.dll
+|   |           |   Microsoft.AspNetCore.Components.Forms.dll
+|   |           |   Microsoft.AspNetCore.Components.Web.dll
+|   |           |   Microsoft.AspNetCore.Metadata.dll
+|   |           |   Microsoft.Data.Sqlite.dll
+|   |           |   Microsoft.EntityFrameworkCore.Abstractions.dll
+|   |           |   Microsoft.EntityFrameworkCore.dll
+|   |           |   Microsoft.EntityFrameworkCore.InMemory.dll
+|   |           |   Microsoft.EntityFrameworkCore.Relational.dll
+|   |           |   Microsoft.EntityFrameworkCore.Sqlite.dll
+|   |           |   Microsoft.Extensions.Caching.Abstractions.dll
+|   |           |   Microsoft.Extensions.Caching.Memory.dll
+|   |           |   Microsoft.Extensions.DependencyInjection.Abstractions.dll
+|   |           |   Microsoft.Extensions.DependencyInjection.dll
+|   |           |   Microsoft.Extensions.DependencyModel.dll
+|   |           |   Microsoft.Extensions.Localization.Abstractions.dll
+|   |           |   Microsoft.Extensions.Localization.dll
+|   |           |   Microsoft.Extensions.Logging.Abstractions.dll
+|   |           |   Microsoft.Extensions.Logging.dll
+|   |           |   Microsoft.Extensions.Options.dll
+|   |           |   Microsoft.Extensions.Primitives.dll
+|   |           |   Microsoft.JSInterop.dll
+|   |           |   Microsoft.TestPlatform.CommunicationUtilities.dll
+|   |           |   Microsoft.TestPlatform.CoreUtilities.dll
+|   |           |   Microsoft.TestPlatform.CrossPlatEngine.dll
+|   |           |   Microsoft.TestPlatform.PlatformAbstractions.dll
+|   |           |   Microsoft.TestPlatform.Utilities.dll
+|   |           |   Microsoft.VisualStudio.CodeCoverage.Shim.dll
+|   |           |   Microsoft.VisualStudio.TestPlatform.Common.dll
+|   |           |   Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
+|   |           |   MudBlazor.dll
+|   |           |   Newtonsoft.Json.dll
+|   |           |   nunit.engine.api.dll
+|   |           |   nunit.engine.core.dll
+|   |           |   nunit.engine.dll
+|   |           |   nunit.framework.dll
+|   |           |   nunit.framework.legacy.dll
+|   |           |   NUnit3.TestAdapter.dll
+|   |           |   NUnit3.TestAdapter.pdb
+|   |           |   skill-share-map.deps.json
+|   |           |   skill-share-map.dll
+|   |           |   skill-share-map.exe
+|   |           |   skill-share-map.pdb
+|   |           |   skill-share-map.runtimeconfig.json
+|   |           |   skill-share-map.staticwebassets.endpoints.json
+|   |           |   skill-share-map.staticwebassets.runtime.json
+|   |           |   SkillShareMap.Test.deps.json
+|   |           |   SkillShareMap.Test.dll
+|   |           |   SkillShareMap.Test.pdb
+|   |           |   SkillShareMap.Test.runtimeconfig.json
+|   |           |   SQLitePCLRaw.batteries_v2.dll
+|   |           |   SQLitePCLRaw.core.dll
+|   |           |   SQLitePCLRaw.provider.e_sqlite3.dll
+|   |           |   testcentric.engine.metadata.dll
+|   |           |   testhost.dll
+|   |           |   testhost.exe
+|   |           |   
+|   |           +---cs
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---de
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---es
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---fr
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---it
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---ja
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---ko
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---pl
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---pt-BR
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---ru
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---runtimes
+|   |           |   +---browser-wasm
+|   |           |   |   \---nativeassets
+|   |           |   |       \---net9.0
+|   |           |   |               e_sqlite3.a
+|   |           |   |               
+|   |           |   +---linux-arm
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-arm64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-armel
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-mips64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-musl-arm
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-musl-arm64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-musl-s390x
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-musl-x64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-ppc64le
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-s390x
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-x64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---linux-x86
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.so
+|   |           |   |           
+|   |           |   +---maccatalyst-arm64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.dylib
+|   |           |   |           
+|   |           |   +---maccatalyst-x64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.dylib
+|   |           |   |           
+|   |           |   +---osx-arm64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.dylib
+|   |           |   |           
+|   |           |   +---osx-x64
+|   |           |   |   \---native
+|   |           |   |           libe_sqlite3.dylib
+|   |           |   |           
+|   |           |   +---win-arm
+|   |           |   |   \---native
+|   |           |   |           e_sqlite3.dll
+|   |           |   |           
+|   |           |   +---win-arm64
+|   |           |   |   \---native
+|   |           |   |           e_sqlite3.dll
+|   |           |   |           
+|   |           |   +---win-x64
+|   |           |   |   \---native
+|   |           |   |           e_sqlite3.dll
+|   |           |   |           
+|   |           |   \---win-x86
+|   |           |       \---native
+|   |           |               e_sqlite3.dll
+|   |           |               
+|   |           +---SkillShareMap.Test
+|   |           |   +---bin
+|   |           |   |   \---Debug
+|   |           |   |       \---net9.0
+|   |           |   |           |   appsettings.json
+|   |           |   |           |   skill-share-map.deps.json
+|   |           |   |           |   skill-share-map.runtimeconfig.json
+|   |           |   |           |   skill-share-map.staticwebassets.endpoints.json
+|   |           |   |           |   skill-share-map.staticwebassets.runtime.json
+|   |           |   |           |   SkillShareMap.Test.deps.json
+|   |           |   |           |   SkillShareMap.Test.runtimeconfig.json
+|   |           |   |           |   
+|   |           |   |           \---SkillShareMap.Test
+|   |           |   |               \---obj
+|   |           |   |                       project.assets.json
+|   |           |   |                       SkillShareMap.Test.csproj.nuget.dgspec.json
+|   |           |   |                       
+|   |           |   \---obj
+|   |           |       |   project.assets.json
+|   |           |       |   SkillShareMap.Test.csproj.nuget.dgspec.json
+|   |           |       |   
+|   |           |       \---Debug
+|   |           |           \---net9.0
+|   |           |                   SkillShareMap.Test.sourcelink.json
+|   |           |                   
+|   |           +---tr
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           +---zh-Hans
+|   |           |       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |           |       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |           |       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |           |       
+|   |           \---zh-Hant
+|   |                   Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+|   |                   Microsoft.TestPlatform.CoreUtilities.resources.dll
+|   |                   Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+|   |                   Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+|   |                   Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+|   |                   
+|   \---obj
+|       |   project.assets.json
+|       |   project.nuget.cache
+|       |   SkillShareMap.Test.csproj.nuget.dgspec.json
+|       |   SkillShareMap.Test.csproj.nuget.g.props
+|       |   SkillShareMap.Test.csproj.nuget.g.targets
+|       |   
+|       \---Debug
+|           \---net9.0
+|               |   .NETCoreApp,Version=v9.0.AssemblyAttributes.cs
+|               |   SkillSha.BE910889.Up2Date
+|               |   SkillShareMap.Test.AssemblyInfo.cs
+|               |   SkillShareMap.Test.AssemblyInfoInputs.cache
+|               |   SkillShareMap.Test.assets.cache
+|               |   SkillShareMap.Test.csproj.AssemblyReference.cache
+|               |   SkillShareMap.Test.csproj.CoreCompileInputs.cache
+|               |   SkillShareMap.Test.csproj.FileListAbsolute.txt
+|               |   SkillShareMap.Test.dll
+|               |   SkillShareMap.Test.GeneratedMSBuildEditorConfig.editorconfig
+|               |   SkillShareMap.Test.genruntimeconfig.cache
+|               |   SkillShareMap.Test.GlobalUsings.g.cs
+|               |   SkillShareMap.Test.pdb
+|               |   SkillShareMap.Test.sourcelink.json
+|               |   
+|               +---ref
+|               |       SkillShareMap.Test.dll
+|               |       
+|               \---refint
+|                       SkillShareMap.Test.dll
+|                       
+\---wwwroot
+    |   favicon.ico
+    |   test-images.html
+    |   
+    +---css
+    |   |   site.css
+    |   |   
+    |   +---bootstrap
+    |   |       bootstrap.min.css
+    |   |       bootstrap.min.css.map
+    |   |       
+    |   \---open-iconic
+    |       |   FONT-LICENSE
+    |       |   ICON-LICENSE
+    |       |   README.md
+    |       |   
+    |       \---font
+    |           +---css
+    |           |       open-iconic-bootstrap.min.css
+    |           |       
+    |           \---fonts
+    |                   open-iconic.eot
+    |                   open-iconic.otf
+    |                   open-iconic.svg
+    |                   open-iconic.ttf
+    |                   open-iconic.woff
+    |                   
+    +---images
+    |   |   badge_icon.svg
+    |   |   chat_icon.svg
+    |   |   logo.png
+    |   |   logo_white.png
+    |   |   profile_icon.svg
+    |   |   task_icon.svg
+    |   |   wallet_icon.svg
+    |   |   
+    |   \---courses
+    |           graphic-design.svg
+    |           math.svg
+    |           photography.svg
+    |           spanish.svg
+    |           web-dev.svg
+    |           writing.svg
+    |           
+    +---js
+    |       geolocation.js
+    |       map.js
+    |       
+    \---uploads
+            5700fbd8-5fa2-4fd0-b853-7d54405f8f72.jpg
+            d48bcecd-abbc-4125-b5d7-ec536895656f.jpg
+            d55a3cad-962d-4a40-996d-891ee0612971.jpg
+            

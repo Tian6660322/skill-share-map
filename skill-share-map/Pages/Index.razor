@@ -1,71 +1,52 @@
-﻿@page "/"
+@page "/"
 @using SkillShareMap.Models
 @using SkillShareMap.Services
 @using SkillShareMap.Shared.Components
 @inject ITaskService TaskService
 @inject IJobService JobService
 @inject IGeoService GeoService
-@inject UserState UserState
+@inject UserState _userState
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Skill Share Map</PageTitle>
 
-<div style="width: 100%; 
-            position: relative;
-            background-color: #FFFFFF;">
+@* ══════════════════════════════════════════════════════════════
+   FULLSCREEN MAP OVERLAY (shown when _isMapExpanded == true)
+   ══════════════════════════════════════════════════════════════ *@
+@if (_isMapExpanded)
+{
+    <div class="fullscreen-map-overlay">
+        @* Close button *@
+        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                       Size="Size.Large"
+                       OnClick="CloseMapOverlay"
+                       Style="position: fixed; top: 20px; right: 20px; z-index: 1102; background: white; box-shadow: 0 2px 12px rgba(0,0,0,0.15); border-radius: 50%;" />
 
-    <div style="position: absolute; 
-                bottom: -150px;
-                left: 50%; 
-                transform: translateX(-50%); 
-                width: 600px; 
-                height: 300px; 
-                background: radial-gradient(ellipse at center, rgba(74, 117, 176, 0.25) 0%, transparent 70%);
-                filter: blur(60px);
-                z-index: 0;
-                pointer-events: none;"> 
-    </div>
+        @* Filter Sidebar — collapsible *@
+        <div class="map-overlay-sidebar @(_isFilterOpen ? "open" : "collapsed")">
+            @if (_isFilterOpen)
+            {
+                <div class="pa-5" style="color: white;">
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <MudText Typo="Typo.h6" Style="font-weight: bold; color: white;">Filters</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                                       Size="Size.Small"
+                                       OnClick="@(() => _isFilterOpen = false)"
+                                       Style="color: white;" />
+                    </div>
 
-    <MudContainer MaxWidth="MaxWidth.Large" Class="pt-12 pb-20" Style="position: relative; z-index: 1;">
-        <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="text-center">
-            <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Secondary" Style="font-weight: 700;">
-                Get Paid <br /> For What You Know
-            </MudText>
-
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Secondary" Class="mt-2">
-                Explore the campus map <br /> click on a task <br /> and start earning
-            </MudText>
-            
-            <MudButton Variant="Variant.Filled" 
-                       Color="Color.Dark" 
-                       Size="Size.Large" 
-                       Class="mt-8 rounded-pill px-8 py-2"
-                       Style="background-color: #2b2b3d; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
-                Post a Task Now
-            </MudButton>
-        </MudStack>
-    </MudContainer>
-
-</div> <MudContainer MaxWidth="MaxWidth.Large" Class="my-12" Style="position: relative; z-index: 2; width: 80%; max-width: 1400px; margin: 0 auto;">
-    
-    <MudPaper Elevation="4" Class="rounded-xl overflow-hidden" Style="height: 650px; border: 1px solid #e0e0e0;">
-        <MudGrid Spacing="0" Style="height: 100%;">
-            
-            <MudItem xs="12" md="3" Style="height: 100%; background-color: #1a1b1e; overflow-y: auto;">
-                <MudPaper Elevation="0" Class="pa-6" Style="background-color: transparent; color: white;">
-                    <MudText Typo="Typo.h6" Class="mb-6" Style="font-weight: bold;">Filter</MudText>
-
+                    @* Display Type *@
                     <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Display Type</MudText>
                     <MudRadioGroup T="string" Value="_displayType" ValueChanged="OnDisplayTypeChanged">
-                        <MudRadio T="string" Value="@("tasks")" Color="Color.Primary" Class="mr-3" Style="color: white;">Tasks</MudRadio>
-                        <MudRadio T="string" Value="@("jobs")" Color="Color.Primary" Class="mr-3" Style="color: white;">Jobs</MudRadio>
+                        <MudRadio T="string" Value="@("tasks")" Color="Color.Primary" Style="color: white;">Tasks</MudRadio>
+                        <MudRadio T="string" Value="@("jobs")" Color="Color.Primary" Style="color: white;">Jobs</MudRadio>
                     </MudRadioGroup>
 
                     @if (_displayType == "tasks")
                     {
-                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Category</MudText>
+                        <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4" Style="color: #FFFFFF; font-weight: bold;">Category</MudText>
                         <MudSelect T="TaskCategory?"
                                    MultiSelection="true"
                                    @bind-SelectedValues="_selectedCategories"
@@ -101,11 +82,11 @@
                             <MudSelectItem T="SkillTaskStatus?" Value="@((SkillTaskStatus?)SkillTaskStatus.Assigned)">Assigned</MudSelectItem>
                             <MudSelectItem T="SkillTaskStatus?" Value="@((SkillTaskStatus?)SkillTaskStatus.PendingCompletion)">In Progress</MudSelectItem>
                         </MudSelect>
-                        
                     }
 
-                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color: #FFFFFF; font-weight: bold;">Current Location</MudText>
-                    <MudGrid Class="mb-4" Spacing="1">
+                    @* Location *@
+                    <MudText Typo="Typo.subtitle2" Class="mb-2 mt-2" Style="color: #FFFFFF; font-weight: bold;">Location</MudText>
+                    <MudGrid Class="mb-3" Spacing="1">
                         <MudItem xs="9">
                             <MudAutocomplete T="LocationResult"
                                              Label="Current Location"
@@ -132,500 +113,645 @@
                                        OnClick="GetCurrentGpsLocation"
                                        Disabled="_isGeocoding">
                                 @if (_isGeocoding)
-                                {
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                }
+                                { <MudProgressCircular Size="Size.Small" Indeterminate="true" /> }
                                 else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.NearMe" />
-                                }
+                                { <MudIcon Icon="@Icons.Material.Filled.NearMe" /> }
                             </MudButton>
                         </MudItem>
                     </MudGrid>
 
-                    <MudText Typo="Typo.subtitle2" Class="mt-2 mb-2" Style="color: #FFFFFF;">Distance: @_distanceKm km</MudText>
-                    <MudSlider T="int"
-                               Value="_distanceKm"
-                               ValueChanged="OnDistanceChanged"
-                               Min="0"
-                               Max="50"
-                               Step="1"
-                               Color="Color.Primary"
-                               Immediate="false" />
+                    @* Distance *@
+                    <MudText Typo="Typo.subtitle2" Class="mt-2 mb-1" Style="color: #FFFFFF;">Distance: @_distanceKm km</MudText>
+                    <MudSlider T="int" Value="_distanceKm" ValueChanged="OnDistanceChanged"
+                               Min="1" Max="50" Step="1" Color="Color.Primary" Immediate="false" />
 
-                    <MudText Typo="Typo.caption" Class="mt-1" Style="color: #e0e0e0;">
-                        @if (_displayType == "tasks")
-                        {
-                            <span>Showing @_visibleTasks.Count task(s) within @_distanceKm km</span>
-                        }
-                        else
-                        {
-                            <span>Showing @_visibleJobs.Count job(s) within @_distanceKm km</span>
-                        }
+                    <MudText Typo="Typo.caption" Class="mt-1" Style="color: #b0b0b0;">
+                        @if (_displayType == "tasks") { <span>Showing @_visibleTasks.Count task(s)</span> }
+                        else { <span>Showing @_visibleJobs.Count job(s)</span> }
                     </MudText>
 
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               FullWidth="true"
-                               Class="mt-8 py-2"
-                               Style="background-color: #7da0fa; color: #000; font-weight: bold;"
-                               OnClick="ApplyFilters">
-                        Apply Filters
-                    </MudButton>
-
-                    <MudButton Variant="Variant.Text"
-                               FullWidth="true"
-                               Class="mt-2"
-                               Style="color: #a0a0a0;"
-                               OnClick="ResetFilters">
-                        Reset
-                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                               Class="mt-5 py-2" Style="background-color: #7da0fa; color: #000; font-weight: bold;"
+                               OnClick="ApplyFilters">Apply Filters</MudButton>
+                    <MudButton Variant="Variant.Text" FullWidth="true" Class="mt-2" Style="color: #a0a0a0;" OnClick="ResetFilters">Reset</MudButton>
 
                     @if (!string.IsNullOrEmpty(_noResultsMessage))
                     {
-                        <MudAlert Severity="Severity.Info" Variant="Variant.Text" Class="mt-3" Style="color: white;">
-                            @_noResultsMessage
-                        </MudAlert>
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Text" Class="mt-3" Style="color: white;">@_noResultsMessage</MudAlert>
                     }
+                </div>
+            }
+            else
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Tune" Size="Size.Medium"
+                               OnClick="@(() => _isFilterOpen = true)"
+                               Style="color: white; margin: 12px auto; display: block;" />
+            }
+        </div>
+
+        @* Legend *@
+        <div class="map-overlay-legend">
+            <div class="d-flex align-center gap-2 mr-4">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #0B4E99;"></div>
+                <span style="font-size: 12px; color: #555;">Tasks</span>
+            </div>
+            <div class="d-flex align-center gap-2">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #EB1D26;"></div>
+                <span style="font-size: 12px; color: #555;">Jobs</span>
+            </div>
+        </div>
+
+        @* The Map *@
+        <div style="width: 100%; height: 100%;">
+            <MapComponent @ref="_mapComponent"
+                          OnMarkerClickWithCoords="@(args => HandleMarkerClick(args.Id, args.X, args.Y))"
+                          MapId="mainMap" Height="100%"
+                          InitialLat="@_userLat" InitialLng="@_userLng" InitialZoom="13" />
+        </div>
+    </div>
+}
+
+@* ══════════════════════════════════════════════════════════════
+   PAGE-LEVEL POPUP CARD (fixed overlay — never clipped by map)
+   ══════════════════════════════════════════════════════════════ *@
+@if (_isMapExpanded && (_selectedTask != null || _selectedJob != null))
+{
+    <div style="position: fixed; inset: 0; z-index: 1200;" @onclick="DismissPopup"></div>
+
+    <div class="detail-card-overlay" style="top: @(Math.Max(20, _popupScreenY - 380))px; left: @(ClampPopupX())px;">
+        @if (_selectedTask != null)
+        {
+            <MudPaper Class="rounded-xl pa-5" Elevation="8" Style="width: 360px; background: white; position: relative;">
+                <div class="d-flex justify-space-between align-start mb-1">
+                    <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2; max-width: 260px;">@_selectedTask.Title</MudText>
+                    @if (_selectedTask.IsUrgent)
+                    { <div style="background-color: #f44336; color: white; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; white-space: nowrap;">URGENT</div> }
+                </div>
+                <MudText Typo="Typo.caption" Style="color: #888;" Class="mb-3 d-block">@_selectedTask.LocationAddress</MudText>
+                <div class="d-flex align-center justify-space-between pa-3 mb-3" Style="border: 1px solid #eee; border-radius: 10px; background: #fafafa;">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" Style="color: #888;" />
+                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@(_selectedTask.Deadline?.ToString("MMM dd, yyyy") ?? "No deadline")</MudText>
+                    </div>
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Small" Style="color: #2e7d32;" />
+                        <MudText Typo="Typo.body2" Style="font-weight: 700; color: #2e7d32;">$@_selectedTask.Budget</MudText>
+                    </div>
+                </div>
+                <MudText Typo="Typo.body2" Style="font-weight: 600; margin-bottom: 4px;">Description</MudText>
+                <MudText Typo="Typo.caption" Style="color: #666; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;" Class="mb-4">@_selectedTask.Description</MudText>
+                <div class="d-flex gap-2">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_selectedTask.Status)" Variant="Variant.Filled" Style="font-weight: 600; font-size: 11px;">@_selectedTask.Status</MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Style="font-size: 11px;">@GetCategoryName(_selectedTask.Category)</MudChip>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="rounded-lg mt-4"
+                           Style="height: 42px; text-transform: none; font-weight: bold;"
+                           OnClick="@(() => Navigation.NavigateTo($"/task/{_selectedTask.Id}"))">View Full Details</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="DismissPopup"
+                               Style="position: absolute; top: 8px; right: 8px; color: #999;" />
+            </MudPaper>
+        }
+        else if (_selectedJob != null)
+        {
+            <MudPaper Class="rounded-xl pa-5" Elevation="8" Style="width: 360px; background: white; border-top: 4px solid #EB1D26; position: relative;">
+                <div class="d-flex justify-space-between align-start mb-1">
+                    <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2; max-width: 260px;">@_selectedJob.Title</MudText>
+                    <MudChip T="string" Size="Size.Small" Style="background-color: #EB1D26; color: white; font-weight: 700; font-size: 10px;">JOB</MudChip>
+                </div>
+                @if (_selectedJob.PostedBy != null)
+                { <MudText Typo="Typo.caption" Style="color: #888;" Class="mb-1 d-block">@_selectedJob.PostedBy.Username</MudText> }
+                <MudText Typo="Typo.caption" Style="color: #aaa;" Class="mb-3 d-block">@_selectedJob.LocationAddress</MudText>
+                <div class="d-flex align-center justify-space-between pa-3 mb-3" Style="border: 1px solid #eee; border-radius: 10px; background: #fafafa;">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Small" Style="color: #888;" />
+                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@GetEmploymentTypeName(_selectedJob.EmploymentType)</MudText>
+                    </div>
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Style="color: #888;" />
+                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@_selectedJob.CreatedAt.ToString("MMM dd")</MudText>
+                    </div>
+                </div>
+                <MudText Typo="Typo.body2" Style="font-weight: 600; margin-bottom: 4px;">Responsibilities</MudText>
+                <MudText Typo="Typo.caption" Style="color: #666; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;" Class="mb-4">@_selectedJob.Responsibilities</MudText>
+                <MudButton Variant="Variant.Filled" FullWidth="true" Class="rounded-lg mt-2"
+                           Style="height: 42px; text-transform: none; font-weight: bold; background-color: #EB1D26; color: white;"
+                           OnClick="@(() => Navigation.NavigateTo($"/job/{_selectedJob.Id}"))">View Job Details</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="DismissPopup"
+                               Style="position: absolute; top: 8px; right: 8px; color: #999;" />
+            </MudPaper>
+        }
+    </div>
+}
+
+@* ══════════════════════════════════════════════════════════════
+   HOMEPAGE CONTENT (shown when map is NOT expanded)
+   ══════════════════════════════════════════════════════════════ *@
+@if (!_isMapExpanded)
+{
+    @* ─── HERO ─── *@
+    <div style="width: 100%; position: relative; background-color: #FFFFFF; overflow: hidden;">
+        <div style="position: absolute; bottom: -20%; left: 50%; transform: translateX(-50%); width: min(600px, 80vw); height: 300px; background: radial-gradient(ellipse at center, rgba(74, 117, 176, 0.18) 0%, transparent 70%); filter: blur(60px); z-index: 0; pointer-events: none;"></div>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="pt-14 pb-16" Style="position: relative; z-index: 1;">
+            <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="text-center">
+                <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Secondary" Style="font-weight: 700; letter-spacing: -0.5px;">
+                    Get Paid<br/>For What You Know
+                </MudText>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Style="color: #666; max-width: 440px; line-height: 1.7;" Class="mt-2">
+                    Find short-term tasks and jobs near campus. Use your skills, earn money, and build your portfolio.
+                </MudText>
+                <div class="toggle-pill-container mt-8">
+                    <div class="toggle-pill-item @(_viewMode == "onsite" ? "active" : "")" @onclick="@(() => SetViewMode("onsite"))">
+                        <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" Class="mr-1" Style="vertical-align: middle;" /> Onsite Map
+                    </div>
+                    <div class="toggle-pill-item @(_viewMode == "remote" ? "active" : "")" @onclick="@(() => SetViewMode("remote"))">
+                        <MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Small" Class="mr-1" Style="vertical-align: middle;" /> Remote List
+                    </div>
+                </div>
+                @if (_viewMode == "onsite")
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+                               StartIcon="@Icons.Material.Filled.Explore"
+                               Class="mt-6 rounded-pill px-10 py-3"
+                               Style="text-transform: none; font-weight: 700; font-size: 16px; box-shadow: 0 4px 20px rgba(74, 117, 176, 0.3);"
+                               OnClick="OpenMapOverlay">Explore the Map</MudButton>
+                }
+            </MudStack>
+        </MudContainer>
+    </div>
+
+    @* ─── MAP PREVIEW (onsite) or REMOTE LIST ─── *@
+    <MudContainer MaxWidth="MaxWidth.Large" Class="my-8" Style="width: 90%; max-width: 1400px; margin: 0 auto;">
+        @if (_viewMode == "onsite")
+        {
+            <div class="map-preview-wrapper" @onclick="OpenMapOverlay">
+                <div class="map-preview-inner">
+                    <MapComponent @ref="_mapComponent"
+                                  OnMarkerClickWithCoords="@(args => HandleMarkerClick(args.Id, args.X, args.Y))"
+                                  MapId="mainMap" Height="100%"
+                                  InitialLat="@_userLat" InitialLng="@_userLng" InitialZoom="12" />
+                    <div class="map-preview-overlay">
+                        <MudIcon Icon="@Icons.Material.Filled.Fullscreen" Size="Size.Large" Style="color: white;" />
+                        <MudText Typo="Typo.subtitle1" Style="color: white; font-weight: 600;">Click to explore full map</MudText>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            @* Remote list with filters *@
+            <div class="d-flex gap-4 align-center mb-6 px-2 flex-wrap">
+                <MudMenu Label="Filters" StartIcon="@Icons.Material.Filled.Tune" Variant="Variant.Outlined" Color="Color.Dark"
+                         AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Class="rounded-lg"
+                         Style="border-color: #e0e0e0; background: white; text-transform: none; font-weight: 600; height: 48px;">
+                    <div class="pa-4" style="min-width: 260px;">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="font-weight: bold;">Category</MudText>
+                        <MudSelect T="TaskCategory?" MultiSelection="true" @bind-SelectedValues="_selectedCategories"
+                                   Placeholder="All Categories" Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+                            @foreach (var category in Enum.GetValues<TaskCategory>())
+                            { <MudSelectItem T="TaskCategory?" Value="@((TaskCategory?)category)">@GetCategoryName(category)</MudSelectItem> }
+                        </MudSelect>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-2" OnClick="ApplyFilters">Apply</MudButton>
+                    </div>
+                </MudMenu>
+                <MudTextField @bind-Value="_remoteSearchText" Placeholder="Search tasks..." Variant="Variant.Outlined"
+                              Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary"
+                              Class="rounded-lg white-bg flex-grow-1" Margin="Margin.None" Style="background-color: white;"
+                              Immediate="true" OnKeyUp="@(e => { if (e.Key == "Enter") ApplyFilters(); })" />
+            </div>
+            @if (_visibleTasks.Any())
+            {
+                <MudGrid>
+                    @foreach (var task in _visibleTasks)
+                    {
+                        <MudItem xs="12">
+                            <MudPaper Class="pa-5 rounded-xl hover-card" Elevation="2">
+                                <div class="d-flex justify-space-between">
+                                    <div class="d-flex gap-4">
+                                        <MudAvatar Color="Color.Primary" Size="Size.Large" Class="my-auto">
+                                            @(task.Creator?.Username?.Substring(0, 1).ToUpper() ?? "?")
+                                        </MudAvatar>
+                                        <div>
+                                            <div class="d-flex align-center gap-2 mb-1">
+                                                <MudText Typo="Typo.h6" Style="font-weight: 700;">@task.Title</MudText>
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text" Class="font-weight-bold">REMOTE</MudChip>
+                                                @if (task.IsUrgent) { <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text" Class="font-weight-bold">URGENT</MudChip> }
+                                            </div>
+                                            <MudText Typo="Typo.body2" Class="mb-2" Style="color: #666; max-width: 550px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">@task.Description</MudText>
+                                            <div class="d-flex gap-4 mt-1 align-center">
+                                                <MudText Typo="Typo.body2" Color="Color.Success" Style="font-weight: 700;">$@task.Budget</MudText>
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">@GetCategoryName(task.Category)</MudChip>
+                                                <MudText Typo="Typo.caption" Style="color: #999;">@task.CreatedAt.ToString("MMM dd")</MudText>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column justify-center">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="rounded-lg" Style="text-transform: none; font-weight: 600;"
+                                                   OnClick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">View Details</MudButton>
+                                    </div>
+                                </div>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else
+            {
+                <MudPaper Class="pa-12 d-flex flex-column align-center justify-center rounded-xl" Elevation="0" Style="background-color: #f5f5f5;">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Style="color: #ccc;" Class="mb-3" />
+                    <MudText Typo="Typo.h6" Style="color: #999;">No remote tasks found.</MudText>
+                    <MudText Typo="Typo.body2" Style="color: #bbb;" Class="mt-1">Try adjusting your search or filters.</MudText>
                 </MudPaper>
-            </MudItem>
+            }
+        }
+    </MudContainer>
 
-            <MudItem xs="12" md="9" Style="height: 100%; position: relative;">
-                <MapComponent @ref="_mapComponent"
-                              OnMarkerClick="HandleMarkerClick"
-                              MapId="mainMap"
-                              Height="100%"
-                              InitialLat="@_userLat"
-                              InitialLng="@_userLng"
-                              InitialZoom="13" />
+    @* ─── HOW IT WORKS ─── *@
+    <div style="background-color: #f8f9fb; padding: 60px 0;">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudText Typo="Typo.h4" Align="Align.Center" Style="font-weight: 700; color: #1a1b1e;" Class="mb-2">How It Works</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Style="color: #888; max-width: 500px; margin: 0 auto;" Class="mb-10">
+                Three simple steps from finding a task to getting paid.
+            </MudText>
+            <MudGrid Spacing="6" Justify="Justify.Center">
+                <MudItem xs="12" sm="4">
+                    <MudPaper Class="pa-6 rounded-xl text-center hover-card" Elevation="0" Style="background: white; border: 1px solid #eee;">
+                        <div class="step-icon-circle mb-4" style="background-color: #e8f0fe;">
+                            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Style="color: #4a75b0;" />
+                        </div>
+                        <MudText Typo="Typo.h6" Style="font-weight: 700;" Class="mb-2">1. Browse</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #666; line-height: 1.6;">Open the map and find tasks nearby. Filter by category, status, or distance to find the perfect match.</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudPaper Class="pa-6 rounded-xl text-center hover-card" Elevation="0" Style="background: white; border: 1px solid #eee;">
+                        <div class="step-icon-circle mb-4" style="background-color: #fef3e0;">
+                            <MudIcon Icon="@Icons.Material.Filled.Handshake" Size="Size.Large" Style="color: #f59e0b;" />
+                        </div>
+                        <MudText Typo="Typo.h6" Style="font-weight: 700;" Class="mb-2">2. Accept</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #666; line-height: 1.6;">Apply for a task or accept it directly. A 10% deposit is secured so both sides are committed.</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudPaper Class="pa-6 rounded-xl text-center hover-card" Elevation="0" Style="background: white; border: 1px solid #eee;">
+                        <div class="step-icon-circle mb-4" style="background-color: #e6f9ed;">
+                            <MudIcon Icon="@Icons.Material.Filled.Paid" Size="Size.Large" Style="color: #16a34a;" />
+                        </div>
+                        <MudText Typo="Typo.h6" Style="font-weight: 700;" Class="mb-2">3. Get Paid</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #666; line-height: 1.6;">Complete the task, get confirmed by the poster, and receive full payment to your wallet.</MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </div>
 
-            </MudItem>
+    @* ─── FEATURED TASKS ─── *@
+    @if (_featuredTasks.Any())
+    {
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-14">
+            <div class="d-flex justify-space-between align-center mb-8">
+                <div>
+                    <MudText Typo="Typo.h4" Style="font-weight: 700; color: #1a1b1e;">Latest Tasks</MudText>
+                    <MudText Typo="Typo.body2" Style="color: #888;" Class="mt-1">Recently posted tasks looking for helpers.</MudText>
+                </div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward"
+                           Style="text-transform: none; font-weight: 600;" OnClick="OpenMapOverlay">View all on map</MudButton>
+            </div>
+            <MudGrid Spacing="4">
+                @foreach (var task in _featuredTasks)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Class="pa-5 rounded-xl hover-card d-flex flex-column" Elevation="1"
+                                  Style="height: 100%; border: 1px solid #f0f0f0; cursor: pointer;"
+                                  @onclick="@(() => Navigation.NavigateTo($"/task/{task.Id}"))">
+                            <div class="d-flex justify-space-between align-start mb-2">
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Style="font-size: 11px;">@GetCategoryName(task.Category)</MudChip>
+                                @if (task.IsUrgent) { <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled" Style="font-size: 11px; font-weight: 700;">URGENT</MudChip> }
+                            </div>
+                            <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.3;" Class="mb-1">@task.Title</MudText>
+                            <MudText Typo="Typo.caption" Style="color: #999;" Class="mb-2">
+                                @(task.LocationAddress ?? (task.LocationType == TaskLocationType.Remote ? "Remote" : "On-site"))
+                            </MudText>
+                            <MudText Typo="Typo.body2" Style="color: #666; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;" Class="mb-4">@task.Description</MudText>
+                            <MudSpacer />
+                            <div class="d-flex justify-space-between align-center pt-3" style="border-top: 1px solid #f0f0f0;">
+                                <MudText Typo="Typo.body1" Style="font-weight: 700; color: #2e7d32;">$@task.Budget</MudText>
+                                <MudText Typo="Typo.caption" Style="color: #bbb;">@task.CreatedAt.ToString("MMM dd")</MudText>
+                            </div>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudContainer>
+    }
+
+    @* ─── STATS BAR ─── *@
+    <div style="background-color: #1a1b1e; padding: 48px 0;">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudGrid Spacing="4" Justify="Justify.Center">
+                <MudItem xs="6" sm="3">
+                    <div class="text-center">
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #7da0fa;">@_statTotalTasks</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #888;">Tasks Posted</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="text-center">
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #7da0fa;">@_statCompletedTasks</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #888;">Completed</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="text-center">
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #7da0fa;">@_statOpenTasks</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #888;">Open Now</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="text-center">
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #7da0fa;">@_statOpenJobs</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #888;">Job Listings</MudText>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </div>
+
+    @* ─── BROWSE BY CATEGORY ─── *@
+    <MudContainer MaxWidth="MaxWidth.Large" Class="py-14">
+        <MudText Typo="Typo.h4" Align="Align.Center" Style="font-weight: 700; color: #1a1b1e;" Class="mb-2">Browse by Category</MudText>
+        <MudText Typo="Typo.body1" Align="Align.Center" Style="color: #888;" Class="mb-10">Find tasks that match your skills.</MudText>
+        <MudGrid Spacing="3" Justify="Justify.Center">
+            @foreach (var cat in _categoryCards)
+            {
+                        <MudItem xs="6" sm="4" md="2">
+                            <MudPaper Class="pa-4 rounded-xl text-center hover-card" Elevation="0"
+                                      Style="border: 1px solid #eee; cursor: pointer;" @onclick="@(() => BrowseCategory(cat.Category))">
+                                <MudIcon Icon="@cat.Icon" Size="Size.Large" Style="@($"color: {cat.Color};")" Class="mb-2" />
+                                <MudText Typo="Typo.body2" Style="font-weight: 600;">@cat.Name</MudText>
+                            </MudPaper>
+                        </MudItem>
+            }
         </MudGrid>
-    </MudPaper>
-    
-</MudContainer>
+    </MudContainer>
+}
 
 @implements IDisposable
 
 @code {
     private MapComponent? _mapComponent;
+    private bool _isMapExpanded = false;
+    private bool _isFilterOpen = true;
+
     private string _displayType = "tasks";
     private IEnumerable<TaskCategory?> _selectedCategories = new HashSet<TaskCategory?>();
     private IEnumerable<SkillTaskStatus?> _selectedStatuses = new HashSet<SkillTaskStatus?>();
-    private int _distanceKm = 50; 
+    private int _distanceKm = 15;
 
     private SkillTask? _selectedTask;
     private Job? _selectedJob;
 
-    private List<SkillTask> _tasks = new();
+    private List<SkillTask> _allTasks = new();
     private List<Job> _jobs = new();
     private List<SkillTask> _visibleTasks = new();
     private List<Job> _visibleJobs = new();
     private string? _noResultsMessage;
+    private List<SkillTask> _featuredTasks = new();
+
+    private int _statTotalTasks, _statCompletedTasks, _statOpenTasks, _statOpenJobs;
 
     private double _userLat = -33.8688;
     private double _userLng = 151.2093;
 
-    // Geocoding related
     private string _searchAddress = "";
     private bool _isGeocoding = false;
     private LocationResult? _selectedLocation;
+    private string _viewMode = "onsite";
+    private string _remoteSearchText = "";
+    private double _popupScreenX, _popupScreenY;
+    private System.Threading.Timer? _debounceTimer;
+
+    private record CategoryCard(TaskCategory Category, string Name, string Icon, string Color);
+    private List<CategoryCard> _categoryCards = new()
+    {
+        new(TaskCategory.StudyHelp, "Study Help", Icons.Material.Filled.MenuBook, "#4a75b0"),
+        new(TaskCategory.TechHelp, "Tech Help", Icons.Material.Filled.Computer, "#7c3aed"),
+        new(TaskCategory.CreativeDesign, "Creative", Icons.Material.Filled.Palette, "#ec4899"),
+        new(TaskCategory.PhotoVideo, "Photo & Video", Icons.Material.Filled.CameraAlt, "#f59e0b"),
+        new(TaskCategory.WritingEditing, "Writing", Icons.Material.Filled.Edit, "#16a34a"),
+        new(TaskCategory.LanguageHelp, "Language", Icons.Material.Filled.Translate, "#0891b2"),
+    };
 
     protected override async Task OnInitializedAsync()
     {
         Navigation.LocationChanged += OnLocationChanged;
-
-        if (UserState.IsAuthenticated && UserState.CurrentUser != null)
+        if (_userState.IsAuthenticated && _userState.CurrentUser != null)
         {
-            var currentUser = UserState.CurrentUser;
-            if (currentUser.HomeBaseLatitude.HasValue && currentUser.HomeBaseLongitude.HasValue)
-            {
-                _userLat = currentUser.HomeBaseLatitude.Value;
-                _userLng = currentUser.HomeBaseLongitude.Value;
-            }
+            var u = _userState.CurrentUser;
+            if (u.HomeBaseLatitude.HasValue && u.HomeBaseLongitude.HasValue)
+            { _userLat = u.HomeBaseLatitude.Value; _userLng = u.HomeBaseLongitude.Value; }
         }
-
         await LoadData();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await Task.Delay(500);
-            await ApplyFilters();
-        }
+        if (firstRender) { await Task.Delay(500); await ApplyFilters(); }
     }
+
+    public void Dispose() { Navigation.LocationChanged -= OnLocationChanged; _debounceTimer?.Dispose(); }
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
         if (e.Location.EndsWith("/") || e.Location.EndsWith("/index"))
-        {
-            InvokeAsync(async () =>
-            {
-                await LoadData();
-                await ApplyFilters();
-            });
-        }
+            InvokeAsync(async () => { await LoadData(); await ApplyFilters(); });
     }
 
     private async Task LoadData()
     {
-        _tasks = await TaskService.GetTasksAsync();
+        _allTasks = await TaskService.GetTasksAsync();
         _jobs = await JobService.GetOpenJobsAsync();
+        _statTotalTasks = _allTasks.Count;
+        _statCompletedTasks = _allTasks.Count(t => t.Status == SkillTaskStatus.Completed);
+        _statOpenTasks = _allTasks.Count(t => t.Status == SkillTaskStatus.Open);
+        _statOpenJobs = _jobs.Count(j => j.IsOpen);
+        _featuredTasks = _allTasks.Where(t => t.Status == SkillTaskStatus.Open).OrderByDescending(t => t.CreatedAt).Take(6).ToList();
     }
 
-    public void Dispose()
+    private async Task OpenMapOverlay()
     {
-        Navigation.LocationChanged -= OnLocationChanged;
+        _isMapExpanded = true; _isFilterOpen = true; StateHasChanged();
+        await Task.Delay(400); await ApplyFilters();
     }
+
+    private void CloseMapOverlay() { _isMapExpanded = false; _selectedTask = null; _selectedJob = null; StateHasChanged(); }
 
     private async Task ApplyFilters()
     {
-        if (_mapComponent == null) return;
-
-        await _mapComponent.ClearMarkersAsync();
-
-        _noResultsMessage = null;
-        var hasMarkers = false;
-
-        if (_displayType == "tasks")
-        {
-            _visibleJobs.Clear();
-
-            var filteredTasks = _tasks
-                .Where(t => t.Status != SkillTaskStatus.Cancelled && t.Status != SkillTaskStatus.Completed)
-                .Where(t => !_selectedCategories.Any() || _selectedCategories.Contains(t.Category))
-                .Where(t => !_selectedStatuses.Any() || _selectedStatuses.Contains(t.Status))
-                .Where(t => t.Latitude.HasValue && t.Longitude.HasValue)
-                .Where(t =>
-                {
-                    var distance = GeoService.CalculateDistance(
-                        _userLat, _userLng,
-                        t.Latitude!.Value, t.Longitude!.Value);
-                    return distance <= _distanceKm;
-                })
-                .ToList();
-
-            _visibleTasks = filteredTasks;
-
-            foreach (var task in _visibleTasks)
-            {
-                await _mapComponent.AddMarkerAsync(
-                    task.Id,
-                    task.Latitude!.Value,
-                    task.Longitude!.Value,
-                    task.Title,
-                    "task");
-                hasMarkers = true;
-            }
-
-            if (_visibleTasks.Count == 0)
-            {
-                _noResultsMessage = $"No tasks found within {_distanceKm} km of your location.";
-            }
-            else if (_selectedTask != null && !_visibleTasks.Any(t => t.Id == _selectedTask.Id))
-            {
-                _selectedTask = null;
-            }
-        }
-        else // jobs
-        {
-            _visibleTasks.Clear();
-
-            var filteredJobs = _jobs
-                .Where(j => j.Latitude.HasValue && j.Longitude.HasValue)
-                .Where(j =>
-                {
-                    var distance = GeoService.CalculateDistance(
-                        _userLat, _userLng,
-                        j.Latitude!.Value, j.Longitude!.Value);
-                    return distance <= _distanceKm;
-                })
-                .ToList();
-
-            _visibleJobs = filteredJobs;
-
-            foreach (var job in _visibleJobs)
-            {
-                await _mapComponent.AddMarkerAsync(
-                    job.Id,
-                    job.Latitude!.Value,
-                    job.Longitude!.Value,
-                    job.Title,
-                    "job");
-                hasMarkers = true;
-            }
-
-            if (_visibleJobs.Count == 0)
-            {
-                _noResultsMessage = $"No jobs found within {_distanceKm} km of your location.";
-            }
-            else if (_selectedJob != null && !_visibleJobs.Any(j => j.Id == _selectedJob.Id))
-            {
-                _selectedJob = null;
-            }
-        }
-
-        if (hasMarkers)
-        {
-            await _mapComponent.FitBoundsAsync();
-        }
-        else
-        {
-            await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
-        }
-
+        _noResultsMessage = null; _selectedTask = null; _selectedJob = null;
+        if (_mapComponent != null && _viewMode == "onsite") await _mapComponent.ClearMarkersAsync();
+        if (_displayType == "tasks") await ApplyTaskFilters(); else await ApplyJobFilters();
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task ApplyTaskFilters()
+    {
+        var q = _allTasks.Where(t => t.Status != SkillTaskStatus.Cancelled && t.Status != SkillTaskStatus.Completed);
+        if (_selectedCategories.Any()) q = q.Where(t => _selectedCategories.Contains(t.Category));
+        if (_selectedStatuses.Any()) q = q.Where(t => _selectedStatuses.Contains(t.Status));
+
+        if (_viewMode == "onsite")
+        {
+            _visibleTasks = q.Where(t => t.LocationType == TaskLocationType.OnSite && t.Latitude.HasValue && t.Longitude.HasValue)
+                .Where(t => GeoService.CalculateDistance(_userLat, _userLng, t.Latitude!.Value, t.Longitude!.Value) <= _distanceKm).ToList();
+            if (_mapComponent != null)
+            {
+                bool h = false;
+                foreach (var t in _visibleTasks) { await _mapComponent.AddMarkerAsync(t.Id, t.Latitude!.Value, t.Longitude!.Value, t.Title, "task"); h = true; }
+                if (h) await _mapComponent.FitBoundsAsync(); else await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
+            }
+            if (!_visibleTasks.Any()) _noResultsMessage = $"No tasks found within {_distanceKm} km.";
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(_remoteSearchText))
+                q = q.Where(t => t.Title.Contains(_remoteSearchText, StringComparison.OrdinalIgnoreCase) || t.Description.Contains(_remoteSearchText, StringComparison.OrdinalIgnoreCase));
+            _visibleTasks = q.Where(t => t.LocationType == TaskLocationType.Remote).OrderByDescending(t => t.CreatedAt).ToList();
+        }
+    }
+
+    private async Task ApplyJobFilters()
+    {
+        if (_viewMode == "onsite")
+        {
+            _visibleJobs = _jobs.Where(j => j.IsOpen && j.Latitude.HasValue && j.Longitude.HasValue)
+                .Where(j => GeoService.CalculateDistance(_userLat, _userLng, j.Latitude!.Value, j.Longitude!.Value) <= _distanceKm).ToList();
+            if (_mapComponent != null)
+            {
+                bool h = false;
+                foreach (var j in _visibleJobs) { await _mapComponent.AddMarkerAsync(j.Id, j.Latitude!.Value, j.Longitude!.Value, j.Title, "job"); h = true; }
+                if (h) await _mapComponent.FitBoundsAsync(); else await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
+            }
+            if (!_visibleJobs.Any()) _noResultsMessage = $"No jobs found within {_distanceKm} km.";
+        }
+        else { _visibleJobs = _jobs.Where(j => j.IsOpen).OrderByDescending(j => j.CreatedAt).ToList(); }
+    }
+
+    private async Task SetViewMode(string mode)
+    { _viewMode = mode; _visibleTasks.Clear(); _visibleJobs.Clear(); _noResultsMessage = null; _selectedTask = null; _selectedJob = null; await ApplyFilters(); }
+
+    private async Task OnDisplayTypeChanged(string type) { _displayType = type; _selectedTask = null; _selectedJob = null; await ApplyFilters(); }
+
     private async Task OnDistanceChanged(int value)
     {
-        if (_distanceKm == value)
-            return;
-
-        _distanceKm = value;
-        await ApplyFilters();
+        if (_distanceKm == value) return; _distanceKm = value;
+        _debounceTimer?.Dispose();
+        _debounceTimer = new System.Threading.Timer(async _ =>
+            await InvokeAsync(async () => { await ApplyFilters(); StateHasChanged(); }), null, 300, Timeout.Infinite);
     }
 
     private async Task ResetFilters()
     {
-        _selectedCategories = new HashSet<TaskCategory?>();
-        _selectedStatuses = new HashSet<SkillTaskStatus?>();
-    
-        _distanceKm = 50; 
-        _selectedTask = null;
-        _selectedJob = null;
-        _noResultsMessage = null;
+        _selectedCategories = new HashSet<TaskCategory?>(); _selectedStatuses = new HashSet<SkillTaskStatus?>();
+        _distanceKm = 15; _selectedTask = null; _selectedJob = null; _noResultsMessage = null; _remoteSearchText = "";
         await ApplyFilters();
     }
 
-    // Geocode the address and update user location
-    private async Task UpdateLocationFromAddress()
+    [JSInvokable]
+    public async Task HandleMarkerClick(int markerId, double x, double y)
     {
-        if (string.IsNullOrWhiteSpace(_searchAddress)) return;
-
-        _isGeocoding = true;
-        StateHasChanged();
-        var coords = await GeoService.GeocodeAddressAsync(_searchAddress);
-
-        if (coords.HasValue)
-        {
-            _userLat = coords.Value.lat;
-            _userLng = coords.Value.lon;
-            
-            if (_mapComponent != null)
-            {
-                await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
-            }
-
-            await ApplyFilters(); 
-        }
-        else
-        {
-            Snackbar.Add("Address not found", Severity.Warning);
-        }
-
-        _isGeocoding = false;
-        StateHasChanged();
+        // x, y are screen-relative coords from updated map.js
+        _popupScreenX = x; _popupScreenY = y;
+        if (_displayType == "tasks") { _selectedTask = _allTasks.FirstOrDefault(t => t.Id == markerId); _selectedJob = null; }
+        else { _selectedJob = _jobs.FirstOrDefault(j => j.Id == markerId); _selectedTask = null; }
+        await InvokeAsync(StateHasChanged);
     }
+
+    private void DismissPopup() { _selectedTask = null; _selectedJob = null; StateHasChanged(); }
+
+    private double ClampPopupX()
+    {
+        double x = _popupScreenX; double half = 180;
+        if (x - half < 10) x = half + 10;
+        return x;
+    }
+
+    private void BrowseCategory(TaskCategory category)
+    { _selectedCategories = new HashSet<TaskCategory?> { category }; _viewMode = "onsite"; _ = OpenMapOverlay(); }
 
     private async Task<IEnumerable<LocationResult>> SearchLocation(string value, CancellationToken token)
-    {
-        if (string.IsNullOrEmpty(value))
-            return new LocationResult[0];
-        return await GeoService.SearchAddressAsync(value);
-    }
+    { if (string.IsNullOrEmpty(value)) return Array.Empty<LocationResult>(); return await GeoService.SearchAddressAsync(value); }
 
     private async Task OnLocationSelected(LocationResult result)
     {
-        if (result == null) return;
-
-        _selectedLocation = result;
-        _userLat = result.Lat;
-        _userLng = result.Lon;
-
-        if (_mapComponent != null)
-        {
-            await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
-        }
-
+        if (result == null) return; _selectedLocation = result; _userLat = result.Lat; _userLng = result.Lon;
+        if (_mapComponent != null) await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
         await ApplyFilters();
     }
 
     private async Task GetCurrentGpsLocation()
     {
-        _isGeocoding = true;
-        StateHasChanged();
-
+        _isGeocoding = true; StateHasChanged();
         try
         {
-            var location = await JSRuntime.InvokeAsync<GeolocationResult>("geolocationHelper.getCurrentLocationWithAddress");
-
-            if (location != null)
-            {
-                _userLat = location.Latitude;
-                _userLng = location.Longitude;
-            
-                if (!string.IsNullOrEmpty(location.Address))
-                {
-                }
-
-                if (_mapComponent != null)
-                {
-                    await _mapComponent.SetViewAsync(_userLat, _userLng, 13);
-                }
-            
-                await ApplyFilters();
-                Snackbar.Add("Location updated", Severity.Success);
-            }
+            var loc = await JSRuntime.InvokeAsync<GeolocationResult>("geolocationHelper.getCurrentLocationWithAddress");
+            if (loc != null)
+            { _userLat = loc.Latitude; _userLng = loc.Longitude; if (_mapComponent != null) await _mapComponent.SetViewAsync(_userLat, _userLng, 13); await ApplyFilters(); Snackbar.Add("Location updated", Severity.Success); }
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"GPS Error: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            _isGeocoding = false;
-            StateHasChanged();
-        }
+        catch (Exception ex) { Snackbar.Add($"GPS Error: {ex.Message}", Severity.Error); }
+        finally { _isGeocoding = false; StateHasChanged(); }
     }
 
-    public class GeolocationResult
-    {
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-        public string Address { get; set; } = "";
-    }
+    public class GeolocationResult { public double Latitude { get; set; } public double Longitude { get; set; } public string Address { get; set; } = ""; }
 
-    private string GetCategoryName(TaskCategory category)
-    {
-        return category switch
-        {
-            TaskCategory.StudyHelp => "Study Help",
-            TaskCategory.TechHelp => "Tech Help",
-            TaskCategory.CreativeDesign => "Creative Design",
-            TaskCategory.PhotoVideo => "Photo & Video",
-            TaskCategory.WritingEditing => "Writing & Editing",
-            TaskCategory.LanguageHelp => "Language Help",
-            _ => category.ToString()
-        };
-    }
+    private string GetCategoryName(TaskCategory c) => c switch
+    { TaskCategory.StudyHelp => "Study Help", TaskCategory.TechHelp => "Tech Help", TaskCategory.CreativeDesign => "Creative Design",
+      TaskCategory.PhotoVideo => "Photo & Video", TaskCategory.WritingEditing => "Writing & Editing", TaskCategory.LanguageHelp => "Language Help", _ => c.ToString() };
 
-    private Color GetStatusColor(SkillTaskStatus status)
-    {
-        return status switch
-        {
-            SkillTaskStatus.Open => Color.Success,
-            SkillTaskStatus.Assigned => Color.Info,
-            SkillTaskStatus.PendingDeposit => Color.Warning,
-            SkillTaskStatus.PendingCompletion => Color.Warning,
-            SkillTaskStatus.Completed => Color.Success,
-            SkillTaskStatus.Cancelled => Color.Error,
-            _ => Color.Default
-        };
-    }
+    private string GetEmploymentTypeName(EmploymentType t) => t switch
+    { EmploymentType.FullTime => "Full-Time", EmploymentType.PartTime => "Part-Time", EmploymentType.Internship => "Internship",
+      EmploymentType.Contract => "Contract", EmploymentType.Temporary => "Temporary", _ => t.ToString() };
 
-    private Task HandleMarkerClick(int markerId)
-    {
-        if (_displayType == "tasks")
-        {
-            _selectedTask = _tasks.FirstOrDefault(t => t.Id == markerId);
-            _selectedJob = null;
-        }
-        else
-        {
-            _selectedJob = _jobs.FirstOrDefault(j => j.Id == markerId);
-            _selectedTask = null;
-        }
-
-        return InvokeAsync(StateHasChanged);
-    }
-
-    private async Task OnDisplayTypeChanged(string type)
-    {
-        _displayType = type;
-        _selectedTask = null;
-        _selectedJob = null;
-        await ApplyFilters(); 
-    }
+    private Color GetStatusColor(SkillTaskStatus s) => s switch
+    { SkillTaskStatus.Open => Color.Success, SkillTaskStatus.Assigned => Color.Info, SkillTaskStatus.PendingDeposit => Color.Warning,
+      SkillTaskStatus.PendingCompletion => Color.Warning, SkillTaskStatus.Completed => Color.Success, SkillTaskStatus.Cancelled => Color.Error, _ => Color.Default };
 }
 
 <style>
-    /* placeholder */
-    .white-placeholder .mud-input-slot {
-        font-size: 12px !important;
-        padding-top: 2px; /* position */
-        color: #ffffff !important;
-    }
+    /* Fullscreen map sits beneath fixed top app bar (80px) */
+    .fullscreen-map-overlay { position: fixed; top: 80px; left: 0; right: 0; bottom: 0; z-index: 1000; background: white; animation: fadeIn 0.3s ease; }
+    .map-overlay-sidebar { position: fixed; top: 80px; left: 0; height: calc(100vh - 80px); background-color: #1a1b1e; z-index: 1001; overflow-y: auto; transition: width 0.3s ease; }
+    .map-overlay-sidebar.open { width: 320px; }
+    .map-overlay-sidebar.collapsed { width: 52px; }
+    .map-overlay-legend { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 1101; background: white; padding: 8px 20px; border-radius: 50px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); display: flex; align-items: center; }
+    @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    .white-placeholder .mud-input-slot::placeholder {
-        color: #e0e0e0 !important;
-        opacity: 1 !important;
-    }
-    
-    .white-placeholder input::-webkit-input-placeholder {
-        color: #e0e0e0 !important;
-        opacity: 1 !important;
-    }
+    .detail-card-overlay { position: fixed; z-index: 1300; transform: translateX(-50%); animation: cardSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); max-width: calc(100vw - 40px); }
+    @@keyframes cardSlideIn { from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.95); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } }
 
-    /* Multi Choice */
-    /* 1. Glowing border effect when input box is focused */
-    .glow-focus.mud-input-control-focused .mud-input-outlined-border {
-        border-color: #4a75b0 !important;
-        box-shadow: 0 0 10px rgba(138, 43, 226, 0.6); /* glow */
-    }
+    .map-preview-wrapper { cursor: pointer; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 30px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; transition: all 0.3s ease; }
+    .map-preview-wrapper:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.12); transform: translateY(-2px); }
+    .map-preview-wrapper:hover .map-preview-overlay { opacity: 1; }
+    .map-preview-inner { position: relative; height: 400px; }
+    .map-preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; z-index: 10; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
 
-    /* 2. Background of the dropdown menu */
-    .mud-popover.fancy-menu .mud-list {
-        background-color: #ffffff !important; /* 菜单白底，看着干净 */
-        padding: 8px;
-    }
+    .step-icon-circle { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
 
-    /* 3. Style for each option */
-    .mud-popover.fancy-menu .mud-list-item {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        margin-bottom: 6px;
-        color: #333 !important;
-        transition: all 0.2s;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 12px !important;
-    }
-
-    /* 4. Hide built in checkbox */
-    .mud-popover.fancy-menu .mud-checkbox {
-        display: none !important;
-    }
-
-    /* 5. Selected state */
-    .mud-popover.fancy-menu .mud-selected-item {
-        background-color: #4a75b0 !important;
-        color: white !important;
-        border-color: #4a75b0;
-    }
-
-    .mud-popover.fancy-menu .mud-selected-item:hover {
-        background-color: #4a75b0 !important;
-    }
-
-    /* 6. Add a ✓ on the right when selected */
-    .mud-popover.fancy-menu .mud-selected-item::after {
-        content: "✓";
-        font-weight: bold;
-        font-size: 16px;
-        color: white;
-        margin-right: 10px;
-    }
-    
-    /* Hover effect for unselected items */
-    .mud-popover.fancy-menu .mud-list-item:not(.mud-selected-item):hover {
-        background-color: #f5f5f5 !important;
-    }
-
-    .white-placeholder .mud-input-slot { font-size: 12px !important; }
+    .white-placeholder .mud-input-slot { font-size: 12px !important; padding-top: 2px; color: #ffffff !important; }
     .white-placeholder .mud-input-slot::placeholder { color: #e0e0e0 !important; opacity: 1 !important; }
     .white-placeholder input::-webkit-input-placeholder { color: #e0e0e0 !important; opacity: 1 !important; }
+    .glow-focus.mud-input-control-focused .mud-input-outlined-border { border-color: #4a75b0 !important; box-shadow: 0 0 10px rgba(74, 117, 176, 0.4); }
+    .mud-popover.fancy-menu .mud-list { background-color: #ffffff !important; padding: 8px; }
+    .mud-popover.fancy-menu .mud-list-item { border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 6px; color: #333 !important; transition: all 0.2s; font-size: 12px !important; }
+    .mud-popover.fancy-menu .mud-checkbox { display: none !important; }
+    .mud-popover.fancy-menu .mud-selected-item { background-color: #4a75b0 !important; color: white !important; border-color: #4a75b0; }
+    .mud-popover.fancy-menu .mud-selected-item:hover { background-color: #4a75b0 !important; }
+    .mud-popover.fancy-menu .mud-selected-item::after { content: "\2713"; font-weight: bold; font-size: 16px; color: white; margin-right: 10px; }
+    .mud-popover.fancy-menu .mud-list-item:not(.mud-selected-item):hover { background-color: #f5f5f5 !important; }
+
+    .toggle-pill-container { display: inline-flex; background-color: #1a1b1e; padding: 4px; border-radius: 50px; }
+    .toggle-pill-item { padding: 10px 28px; border-radius: 50px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; color: #a0a0a0; transition: all 0.3s ease; user-select: none; display: flex; align-items: center; }
+    .toggle-pill-item.active { background-color: #4a75b0; color: white; box-shadow: 0 4px 12px rgba(74, 117, 176, 0.3); }
+    .toggle-pill-item:not(.active):hover { color: white; }
+    .hover-card { transition: transform 0.2s, box-shadow 0.2s; }
+    .hover-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important; }
 </style>

@@ -24,6 +24,7 @@
 
     [Parameter]
     public EventCallback<int> OnMarkerClick { get; set; }
+    [Parameter] public EventCallback<(int Id, double X, double Y)> OnMarkerClickWithCoords { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -55,14 +56,16 @@
     }
 
     [JSInvokable]
-    public Task HandleMarkerClick(int markerId)
+    public async Task HandleMarkerClick(int markerId, double x, double y)
     {
-        if (OnMarkerClick.HasDelegate)
+        if (OnMarkerClickWithCoords.HasDelegate)
         {
-            return OnMarkerClick.InvokeAsync(markerId);
+            await OnMarkerClickWithCoords.InvokeAsync((markerId, x, y));
         }
-
-        return Task.CompletedTask;
+        else if (OnMarkerClick.HasDelegate)
+        {
+            await OnMarkerClick.InvokeAsync(markerId);
+        }
     }
 
     public void Dispose()
